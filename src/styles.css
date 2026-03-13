@@ -1,1 +1,14 @@
-/* You can add global styles to this file, and also import other style files */
+/* Modern CSS reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Timer display font — visible from 1-2m distance */
+.timer-display {
+  font-family: 'Exo 2', sans-serif;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,6 +1,22 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # FitBreak
 
 Personal health tool for building a habit of taking breaks, exercising, and staying active throughout the workday. Single-user app, not a SaaS.
+
+## Development Commands
+
+```bash
+npm start            # Dev server (ng serve) at localhost:4200
+npm run build        # Production build
+npm run watch        # Dev build with file watching
+npm test             # Run all tests (Vitest via @angular/build:unit-test)
+npx ng test --grep "test name"  # Run a single test by name
+```
+
+**Test framework:** Vitest (not Karma/Jasmine). Tests use `vitest/globals` — `describe`, `it`, `expect` are available globally without imports. Test files: `*.spec.ts`. Angular TestBed works as usual.
 
 ## Tech Stack
 
@@ -116,26 +132,25 @@ query<T>(queryPromise: PromiseLike<{ data: T | null; error: any }>): Observable<
 - UI text (labels, buttons, messages, exercise names) — **Ukrainian** (hardcoded, no i18n)
 - Exercise names have both `name` (Ukrainian) and `nameEn` (English, for YouTube search)
 
-### Angular Specifics
-- Standalone components only (no NgModules)
-- New control flow (`@if`, `@for`, `@switch`) — no `*ngIf`, `*ngFor`
-- Signals for component state, `input()` / `output()` / `model()` for component API
-- `inject()` function instead of constructor injection
-- Typed reactive forms or Signal Forms where applicable
-- `toSignal()` / `toObservable()` for bridging signals ↔ RxJS
+### Angular (project-specific conventions)
+- `changeDetection: ChangeDetectionStrategy.OnPush` on all components
+- Prefer inline templates for small components
+- WCAG AA compliance required — must pass AXE checks
+- Do NOT install `@angular/animations` — deprecated in v20.2, Material v21 uses CSS animations
+- No explicit `provideHttpClient()` needed — Angular 21 provides it by default
 
-### TypeScript
-- Strict mode enabled
-- Explicit return types on public methods
-- No `any` — use `unknown` and narrow, or define proper types
-- Interfaces over classes for data models
-- Prefer `const` assertions and literal types
+_Generic Angular 21 best practices (standalone, signals, inject(), control flow, etc.) are covered by `.claude/skills/angular-*`._
+
+### Material M3
+- Do NOT use `color="primary"` on components — M2 pattern, doesn't work in M3
+- Style with CSS tokens: `background: var(--mat-sys-primary); color: var(--mat-sys-on-primary);`
+- Icons: Material Symbols Outlined (not legacy Material Icons). Default font set configured in `app.config.ts` via `MAT_ICON_DEFAULT_OPTIONS`
+- Theme: Deep Purple `#5E35B1`, generated palettes in `src/_theme-colors.scss`
+- Dark mode: `color-scheme: light dark` on body — auto-follows OS preference via M3 `light-dark()` tokens
 
 ### Styling
-- Angular Material theming via CSS custom properties
 - Component-scoped styles (default ViewEncapsulation)
 - Responsive design: desktop-first for dashboard/break-timer, mobile-friendly for strength/stepper
-- Dark theme support via Angular Material's built-in theming
 
 ### File Naming
 - `feature-name.component.ts` / `.html` / `.scss`

@@ -1,0 +1,28 @@
+@use '@angular/material' as mat;
+@use './theme-colors' as theme;
+
+// M3 theme generated from primary: #5E35B1 (Deep Purple)
+// Typography: Inter for UI, Exo 2 applied via CSS on timer components
+html {
+  height: 100%;
+  // Must be on html — light-dark() tokens resolve against this element's color-scheme
+  color-scheme: light dark;
+  @include mat.theme((
+    color: (
+      primary: theme.$primary-palette,
+      tertiary: theme.$tertiary-palette,
+    ),
+    typography: Inter,
+    density: 0,
+  ));
+}
+
+body {
+
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  margin: 0;
+  height: 100%;
+}
