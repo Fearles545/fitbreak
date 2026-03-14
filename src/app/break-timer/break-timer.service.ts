@@ -1,11 +1,12 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
+import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { DashboardService } from '../dashboard/dashboard.service';
 import type {
   BreakEntry,
   Exercise,
   MicroBreakRotation,
-  WorkSession,
+  MoodRating,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
 
@@ -23,13 +24,10 @@ export class BreakTimerService {
   private supabase = inject(SupabaseService);
   private dashboard = inject(DashboardService);
 
-  private readonly rotationOrder: MicroBreakRotation[] = [
-    'neck-eyes', 'thoracic-shoulders', 'hips-lower-back', 'active',
-  ];
-
   private _exercises = signal<Exercise[]>([]);
   private _currentExerciseIndex = signal(0);
   private _activeRotation = signal<MicroBreakRotation | null>(null);
+  private _startedAt = signal<string | null>(null);
   private _templates = signal<WorkoutTemplate[]>([]);
 
   readonly exercises = this._exercises.asReadonly();
@@ -50,24 +48,22 @@ export class BreakTimerService {
   readonly suggestedRotation = computed((): MicroBreakRotation => {
     const session = this.dashboard.session();
     const idx = session?.current_rotation_index ?? 0;
-    return this.rotationOrder[idx % this.rotationOrder.length];
+    return ROTATION_ORDER[idx % ROTATION_ORDER.length];
   });
 
   readonly rotationOptions = computed((): RotationOption[] => {
     const suggested = this.suggestedRotation();
     const templates = this._templates();
 
-    return this.rotationOrder.map(key => {
-      const template = templates.find(t =>
-        t.workout_type === 'micro-break' && t.exercises.some(() => true) &&
-        this.rotationKeyFromTemplate(t) === key,
-      );
+    return ROTATION_ORDER.map(key => {
+      const info = ROTATION_INFO[key];
+      const template = templates.find(t => this.rotationKeyFromTemplate(t) === key);
       return {
         key,
-        name: this.rotationDisplayName(key),
-        icon: this.rotationIcon(key),
+        name: info.name,
+        icon: info.icon,
         exerciseCount: template?.exercises.length ?? 0,
-        durationMin: template?.estimated_duration_min ?? 3,
+        durationMin: template?.estimated_duration_min ?? info.defaultDurationMin,
         isSuggested: key === suggested,
       };
     });
@@ -87,6 +83,7 @@ export class BreakTimerService {
   async startBreak(rotation: MicroBreakRotation): Promise<void> {
     this._activeRotation.set(rotation);
     this._currentExerciseIndex.set(0);
+    this._startedAt.set(new Date().toISOString());
 
     // Load exercises for this rotation
     const { data, error } = await this.supabase.supabase
@@ -99,14 +96,33 @@ export class BreakTimerService {
 
     if (error) throw error;
     this._exercises.set((data ?? []) as unknown as Exercise[]);
-
-    // Add break entry to session
-    await this.addBreakEntry(rotation, false);
   }
 
   async skipBreak(): Promise<void> {
-    await this.addBreakEntry(this.suggestedRotation(), true);
-    await this.resetTimer();
+    const session = this.dashboard.session();
+    if (!session) return;
+
+    const now = new Date().toISOString();
+    const entry: BreakEntry = {
+      rotationIndex: session.current_rotation_index ?? 0,
+      rotationType: this.suggestedRotation(),
+      scheduledAt: now,
+      skipped: true,
+    };
+
+    const breaks = [...session.breaks, entry];
+    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        breaks: breaks as any,
+        current_rotation_index: nextIdx,
+      })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    await this.dashboard.loadTodaySession();
   }
 
   nextExercise(): boolean {
@@ -118,20 +134,26 @@ export class BreakTimerService {
     return false;
   }
 
-  async completeBreak(mood?: string): Promise<void> {
+  async completeBreak(mood?: MoodRating): Promise<void> {
     const session = this.dashboard.session();
     if (!session) return;
 
-    // Update the last break entry with completedAt and mood
-    const breaks = [...session.breaks];
-    const lastBreak = breaks[breaks.length - 1];
-    if (lastBreak) {
-      lastBreak.completedAt = new Date().toISOString();
-      if (mood) lastBreak.mood = mood as any;
-    }
+    const rotation = this._activeRotation();
+    if (!rotation) return;
 
-    // Advance rotation index
-    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % this.rotationOrder.length;
+    const now = new Date().toISOString();
+    const entry: BreakEntry = {
+      rotationIndex: session.current_rotation_index ?? 0,
+      rotationType: rotation,
+      scheduledAt: this._startedAt() ?? now,
+      startedAt: this._startedAt() ?? now,
+      completedAt: now,
+      skipped: false,
+      mood,
+    };
+
+    const breaks = [...session.breaks, entry];
+    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
 
     const { error } = await this.supabase.supabase
       .from('work_sessions')
@@ -142,8 +164,6 @@ export class BreakTimerService {
       .eq('id', session.id);
 
     if (error) throw error;
-
-    // Refresh session in dashboard
     await this.dashboard.loadTodaySession();
     this.reset();
   }
@@ -152,50 +172,10 @@ export class BreakTimerService {
     this._exercises.set([]);
     this._currentExerciseIndex.set(0);
     this._activeRotation.set(null);
-  }
-
-  private async addBreakEntry(rotation: MicroBreakRotation, skipped: boolean): Promise<void> {
-    const session = this.dashboard.session();
-    if (!session) return;
-
-    const entry: BreakEntry = {
-      rotationIndex: session.current_rotation_index ?? 0,
-      rotationType: rotation,
-      scheduledAt: new Date().toISOString(),
-      startedAt: skipped ? undefined : new Date().toISOString(),
-      skipped,
-    };
-
-    const breaks = [...session.breaks, entry];
-
-    const { error } = await this.supabase.supabase
-      .from('work_sessions')
-      .update({ breaks: breaks as any })
-      .eq('id', session.id);
-
-    if (error) throw error;
-
-    // Refresh session
-    await this.dashboard.loadTodaySession();
-  }
-
-  private async resetTimer(): Promise<void> {
-    const session = this.dashboard.session();
-    if (!session) return;
-
-    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % this.rotationOrder.length;
-
-    const { error } = await this.supabase.supabase
-      .from('work_sessions')
-      .update({ current_rotation_index: nextIdx })
-      .eq('id', session.id);
-
-    if (error) throw error;
-    await this.dashboard.loadTodaySession();
+    this._startedAt.set(null);
   }
 
   private rotationKeyFromTemplate(template: WorkoutTemplate): MicroBreakRotation | null {
-    // Match template name to rotation key
     const nameMap: Record<string, MicroBreakRotation> = {
       'Шия + Очі': 'neck-eyes',
       'Грудний відділ + Плечі': 'thoracic-shoulders',
@@ -203,25 +183,5 @@ export class BreakTimerService {
       'Активна розминка': 'active',
     };
     return nameMap[template.name] ?? null;
-  }
-
-  private rotationDisplayName(key: MicroBreakRotation): string {
-    const names: Record<MicroBreakRotation, string> = {
-      'neck-eyes': 'Шия + Очі',
-      'thoracic-shoulders': 'Грудний відділ + Плечі',
-      'hips-lower-back': 'Стегна + Поперек',
-      'active': 'Активна розминка',
-    };
-    return names[key];
-  }
-
-  private rotationIcon(key: MicroBreakRotation): string {
-    const icons: Record<MicroBreakRotation, string> = {
-      'neck-eyes': '👁️',
-      'thoracic-shoulders': '🦴',
-      'hips-lower-back': '🦵',
-      'active': '⚡',
-    };
-    return icons[key];
   }
 }

@@ -12,7 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { BreakTimerService } from './break-timer.service';
-import type { MicroBreakRotation } from '@shared/models/fitbreak.models';
+import type { MicroBreakRotation, MoodRating } from '@shared/models/fitbreak.models';
 
 type BreakMode = 'prompt' | 'execution' | 'mood';
 
@@ -487,9 +487,6 @@ export class BreakTimerComponent implements OnInit {
 
   ngOnInit(): void {
     this.breakService.loadTemplates();
-
-    // Change tab title
-    document.title = '⏰ Час на перерву! — FitBreak';
   }
 
   async onStartSuggested(): Promise<void> {
@@ -526,7 +523,7 @@ export class BreakTimerComponent implements OnInit {
 
   async onFinish(): Promise<void> {
     this.notifier.cancel();
-    await this.breakService.completeBreak(this.selectedMood() ?? undefined);
+    await this.breakService.completeBreak((this.selectedMood() as MoodRating) ?? undefined);
     this.router.navigate(['/dashboard']);
   }
 }

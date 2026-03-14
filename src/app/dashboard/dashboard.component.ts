@@ -16,6 +16,7 @@ import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.com
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
 import { AudioService } from '@shared/services/audio.service';
 import { BreakNotifierService } from '@shared/services/break-notifier.service';
+import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { AuthService } from '../auth/auth.service';
 import { DashboardService } from './dashboard.service';
 
@@ -61,18 +62,6 @@ import { DashboardService } from './dashboard.service';
       font-size: 0.9rem;
       color: var(--mat-sys-on-surface-variant);
       margin-top: 2px;
-    }
-
-    .streak {
-      text-align: center;
-      margin: 16px 0 24px;
-      font-size: 0.9rem;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .streak-count {
-      font-weight: 700;
-      color: var(--mat-sys-primary);
     }
 
     .actions {
@@ -245,15 +234,6 @@ export class DashboardComponent implements OnInit {
     }
   });
 
-  // Rotation names for display
-  private readonly rotationNames: Record<string, { name: string; icon: string; duration: number }> = {
-    'neck-eyes': { name: 'Шия + Очі', icon: '👁️', duration: 3 },
-    'thoracic-shoulders': { name: 'Грудний відділ + Плечі', icon: '🦴', duration: 4 },
-    'hips-lower-back': { name: 'Стегна + Поперек', icon: '🦵', duration: 4 },
-    'active': { name: 'Активна розминка', icon: '⚡', duration: 3 },
-  };
-
-  private readonly rotationOrder = ['neck-eyes', 'thoracic-shoulders', 'hips-lower-back', 'active'];
 
   firstName = computed(() => {
     const user = this.auth.user();
@@ -286,8 +266,9 @@ export class DashboardComponent implements OnInit {
     const session = this.dashboard.session();
     if (!session) return null;
     const idx = session.current_rotation_index ?? 0;
-    const rotationKey = this.rotationOrder[idx % this.rotationOrder.length];
-    return this.rotationNames[rotationKey] ?? null;
+    const key = ROTATION_ORDER[idx % ROTATION_ORDER.length];
+    const info = ROTATION_INFO[key];
+    return info ? { name: info.name, icon: info.icon, duration: info.defaultDurationMin } : null;
   });
 
   elapsedTime = computed(() => {

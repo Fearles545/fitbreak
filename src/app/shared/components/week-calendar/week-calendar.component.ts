@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 
 export interface DayActivity {
   date: string;
@@ -11,7 +10,7 @@ export interface DayActivity {
 @Component({
   selector: 'app-week-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule],
+  imports: [],
   styles: `
     :host {
       display: block;

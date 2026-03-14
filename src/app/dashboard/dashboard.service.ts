@@ -31,17 +31,19 @@ export class DashboardService {
     const session = this._session();
     if (!session || session.status !== 'active') return null;
 
+    const intervalMs = session.break_interval_min * 60 * 1000;
     const breaks = session.breaks;
+
     if (breaks.length === 0) {
       // First break: started_at + interval
-      const start = new Date(session.started_at).getTime();
-      return start + session.break_interval_min * 60 * 1000;
+      return new Date(session.started_at).getTime() + intervalMs;
     }
 
-    // Next break: last break's scheduledAt + interval
+    // Next break: computed from the last break's resolution time
     const lastBreak = breaks[breaks.length - 1];
-    const lastScheduled = new Date(lastBreak.scheduledAt).getTime();
-    return lastScheduled + session.break_interval_min * 60 * 1000;
+    // Use completedAt (finished break) or scheduledAt (skipped break) as the anchor
+    const anchor = lastBreak.completedAt ?? lastBreak.scheduledAt;
+    return new Date(anchor).getTime() + intervalMs;
   });
 
   async loadTodaySession(): Promise<void> {

@@ -36,12 +36,12 @@ export class AudioService {
     this.playTone(700, 0.3);
   }
 
-  private playTone(frequency: number, durationSec: number, delayMs = 0): void {
+  private playTone(frequency: number, durationSec: number, delaySec = 0): void {
     this.init();
     const ctx = this.context;
     if (!ctx) return;
 
-    const startTime = ctx.currentTime + delayMs;
+    const startTime = ctx.currentTime + delaySec;
 
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
