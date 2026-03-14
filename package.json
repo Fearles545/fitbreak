@@ -4,7 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start-local": "ng serve --host 0.0.0.0",
     "build": "ng build",
+    "build:ghpages": "ng build --base-href /fitbreak/ && cp dist/fitbreak/browser/index.html dist/fitbreak/browser/404.html",
+    "deploy": "npm run build:ghpages && npx ng deploy --no-build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"
@@ -41,6 +44,7 @@
     "@angular/cli": "^21.1.4",
     "@angular/compiler-cli": "^21.1.0",
     "@eslint/js": "^10.0.1",
+    "angular-cli-ghpages": "^3.0.2",
     "angular-eslint": "21.3.0",
     "eslint": "^10.0.2",
     "jsdom": "^27.1.0",

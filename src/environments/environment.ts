@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  supabaseUrl: 'YOUR_SUPABASE_URL',
-  supabaseKey: 'YOUR_SUPABASE_PUBLISHABLE_KEY',
+  supabaseUrl: 'https://nogxsowxwfalbgkrrmyv.supabase.co',
+  supabaseKey: 'sb_publishable_HeVCjbYZFYuBGfB350d3sg_rGs7BUdh',
 };
