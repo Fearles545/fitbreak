@@ -193,7 +193,7 @@ import { DashboardService } from './dashboard.service';
             </button>
 
             <div class="secondary-actions">
-              <button mat-outlined-button disabled>
+              <button mat-outlined-button (click)="router.navigate(['/strength'])">
                 <mat-icon>fitness_center</mat-icon>
                 Силове
               </button>
