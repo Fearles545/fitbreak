@@ -197,7 +197,7 @@ import { DashboardService } from './dashboard.service';
                 <mat-icon>fitness_center</mat-icon>
                 Силове
               </button>
-              <button mat-outlined-button disabled>
+              <button mat-outlined-button (click)="router.navigate(['/stepper'])">
                 <mat-icon>directions_walk</mat-icon>
                 Степер
               </button>
@@ -213,7 +213,7 @@ export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private audio = inject(AudioService);
   private notifier = inject(BreakNotifierService);
-  private router = inject(Router);
+  protected router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   private now = signal(Date.now());
