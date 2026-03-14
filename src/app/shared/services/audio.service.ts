@@ -9,34 +9,62 @@ export class AudioService {
     if (!this.context) {
       this.context = new AudioContext();
     }
-    // Resume if suspended (browser policy)
     if (this.context.state === 'suspended') {
       this.context.resume();
     }
   }
 
-  /** Break reminder: 800 Hz, 200ms */
+  /** Break reminder: xylophone double hit with harmonics */
   playBreakReminder(): void {
-    this.playTone(800, 0.2);
+    this.init();
+    const ctx = this.context;
+    if (!ctx) return;
+
+    this.playBellHit(ctx, 1200, ctx.currentTime);
+    setTimeout(() => {
+      this.playBellHit(ctx, 1500, ctx.currentTime);
+    }, 300);
   }
 
-  /** Stepper interval signal: 1000 Hz, 150ms × 2 (double beep) */
+  /** Stepper interval signal: sawtooth double buzz */
   playStepperInterval(): void {
-    this.playTone(1000, 0.15, 0);
-    this.playTone(1000, 0.15, 0.25);
+    this.playTone(440, 0.3, 0, 'sawtooth', 0.6);
+    this.playTone(440, 0.3, 0.4, 'sawtooth', 0.6);
   }
 
-  /** Stepper finish: 600 Hz, 1000ms */
+  /** Stepper finish: longer buzz × 3 */
   playStepperFinish(): void {
-    this.playTone(600, 1.0);
+    this.playTone(440, 0.4, 0, 'sawtooth', 0.6);
+    this.playTone(440, 0.4, 0.5, 'sawtooth', 0.6);
+    this.playTone(440, 0.6, 1.0, 'sawtooth', 0.6);
   }
 
-  /** Rest timer end: 700 Hz, 300ms */
+  /** Rest timer end: single xylophone hit */
   playRestTimerEnd(): void {
-    this.playTone(700, 0.3);
+    this.init();
+    const ctx = this.context;
+    if (!ctx) return;
+    this.playBellHit(ctx, 1500, ctx.currentTime);
   }
 
-  private playTone(frequency: number, durationSec: number, delaySec = 0): void {
+  /** Layered sine harmonics for bell/xylophone timbre */
+  private playBellHit(ctx: AudioContext, baseFreq: number, startTime: number): void {
+    [1, 2.76, 5.4].forEach((ratio, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = baseFreq * ratio;
+      const vol = [1.0, 0.4, 0.2][i];
+      gain.gain.setValueAtTime(vol, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + 0.6);
+    });
+  }
+
+  private playTone(frequency: number, durationSec: number, delaySec = 0, waveType: OscillatorType = 'sine', volume = 0.3): void {
     this.init();
     const ctx = this.context;
     if (!ctx) return;
@@ -46,11 +74,10 @@ export class AudioService {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    oscillator.type = 'sine';
+    oscillator.type = waveType;
     oscillator.frequency.value = frequency;
 
-    // Smooth fade out to avoid click
-    gain.gain.setValueAtTime(0.3, startTime);
+    gain.gain.setValueAtTime(volume, startTime);
     gain.gain.exponentialRampToValueAtTime(0.001, startTime + durationSec);
 
     oscillator.connect(gain);
