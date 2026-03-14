@@ -15,3 +15,18 @@ export const authGuard: CanActivateFn = async () => {
 
   return true;
 };
+
+/** Reverse guard: redirects authenticated users away from login */
+export const guestGuard: CanActivateFn = async () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  await auth.waitForInitialAuth();
+
+  if (auth.isAuthenticated()) {
+    router.navigate(['/dashboard']);
+    return false;
+  }
+
+  return true;
+};
