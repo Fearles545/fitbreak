@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { StrengthService } from './strength.service';
+import { StrengthService, WorkoutMode } from './strength.service';
 import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
 import { SupabaseService } from '@shared/services/supabase.service';
 
@@ -71,6 +71,47 @@ import { SupabaseService } from '@shared/services/supabase.service';
       font-size: 0.8rem;
       color: var(--mat-sys-on-surface-variant);
       margin-top: 4px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 8px;
+      margin: 20px 0;
+    }
+
+    .mode-chip {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      background: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .mode-chip.selected {
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+      border-color: var(--mat-sys-primary);
+    }
+
+    .mode-chip-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .mode-chip-desc {
+      font-size: 0.7rem;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .round-indicator {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 12px;
     }
 
     .back-link {
@@ -336,6 +377,19 @@ import { SupabaseService } from '@shared/services/supabase.service';
         @case ('idle') {
           <h1 class="pick-title">🏋️ Силове тренування</h1>
 
+          <div class="mode-toggle">
+            <button class="mode-chip" [class.selected]="selectedMode() === 'classic'"
+                    (click)="selectedMode.set('classic')">
+              <div class="mode-chip-label">Класичний</div>
+              <div class="mode-chip-desc">всі підходи однієї вправи</div>
+            </button>
+            <button class="mode-chip" [class.selected]="selectedMode() === 'circuit'"
+                    (click)="selectedMode.set('circuit')">
+              <div class="mode-chip-label">Коловий</div>
+              <div class="mode-chip-desc">всі вправи по колу</div>
+            </button>
+          </div>
+
           <div class="template-list">
             @for (t of templates(); track t.id) {
               <button class="template-card" (click)="onPickTemplate(t)">
@@ -360,16 +414,24 @@ import { SupabaseService } from '@shared/services/supabase.service';
               </span>
             </div>
 
+            @if (strength.mode() === 'circuit') {
+              <div class="round-indicator">
+                Раунд {{ strength.currentRound() }} / {{ strength.totalRounds() }}
+              </div>
+            }
+
             <mat-progress-bar mode="determinate" [value]="exerciseProgress()" />
 
             <h2 class="exercise-name">{{ es.exercise.name }}</h2>
             <p class="exercise-desc">{{ es.exercise.short_description }}</p>
 
-            <div class="set-tracker">
-              <span class="set-label">Підхід</span>
-              <span class="set-number">{{ strength.currentSetNumber() }}</span>
-              <span class="set-target">/ {{ es.targetSets }}</span>
-            </div>
+            @if (strength.mode() === 'classic') {
+              <div class="set-tracker">
+                <span class="set-label">Підхід</span>
+                <span class="set-number">{{ strength.currentSetNumber() }}</span>
+                <span class="set-target">/ {{ strength.totalSetsForCurrent() }}</span>
+              </div>
+            }
 
             <div class="exercise-params">
               @if (es.targetReps) {
@@ -486,6 +548,7 @@ export class StrengthComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   templates = signal<WorkoutTemplate[]>([]);
+  selectedMode = signal<WorkoutMode>('circuit');
   showTechnique = signal(false);
   selectedMood = signal<string | null>(null);
 
@@ -516,6 +579,12 @@ export class StrengthComponent implements OnInit {
   });
 
   nextPreview = computed(() => {
+    if (this.strength.mode() === 'circuit') {
+      const round = this.strength.currentRound();
+      const total = this.strength.totalRounds();
+      return `Раунд ${round + 1} / ${total}`;
+    }
+
     const es = this.strength.currentExerciseState();
     if (!es) return null;
 
@@ -523,7 +592,6 @@ export class StrengthComponent implements OnInit {
       return `Підхід ${es.completedSets.length + 1} / ${es.targetSets}`;
     }
 
-    // Next exercise
     const idx = this.strength.currentExerciseIndex();
     if (idx < this.strength.exerciseCount() - 1) {
       return 'Наступна вправа';
@@ -555,7 +623,7 @@ export class StrengthComponent implements OnInit {
 
   async onPickTemplate(template: WorkoutTemplate): Promise<void> {
     await this.strength.loadTemplate(template.id);
-    this.strength.start();
+    this.strength.start(this.selectedMode());
     this.showTechnique.set(true);
   }
 

@@ -11,6 +11,7 @@ import type {
 } from '@shared/models/fitbreak.models';
 
 export type StrengthState = 'idle' | 'exercising' | 'resting' | 'finished';
+export type WorkoutMode = 'classic' | 'circuit';
 
 interface ExerciseState {
   exercise: Exercise;
@@ -28,9 +29,12 @@ export class StrengthService {
   private auth = inject(AuthService);
 
   private _state = signal<StrengthState>('idle');
+  private _mode = signal<WorkoutMode>('classic');
   private _template = signal<WorkoutTemplate | null>(null);
   private _exerciseStates = signal<ExerciseState[]>([]);
   private _currentExerciseIndex = signal(0);
+  private _currentRound = signal(1);
+  private _totalRounds = signal(3);
   private _startedAt = signal<string | null>(null);
 
   // Rest timer
@@ -40,8 +44,11 @@ export class StrengthService {
   private lastRestTick = 0;
 
   readonly state = this._state.asReadonly();
+  readonly mode = this._mode.asReadonly();
   readonly template = this._template.asReadonly();
   readonly currentExerciseIndex = this._currentExerciseIndex.asReadonly();
+  readonly currentRound = this._currentRound.asReadonly();
+  readonly totalRounds = this._totalRounds.asReadonly();
 
   readonly currentExerciseState = computed(() => {
     const states = this._exerciseStates();
@@ -52,15 +59,16 @@ export class StrengthService {
   readonly exerciseCount = computed(() => this._exerciseStates().length);
 
   readonly currentSetNumber = computed(() => {
+    if (this._mode() === 'circuit') return this._currentRound();
     const state = this.currentExerciseState();
     if (!state) return 0;
     return state.completedSets.length + 1;
   });
 
-  readonly isLastSet = computed(() => {
+  readonly totalSetsForCurrent = computed(() => {
+    if (this._mode() === 'circuit') return this._totalRounds();
     const state = this.currentExerciseState();
-    if (!state) return false;
-    return state.completedSets.length >= state.targetSets - 1;
+    return state?.targetSets ?? 0;
   });
 
   readonly isLastExercise = computed(() =>
@@ -81,7 +89,6 @@ export class StrengthService {
     const template = templateData as unknown as WorkoutTemplate;
     this._template.set(template);
 
-    // Load exercises referenced by the template
     const exerciseIds = template.exercises.map(e => e.exerciseId);
     const { data: exercisesData, error: exercisesError } = await this.supabase.supabase
       .from('exercises')
@@ -91,7 +98,6 @@ export class StrengthService {
     if (exercisesError) throw exercisesError;
     const exercises = (exercisesData ?? []) as unknown as Exercise[];
 
-    // Build exercise states in template order
     const states: ExerciseState[] = [];
     for (const slot of template.exercises) {
       const exercise = exercises.find(e => e.id === slot.exerciseId);
@@ -109,66 +115,35 @@ export class StrengthService {
     this._exerciseStates.set(states);
   }
 
-  start(): void {
+  start(mode: WorkoutMode): void {
     this.audio.init();
+    this._mode.set(mode);
     this._currentExerciseIndex.set(0);
+    this._currentRound.set(1);
     this._startedAt.set(new Date().toISOString());
+
+    // In circuit mode, totalRounds = targetSets of first exercise (all should be same)
+    if (mode === 'circuit') {
+      const first = this._exerciseStates()[0];
+      this._totalRounds.set(first?.targetSets ?? 3);
+    }
+
     this._state.set('exercising');
   }
 
   completeSet(repsCompleted?: number): void {
-    const states = this._exerciseStates();
-    const idx = this._currentExerciseIndex();
-    const current = states[idx];
-    if (!current) return;
-
-    const setLog: SetLog = {
-      setNumber: current.completedSets.length + 1,
-      completed: true,
-      repsCompleted,
-      durationSec: current.targetDurationSec ?? undefined,
-    };
-
-    // Update exercise state immutably
-    const updated = states.map((s, i) =>
-      i === idx ? { ...s, completedSets: [...s.completedSets, setLog] } : s,
-    );
-    this._exerciseStates.set(updated);
-
-    // If last set of last exercise → finish
-    if (current.completedSets.length + 1 >= current.targetSets && idx >= states.length - 1) {
-      this._state.set('finished');
-      return;
+    if (this._mode() === 'circuit') {
+      this.completeSetCircuit(repsCompleted);
+    } else {
+      this.completeSetClassic(repsCompleted);
     }
-
-    // If last set → advance to next exercise after rest
-    // If not last set → rest then next set
-    this.startRest(current.restSec);
   }
 
   skipExercise(): void {
-    const states = this._exerciseStates();
-    const idx = this._currentExerciseIndex();
-    const current = states[idx];
-    if (!current) return;
-
-    // Mark remaining sets as skipped
-    const remainingSets = current.targetSets - current.completedSets.length;
-    const skippedSets: SetLog[] = Array.from({ length: remainingSets }, (_, i) => ({
-      setNumber: current.completedSets.length + i + 1,
-      completed: false,
-    }));
-
-    const updated = states.map((s, i) =>
-      i === idx ? { ...s, completedSets: [...s.completedSets, ...skippedSets] } : s,
-    );
-    this._exerciseStates.set(updated);
-
-    if (idx >= states.length - 1) {
-      this._state.set('finished');
+    if (this._mode() === 'circuit') {
+      this.skipExerciseCircuit();
     } else {
-      this._currentExerciseIndex.set(idx + 1);
-      this._state.set('exercising');
+      this.skipExerciseClassic();
     }
   }
 
@@ -198,7 +173,6 @@ export class StrengthService {
       sortOrder: i + 1,
       sets: s.completedSets,
       skipped: s.completedSets.every(set => !set.completed),
-      notes: undefined,
     }));
 
     const { error } = await this.supabase.supabase
@@ -222,10 +196,148 @@ export class StrengthService {
   reset(): void {
     this.stopRestTick();
     this._state.set('idle');
+    this._mode.set('classic');
     this._template.set(null);
     this._exerciseStates.set([]);
     this._currentExerciseIndex.set(0);
+    this._currentRound.set(1);
     this._startedAt.set(null);
+  }
+
+  // ── Classic mode: all sets of one exercise, then next ──
+
+  private completeSetClassic(repsCompleted?: number): void {
+    const states = this._exerciseStates();
+    const idx = this._currentExerciseIndex();
+    const current = states[idx];
+    if (!current) return;
+
+    this.addSetLog(idx, true, repsCompleted);
+
+    const setsNow = current.completedSets.length + 1;
+
+    // Last set of last exercise → finish
+    if (setsNow >= current.targetSets && idx >= states.length - 1) {
+      this._state.set('finished');
+      return;
+    }
+
+    this.startRest(current.restSec);
+  }
+
+  private skipExerciseClassic(): void {
+    const states = this._exerciseStates();
+    const idx = this._currentExerciseIndex();
+    const current = states[idx];
+    if (!current) return;
+
+    // Mark remaining sets as skipped
+    const remaining = current.targetSets - current.completedSets.length;
+    for (let i = 0; i < remaining; i++) {
+      this.addSetLog(idx, false);
+    }
+
+    if (idx >= states.length - 1) {
+      this._state.set('finished');
+    } else {
+      this._currentExerciseIndex.set(idx + 1);
+    }
+  }
+
+  private advanceAfterRestClassic(): void {
+    const states = this._exerciseStates();
+    const idx = this._currentExerciseIndex();
+    const current = states[idx];
+
+    if (current && current.completedSets.length >= current.targetSets) {
+      if (idx < states.length - 1) {
+        this._currentExerciseIndex.set(idx + 1);
+      } else {
+        this._state.set('finished');
+        return;
+      }
+    }
+
+    this._state.set('exercising');
+  }
+
+  // ── Circuit mode: one set each exercise, rest between rounds ──
+
+  private completeSetCircuit(repsCompleted?: number): void {
+    const states = this._exerciseStates();
+    const idx = this._currentExerciseIndex();
+    if (!states[idx]) return;
+
+    this.addSetLog(idx, true, repsCompleted);
+
+    const round = this._currentRound();
+    const totalRounds = this._totalRounds();
+
+    if (idx < states.length - 1) {
+      // More exercises in this round → advance immediately (no rest)
+      this._currentExerciseIndex.set(idx + 1);
+      return;
+    }
+
+    // End of round
+    if (round >= totalRounds) {
+      // All rounds done
+      this._state.set('finished');
+      return;
+    }
+
+    // Rest between rounds, then start next round
+    const restSec = states[0]?.restSec ?? 60;
+    this.startRest(restSec);
+  }
+
+  private skipExerciseCircuit(): void {
+    const states = this._exerciseStates();
+    const idx = this._currentExerciseIndex();
+    if (!states[idx]) return;
+
+    this.addSetLog(idx, false);
+
+    const round = this._currentRound();
+    const totalRounds = this._totalRounds();
+
+    if (idx < states.length - 1) {
+      this._currentExerciseIndex.set(idx + 1);
+      return;
+    }
+
+    if (round >= totalRounds) {
+      this._state.set('finished');
+    } else {
+      const restSec = states[0]?.restSec ?? 60;
+      this.startRest(restSec);
+    }
+  }
+
+  private advanceAfterRestCircuit(): void {
+    this._currentRound.update(r => r + 1);
+    this._currentExerciseIndex.set(0);
+    this._state.set('exercising');
+  }
+
+  // ── Shared helpers ──
+
+  private addSetLog(exerciseIdx: number, completed: boolean, repsCompleted?: number): void {
+    const states = this._exerciseStates();
+    const current = states[exerciseIdx];
+    if (!current) return;
+
+    const setLog: SetLog = {
+      setNumber: current.completedSets.length + 1,
+      completed,
+      repsCompleted: completed ? repsCompleted : undefined,
+      durationSec: completed ? (current.targetDurationSec ?? undefined) : undefined,
+    };
+
+    const updated = states.map((s, i) =>
+      i === exerciseIdx ? { ...s, completedSets: [...s.completedSets, setLog] } : s,
+    );
+    this._exerciseStates.set(updated);
   }
 
   private startRest(seconds: number): void {
@@ -263,20 +375,10 @@ export class StrengthService {
   }
 
   private advanceAfterRest(): void {
-    const states = this._exerciseStates();
-    const idx = this._currentExerciseIndex();
-    const current = states[idx];
-
-    // If all sets done for current exercise → next exercise
-    if (current && current.completedSets.length >= current.targetSets) {
-      if (idx < states.length - 1) {
-        this._currentExerciseIndex.set(idx + 1);
-      } else {
-        this._state.set('finished');
-        return;
-      }
+    if (this._mode() === 'circuit') {
+      this.advanceAfterRestCircuit();
+    } else {
+      this.advanceAfterRestClassic();
     }
-
-    this._state.set('exercising');
   }
 }
