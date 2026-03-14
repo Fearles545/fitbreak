@@ -14,6 +14,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
+import { AudioService } from '@shared/services/audio.service';
+import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { AuthService } from '../auth/auth.service';
 import { DashboardService } from './dashboard.service';
 
@@ -220,6 +222,8 @@ import { DashboardService } from './dashboard.service';
 export class DashboardComponent implements OnInit {
   protected dashboard = inject(DashboardService);
   private auth = inject(AuthService);
+  private audio = inject(AudioService);
+  private notifier = inject(BreakNotifierService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -232,6 +236,7 @@ export class DashboardComponent implements OnInit {
     const isActive = this.dashboard.isActive();
     if (isActive && remaining === 0 && !this.breakTriggered) {
       this.breakTriggered = true;
+      this.notifier.trigger();
       this.router.navigate(['/break']);
     }
     // Reset flag when timer is running again (returned from break)
@@ -315,6 +320,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async onStartWorkday(): Promise<void> {
+    this.audio.init(); // Unlock AudioContext on user gesture
     await this.dashboard.startWorkday();
     this.startTick();
   }
