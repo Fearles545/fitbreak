@@ -234,7 +234,6 @@ export class DashboardComponent implements OnInit {
     }
   });
 
-
   firstName = computed(() => {
     const user = this.auth.user();
     const meta = user?.user_metadata;
@@ -307,6 +306,7 @@ export class DashboardComponent implements OnInit {
   }
 
   async onEndWorkday(): Promise<void> {
+    this.notifier.cancel();
     await this.dashboard.endWorkday();
     this.stopTick();
     this.dashboard.loadWeekActivities();
