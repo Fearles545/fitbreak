@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   OnInit,
   signal,
@@ -224,6 +225,20 @@ export class DashboardComponent implements OnInit {
 
   private now = signal(Date.now());
   private intervalId: ReturnType<typeof setInterval> | null = null;
+  private breakTriggered = false;
+
+  private breakTrigger = effect(() => {
+    const remaining = this.remainingSeconds();
+    const isActive = this.dashboard.isActive();
+    if (isActive && remaining === 0 && !this.breakTriggered) {
+      this.breakTriggered = true;
+      this.router.navigate(['/break']);
+    }
+    // Reset flag when timer is running again (returned from break)
+    if (remaining > 0) {
+      this.breakTriggered = false;
+    }
+  });
 
   // Rotation names for display
   private readonly rotationNames: Record<string, { name: string; icon: string; duration: number }> = {
