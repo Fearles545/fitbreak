@@ -83,7 +83,7 @@ Plan C (Dependencies) ──→ Plan D (Material + Theming) ──→ Plan F (Ap
    export const environment = {
      production: true,
      supabaseUrl: 'YOUR_SUPABASE_URL',
-     supabaseKey: 'YOUR_SUPABASE_ANON_KEY',
+     supabaseKey: 'YOUR_SUPABASE_PUBLISHABLE_KEY',
    };
    ```
 3. Create `src/environments/environment.development.ts` with real values (user provides):
@@ -106,7 +106,7 @@ Plan C (Dependencies) ──→ Plan D (Material + Theming) ──→ Plan F (Ap
 - [ ] `npm run build` succeeds
 
 ### Risks / Notes:
-- User needs to provide real Supabase URL + anon key for development env
+- User needs to provide real Supabase URL + publishable key for development env
 - Consider adding `@environments/*` path alias too for clean environment imports
 - The `fileReplacements` config goes in `angular.json` under `build > configurations > development`
 

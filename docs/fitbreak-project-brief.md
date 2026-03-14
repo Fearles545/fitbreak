@@ -247,7 +247,7 @@ SQL schema для Supabase — у файлі `fitbreak-supabase-schema.sql`.
 1. Створити проєкт на supabase.com (Free tier)
 2. Запустити `fitbreak-supabase-schema.sql` в SQL Editor
 3. Увімкнути Email auth в Authentication → Providers
-4. Скопіювати `SUPABASE_URL` та `SUPABASE_ANON_KEY` в Angular environment
+4. Скопіювати `SUPABASE_URL` та `SUPABASE_PUBLISHABLE_KEY` в Angular environment
 
 ---
 
