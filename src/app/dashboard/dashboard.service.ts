@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
+import { toDateKey, getLast7Days } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import type { WorkSession } from '@shared/models/fitbreak.models';
 import type { DayActivity } from '@shared/components/week-calendar/week-calendar.component';
@@ -20,7 +21,7 @@ export class DashboardService {
 
   readonly completedBreaks = computed(() => {
     const breaks = this._session()?.breaks ?? [];
-    return breaks.filter(b => !b.skipped && b.completedAt).length;
+    return breaks.filter((b) => !b.skipped && b.completedAt).length;
   });
 
   readonly totalBreaks = computed(() => {
@@ -49,7 +50,7 @@ export class DashboardService {
   async loadTodaySession(): Promise<void> {
     this._loading.set(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = toDateKey();
       const { data, error } = await this.supabase.supabase
         .from('work_sessions')
         .select('*')
@@ -69,7 +70,7 @@ export class DashboardService {
     if (!user) return;
 
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const today = toDateKey();
 
     const { data, error } = await this.supabase.supabase
       .from('work_sessions')
@@ -109,11 +110,9 @@ export class DashboardService {
     const user = this.auth.user();
     if (!user) return;
 
-    const today = new Date();
-    const sixDaysAgo = new Date(today);
-    sixDaysAgo.setDate(today.getDate() - 6);
-    const startDate = sixDaysAgo.toISOString().split('T')[0];
-    const endDate = today.toISOString().split('T')[0];
+    const days = getLast7Days();
+    const startDate = toDateKey(days[0]);
+    const endDate = toDateKey(days[days.length - 1]);
 
     const [sessionsResult, workoutsResult] = await Promise.all([
       this.supabase.supabase

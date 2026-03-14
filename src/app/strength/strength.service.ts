@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { AudioService } from '@shared/services/audio.service';
+import { toDateKey } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import type {
   Exercise,
@@ -163,7 +164,7 @@ export class StrengthService {
     if (!user || !template) return;
 
     const now = new Date().toISOString();
-    const today = now.split('T')[0];
+    const today = toDateKey();
     const startedAt = this._startedAt() ?? now;
     const durationMin = Math.round((Date.now() - new Date(startedAt).getTime()) / 60000);
 

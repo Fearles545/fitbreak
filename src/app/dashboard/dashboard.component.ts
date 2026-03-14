@@ -17,6 +17,7 @@ import { WeekCalendarComponent } from '@shared/components/week-calendar/week-cal
 import { AudioService } from '@shared/services/audio.service';
 import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
+import { toDisplayDate } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import { DashboardService } from './dashboard.service';
 
@@ -241,13 +242,7 @@ export class DashboardComponent implements OnInit {
     return (fullName as string).split(' ')[0] || 'Друже';
   });
 
-  formattedDate = computed(() => {
-    return new Date().toLocaleDateString('uk-UA', {
-      day: 'numeric',
-      month: 'long',
-      weekday: 'long',
-    });
-  });
+  formattedDate = computed(() => toDisplayDate());
 
   totalSeconds = computed(() => {
     const session = this.dashboard.session();

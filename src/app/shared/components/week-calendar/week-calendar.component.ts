@@ -1,4 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { format } from 'date-fns';
+import { uk } from 'date-fns/locale';
+import { getLast7Days, isToday as checkIsToday, toDateKey } from '@shared/utils/date.utils';
 
 export interface DayActivity {
   date: string;
@@ -120,26 +123,19 @@ export interface DayActivity {
 export class WeekCalendarComponent {
   activities = input<DayActivity[]>([]);
 
-  private readonly dayLabels = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-
   days = computed(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const activityMap = new Map(
       this.activities().map(a => [a.date, a]),
     );
 
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - (6 - i));
-      const dateStr = date.toISOString().split('T')[0];
+    return getLast7Days().map(date => {
+      const dateStr = toDateKey(date);
       const activity = activityMap.get(dateStr);
-      const isToday = i === 6;
 
       return {
         date: dateStr,
-        label: this.dayLabels[date.getDay()],
-        isToday,
+        label: format(date, 'EEEEEE', { locale: uk }),
+        isToday: checkIsToday(date),
         breakCount: activity?.breakCount ?? 0,
         hasStrength: activity?.hasStrength ?? false,
         hasStepper: activity?.hasStepper ?? false,

@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { AudioService } from '@shared/services/audio.service';
 import { WakeLockService } from '@shared/services/wake-lock.service';
+import { toDateKey } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import type { MoodRating } from '@shared/models/fitbreak.models';
 
@@ -116,7 +117,7 @@ export class StepperService {
 
     const result = this.getResult();
     const now = new Date().toISOString();
-    const today = now.split('T')[0];
+    const today = toDateKey();
 
     const { error } = await this.supabase.supabase
       .from('workout_logs')
