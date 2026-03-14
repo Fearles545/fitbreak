@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   OnInit,
   signal,
@@ -350,15 +351,15 @@ type StepperView = 'setup' | 'running' | 'summary';
           <div class="summary-stats">
             <div class="stat">
               <span class="stat-label">Тривалість</span>
-              <span class="stat-value">{{ result()?.actualDurationMin }} хв</span>
+              <span class="stat-value">{{ stepper.result()?.actualDurationMin }} хв</span>
             </div>
             <div class="stat">
               <span class="stat-label">Ціль</span>
-              <span class="stat-value">{{ result()?.targetDurationMin }} хв</span>
+              <span class="stat-value">{{ stepper.result()?.targetDurationMin }} хв</span>
             </div>
             <div class="stat">
               <span class="stat-label">Паузи</span>
-              <span class="stat-value">{{ result()?.pauseCount }}</span>
+              <span class="stat-value">{{ stepper.result()?.pauseCount }}</span>
             </div>
           </div>
 
@@ -387,9 +388,17 @@ export class StepperComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   view = signal<StepperView>('setup');
-  result = signal<{ targetDurationMin: number; actualDurationMin: number; pauseCount: number } | null>(null);
   selectedMood = signal<string | null>(null);
   isDimmed = signal(false);
+
+  // Auto-transition to summary when stepper finishes (timer reaches 0)
+  private autoFinish = effect(() => {
+    if (this.stepper.state() === 'finished' && this.view() === 'running') {
+      this.clearDimTimer();
+      this.isDimmed.set(false);
+      this.view.set('summary');
+    }
+  });
 
   selectedDuration = signal(60);
   selectedInterval = signal(5);
@@ -432,11 +441,8 @@ export class StepperComponent implements OnInit {
   }
 
   async onStop(): Promise<void> {
-    const r = await this.stepper.stop();
-    this.result.set(r);
-    this.view.set('summary');
-    this.clearDimTimer();
-    this.isDimmed.set(false);
+    await this.stepper.stop();
+    // view transitions to 'summary' via autoFinish effect
   }
 
   onTap(): void {

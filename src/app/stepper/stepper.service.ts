@@ -3,6 +3,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
 import { AudioService } from '@shared/services/audio.service';
 import { WakeLockService } from '@shared/services/wake-lock.service';
 import { AuthService } from '../auth/auth.service';
+import type { MoodRating } from '@shared/models/fitbreak.models';
 
 export type StepperState = 'idle' | 'running' | 'paused' | 'finished';
 
@@ -27,6 +28,7 @@ export class StepperService {
   private _totalPauseMs = signal(0);
   private _intervalMin = signal(5);
   private _startedAt = signal<string | null>(null);
+  private _result = signal<StepperResult | null>(null);
 
   private tickId: ReturnType<typeof setInterval> | null = null;
   private lastTickTime = 0;
@@ -34,6 +36,7 @@ export class StepperService {
   private lastIntervalBeepAt = 0;
 
   readonly state = this._state.asReadonly();
+  readonly result = this._result.asReadonly();
   readonly remainingMs = this._remainingMs.asReadonly();
   readonly totalMs = this._totalMs.asReadonly();
   readonly pauseCount = this._pauseCount.asReadonly();
@@ -100,13 +103,14 @@ export class StepperService {
     await this.wakeLock.release();
 
     const result = this.getResult();
+    this._result.set(result);
     this._state.set('finished');
     this.audio.playStepperFinish();
 
     return result;
   }
 
-  async saveWorkoutLog(mood?: string): Promise<void> {
+  async saveWorkoutLog(mood?: MoodRating): Promise<void> {
     const user = this.auth.user();
     if (!user) return;
 
@@ -143,6 +147,7 @@ export class StepperService {
     this._pauseCount.set(0);
     this._totalPauseMs.set(0);
     this._startedAt.set(null);
+    this._result.set(null);
   }
 
   private getResult(): StepperResult {
