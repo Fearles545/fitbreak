@@ -152,8 +152,7 @@ import { DashboardService } from './dashboard.service';
             <h1 class="greeting">Привіт, {{ firstName() }}!</h1>
             <div class="date">{{ formattedDate() }}</div>
           </div>
-          <button mat-icon-button class="logout-btn" (click)="onLogout()"
-                  aria-label="Вийти">
+          <button mat-icon-button class="logout-btn" (click)="onLogout()" aria-label="Вийти">
             <mat-icon>logout</mat-icon>
           </button>
         </div>
@@ -166,13 +165,16 @@ import { DashboardService } from './dashboard.service';
             <app-timer-ring
               [remainingSeconds]="remainingSeconds()"
               [totalSeconds]="totalSeconds()"
-              label="до перерви" />
+              label="до перерви"
+            />
           </div>
 
           @if (nextRotation()) {
             <div class="next-rotation">
               <div class="next-rotation-label">Наступна розминка</div>
-              <div class="next-rotation-name">{{ nextRotation()!.icon }} {{ nextRotation()!.name }}</div>
+              <div class="next-rotation-name">
+                {{ nextRotation()!.icon }} {{ nextRotation()!.name }}
+              </div>
               <div class="next-rotation-meta">~{{ nextRotation()!.duration }} хв</div>
             </div>
           }
@@ -182,23 +184,19 @@ import { DashboardService } from './dashboard.service';
           </div>
 
           <div class="end-day">
-            <button mat-outlined-button (click)="onEndWorkday()">
-              Завершити робочий день
-            </button>
+            <button matButton="outlined" (click)="onEndWorkday()">Завершити робочий день</button>
           </div>
         } @else {
           <!-- Start screen -->
           <div class="actions">
-            <button mat-flat-button (click)="onStartWorkday()">
-              Почати робочий день
-            </button>
+            <button mat-flat-button (click)="onStartWorkday()">Почати робочий день</button>
 
             <div class="secondary-actions">
-              <button mat-outlined-button (click)="router.navigate(['/strength'])">
+              <button matButton="outlined" (click)="router.navigate(['/strength'])">
                 <mat-icon>fitness_center</mat-icon>
                 Силове
               </button>
-              <button mat-outlined-button (click)="router.navigate(['/stepper'])">
+              <button matButton="outlined" (click)="router.navigate(['/stepper'])">
                 <mat-icon>directions_walk</mat-icon>
                 Степер
               </button>

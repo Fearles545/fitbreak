@@ -188,8 +188,13 @@ type StepperView = 'setup' | 'running' | 'summary';
     }
 
     @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
     }
 
     /* ── Summary ── */
@@ -279,8 +284,11 @@ type StepperView = 'setup' | 'running' | 'summary';
               <div class="config-label">Тривалість</div>
               <div class="config-options">
                 @for (d of durationOptions; track d) {
-                  <button class="config-chip" [class.selected]="selectedDuration() === d"
-                          (click)="selectedDuration.set(d)">
+                  <button
+                    class="config-chip"
+                    [class.selected]="selectedDuration() === d"
+                    (click)="selectedDuration.set(d)"
+                  >
                     {{ d }} хв
                   </button>
                 }
@@ -291,8 +299,11 @@ type StepperView = 'setup' | 'running' | 'summary';
               <div class="config-label">Сигнал кожні</div>
               <div class="config-options">
                 @for (i of intervalOptions; track i) {
-                  <button class="config-chip" [class.selected]="selectedInterval() === i"
-                          (click)="selectedInterval.set(i)">
+                  <button
+                    class="config-chip"
+                    [class.selected]="selectedInterval() === i"
+                    (click)="selectedInterval.set(i)"
+                  >
                     {{ i }} хв
                   </button>
                 }
@@ -301,15 +312,14 @@ type StepperView = 'setup' | 'running' | 'summary';
 
             <div class="setup-actions">
               <button mat-flat-button (click)="onStart()">Почати</button>
-              <button mat-outlined-button (click)="onBack()">Назад</button>
+              <button matButton="outlined" (click)="onBack()">Назад</button>
             </div>
           </div>
         </div>
       }
 
       @case ('running') {
-        <div class="running" [class.dimmed]="isDimmed()"
-             (click)="onTap()" (touchstart)="onTap()">
+        <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (touchstart)="onTap()">
           <div class="big-timer">{{ stepper.remainingFormatted() }}</div>
           <div class="timer-label">залишилось</div>
 
@@ -326,18 +336,27 @@ type StepperView = 'setup' | 'running' | 'summary';
 
           <div class="running-controls">
             @if (stepper.state() === 'running') {
-              <button class="control-btn" (click)="onPause(); $event.stopPropagation()"
-                      aria-label="Пауза">
+              <button
+                class="control-btn"
+                (click)="onPause(); $event.stopPropagation()"
+                aria-label="Пауза"
+              >
                 <mat-icon>pause</mat-icon>
               </button>
             } @else {
-              <button class="control-btn" (click)="onResume(); $event.stopPropagation()"
-                      aria-label="Продовжити">
+              <button
+                class="control-btn"
+                (click)="onResume(); $event.stopPropagation()"
+                aria-label="Продовжити"
+              >
                 <mat-icon>play_arrow</mat-icon>
               </button>
             }
-            <button class="control-btn stop-btn" (click)="onStop(); $event.stopPropagation()"
-                    aria-label="Зупинити">
+            <button
+              class="control-btn stop-btn"
+              (click)="onStop(); $event.stopPropagation()"
+              aria-label="Зупинити"
+            >
               <mat-icon>stop</mat-icon>
             </button>
           </div>
@@ -367,9 +386,12 @@ type StepperView = 'setup' | 'running' | 'summary';
             <div class="mood-label">Як ти себе почуваєш?</div>
             <div class="mood-options">
               @for (m of moodOptions; track m.value) {
-                <button class="mood-btn" [class.selected]="selectedMood() === m.value"
-                        (click)="selectedMood.set(m.value)"
-                        [attr.aria-label]="m.label">
+                <button
+                  class="mood-btn"
+                  [class.selected]="selectedMood() === m.value"
+                  (click)="selectedMood.set(m.value)"
+                  [attr.aria-label]="m.label"
+                >
                   {{ m.emoji }}
                 </button>
               }

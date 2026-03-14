@@ -144,7 +144,7 @@ import { AuthService } from './auth.service';
               <div class="divider">або</div>
 
               <button
-                mat-outlined-button
+                matButton="outlined"
                 type="button"
                 class="google-btn"
                 (click)="onGoogleLogin()"

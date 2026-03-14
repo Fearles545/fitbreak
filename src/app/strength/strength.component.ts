@@ -378,13 +378,19 @@ import { SupabaseService } from '@shared/services/supabase.service';
           <h1 class="pick-title">🏋️ Силове тренування</h1>
 
           <div class="mode-toggle">
-            <button class="mode-chip" [class.selected]="selectedMode() === 'classic'"
-                    (click)="selectedMode.set('classic')">
+            <button
+              class="mode-chip"
+              [class.selected]="selectedMode() === 'classic'"
+              (click)="selectedMode.set('classic')"
+            >
               <div class="mode-chip-label">Класичний</div>
               <div class="mode-chip-desc">всі підходи однієї вправи</div>
             </button>
-            <button class="mode-chip" [class.selected]="selectedMode() === 'circuit'"
-                    (click)="selectedMode.set('circuit')">
+            <button
+              class="mode-chip"
+              [class.selected]="selectedMode() === 'circuit'"
+              (click)="selectedMode.set('circuit')"
+            >
               <div class="mode-chip-label">Коловий</div>
               <div class="mode-chip-desc">всі вправи по колу</div>
             </button>
@@ -394,7 +400,9 @@ import { SupabaseService } from '@shared/services/supabase.service';
             @for (t of templates(); track t.id) {
               <button class="template-card" (click)="onPickTemplate(t)">
                 <div class="template-name">{{ t.icon }} {{ t.name }}</div>
-                <div class="template-meta">{{ t.exercises.length }} вправ · ~{{ t.estimated_duration_min }} хв</div>
+                <div class="template-meta">
+                  {{ t.exercises.length }} вправ · ~{{ t.estimated_duration_min }} хв
+                </div>
               </button>
             }
           </div>
@@ -410,7 +418,8 @@ import { SupabaseService } from '@shared/services/supabase.service';
           @if (strength.currentExerciseState(); as es) {
             <div class="exec-header">
               <span class="exec-title">
-                {{ strength.template()?.name }} — вправа {{ strength.currentExerciseIndex() + 1 }} з {{ strength.exerciseCount() }}
+                {{ strength.template()?.name }} — вправа {{ strength.currentExerciseIndex() + 1 }} з
+                {{ strength.exerciseCount() }}
               </span>
             </div>
 
@@ -468,9 +477,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
             </div>
 
             <div class="exec-actions">
-              <button mat-flat-button (click)="onCompleteSet()">
-                Готово
-              </button>
+              <button mat-flat-button (click)="onCompleteSet()">Готово</button>
               <div class="skip-link">
                 <button class="skip-btn" (click)="strength.skipExercise()">
                   Пропустити вправу
@@ -496,12 +503,8 @@ import { SupabaseService } from '@shared/services/supabase.service';
             </div>
 
             <div class="rest-actions">
-              <button mat-outlined-button (click)="strength.extendRest(30)">
-                +30 сек
-              </button>
-              <button mat-flat-button (click)="strength.skipRest()">
-                Пропустити відпочинок
-              </button>
+              <button matButton="outlined" (click)="strength.extendRest(30)">+30 сек</button>
+              <button mat-flat-button (click)="strength.skipRest()">Пропустити відпочинок</button>
             </div>
           </div>
         }
@@ -525,9 +528,12 @@ import { SupabaseService } from '@shared/services/supabase.service';
               <div class="mood-label">Як ти себе почуваєш?</div>
               <div class="mood-options">
                 @for (m of moodOptions; track m.value) {
-                  <button class="mood-btn" [class.selected]="selectedMood() === m.value"
-                          (click)="selectedMood.set(m.value)"
-                          [attr.aria-label]="m.label">
+                  <button
+                    class="mood-btn"
+                    [class.selected]="selectedMood() === m.value"
+                    (click)="selectedMood.set(m.value)"
+                    [attr.aria-label]="m.label"
+                  >
                     {{ m.emoji }}
                   </button>
                 }

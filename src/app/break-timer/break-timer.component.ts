@@ -300,7 +300,9 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color 0.15s, transform 0.15s;
+      transition:
+        border-color 0.15s,
+        transform 0.15s;
     }
 
     .mood-btn:hover {
@@ -322,17 +324,15 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
             <div class="suggested-card">
               <div class="suggested-icon">{{ option.icon }}</div>
               <div class="suggested-name">{{ option.name }}</div>
-              <div class="suggested-meta">~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ</div>
+              <div class="suggested-meta">
+                ~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ
+              </div>
             </div>
           }
 
           <div class="prompt-actions">
-            <button mat-flat-button (click)="onStartSuggested()">
-              Почати розминку
-            </button>
-            <button mat-outlined-button (click)="onSkip()">
-              Пропустити
-            </button>
+            <button mat-flat-button (click)="onStartSuggested()">Почати розминку</button>
+            <button matButton="outlined" (click)="onSkip()">Пропустити</button>
           </div>
 
           <div class="choose-another">
@@ -349,7 +349,9 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
                     <span class="rotation-option-icon">{{ option.icon }}</span>
                     <div class="rotation-option-info">
                       <div class="rotation-option-name">{{ option.name }}</div>
-                      <div class="rotation-option-meta">~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ</div>
+                      <div class="rotation-option-meta">
+                        ~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ
+                      </div>
                     </div>
                   </button>
                 }
@@ -365,7 +367,8 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
                 <mat-icon>arrow_back</mat-icon>
               </button>
               <span class="exec-progress-text">
-                Вправа {{ breakService.currentExerciseIndex() + 1 }} з {{ breakService.exerciseCount() }}
+                Вправа {{ breakService.currentExerciseIndex() + 1 }} з
+                {{ breakService.exerciseCount() }}
               </span>
             </div>
 
@@ -396,9 +399,7 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
             </div>
 
             @if (exercise.is_bilateral) {
-              <div class="bilateral-indicator">
-                ↔ Виконай на обидві сторони
-              </div>
+              <div class="bilateral-indicator">↔ Виконай на обидві сторони</div>
             }
 
             <div class="technique">
@@ -442,17 +443,18 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 
             <div class="mood-options">
               @for (m of moodOptions; track m.value) {
-                <button class="mood-btn" [class.selected]="selectedMood() === m.value"
-                        (click)="selectedMood.set(m.value)"
-                        [attr.aria-label]="m.label">
+                <button
+                  class="mood-btn"
+                  [class.selected]="selectedMood() === m.value"
+                  (click)="selectedMood.set(m.value)"
+                  [attr.aria-label]="m.label"
+                >
                   {{ m.emoji }}
                 </button>
               }
             </div>
 
-            <button mat-flat-button (click)="onFinish()">
-              Повернутись до роботи
-            </button>
+            <button mat-flat-button (click)="onFinish()">Повернутись до роботи</button>
           </div>
         }
       }
@@ -476,7 +478,7 @@ export class BreakTimerComponent implements OnInit {
   ];
 
   suggestedOption = computed(() => {
-    return this.breakService.rotationOptions().find(o => o.isSuggested) ?? null;
+    return this.breakService.rotationOptions().find((o) => o.isSuggested) ?? null;
   });
 
   progressPercent = computed(() => {
