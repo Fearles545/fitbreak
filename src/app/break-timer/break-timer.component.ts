@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { BreakNotifierService } from '@shared/services/break-notifier.service';
+import { WorkdayService } from '@shared/services/workday.service';
 import { BreakTimerService } from './break-timer.service';
 import type { MicroBreakRotation, MoodRating } from '@shared/models/fitbreak.models';
 
@@ -463,7 +463,7 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 })
 export class BreakTimerComponent implements OnInit {
   protected breakService = inject(BreakTimerService);
-  private notifier = inject(BreakNotifierService);
+  private workday = inject(WorkdayService);
   private router = inject(Router);
 
   mode = signal<BreakMode>('prompt');
@@ -492,20 +492,20 @@ export class BreakTimerComponent implements OnInit {
   }
 
   async onStartSuggested(): Promise<void> {
-    this.notifier.cancel();
+    this.workday.onBreakStarted();
     const suggested = this.breakService.suggestedRotation();
     await this.breakService.startBreak(suggested);
     this.mode.set('execution');
   }
 
   async onPickRotation(rotation: MicroBreakRotation): Promise<void> {
-    this.notifier.cancel();
+    this.workday.onBreakStarted();
     await this.breakService.startBreak(rotation);
     this.mode.set('execution');
   }
 
   async onSkip(): Promise<void> {
-    this.notifier.cancel();
+    this.workday.onBreakStarted(); // Cancel notifier immediately, don't wait for DB
     await this.breakService.skipBreak();
     this.router.navigate(['/dashboard']);
   }
@@ -524,7 +524,6 @@ export class BreakTimerComponent implements OnInit {
   }
 
   async onFinish(): Promise<void> {
-    this.notifier.cancel();
     await this.breakService.completeBreak((this.selectedMood() as MoodRating) ?? undefined);
     this.router.navigate(['/dashboard']);
   }

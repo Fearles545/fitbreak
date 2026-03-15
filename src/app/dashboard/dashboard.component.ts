@@ -2,11 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
-  effect,
   inject,
   OnInit,
-  signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,7 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
 import { AudioService } from '@shared/services/audio.service';
-import { BreakNotifierService } from '@shared/services/break-notifier.service';
+import { WorkdayService } from '@shared/services/workday.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { toDisplayDate } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
@@ -209,29 +206,10 @@ import { DashboardService } from './dashboard.service';
 })
 export class DashboardComponent implements OnInit {
   protected dashboard = inject(DashboardService);
+  protected workday = inject(WorkdayService);
   private auth = inject(AuthService);
   private audio = inject(AudioService);
-  private notifier = inject(BreakNotifierService);
   protected router = inject(Router);
-  private destroyRef = inject(DestroyRef);
-
-  private now = signal(Date.now());
-  private intervalId: ReturnType<typeof setInterval> | null = null;
-  private breakTriggered = false;
-
-  private breakTrigger = effect(() => {
-    const remaining = this.remainingSeconds();
-    const isActive = this.dashboard.isActive();
-    if (isActive && remaining === 0 && !this.breakTriggered) {
-      this.breakTriggered = true;
-      this.notifier.trigger();
-      this.router.navigate(['/break']);
-    }
-    // Reset flag when timer is running again (returned from break)
-    if (remaining > 0) {
-      this.breakTriggered = false;
-    }
-  });
 
   firstName = computed(() => {
     const user = this.auth.user();
@@ -247,12 +225,7 @@ export class DashboardComponent implements OnInit {
     return (session?.break_interval_min ?? 45) * 60;
   });
 
-  remainingSeconds = computed(() => {
-    const nextBreak = this.dashboard.nextBreakAt();
-    if (!nextBreak) return 0;
-    const diff = Math.floor((nextBreak - this.now()) / 1000);
-    return Math.max(0, diff);
-  });
+  remainingSeconds = computed(() => this.workday.remainingSeconds());
 
   nextRotation = computed(() => {
     const session = this.dashboard.session();
@@ -267,60 +240,31 @@ export class DashboardComponent implements OnInit {
     const session = this.dashboard.session();
     if (!session) return '';
     const start = new Date(session.started_at).getTime();
-    const elapsed = Math.floor((this.now() - start) / 1000 / 60);
+    const elapsed = Math.floor((this.workday.now() - start) / 1000 / 60);
     const hours = Math.floor(elapsed / 60);
     const mins = elapsed % 60;
     if (hours > 0) return `${hours}г ${mins}хв`;
     return `${mins} хв`;
   });
 
-  ngOnInit(): void {
-    this.dashboard.loadTodaySession();
+  async ngOnInit(): Promise<void> {
+    await this.dashboard.refreshSession();
+    this.workday.init();
     this.dashboard.loadWeekActivities();
-    this.startTick();
-
-    // Recalculate on tab return
-    const onVisibility = () => {
-      if (!document.hidden) {
-        this.now.set(Date.now());
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    this.destroyRef.onDestroy(() => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      this.stopTick();
-    });
   }
 
   async onStartWorkday(): Promise<void> {
-    this.audio.init(); // Unlock AudioContext on user gesture
-    await this.dashboard.startWorkday();
-    this.startTick();
+    this.audio.init();
+    await this.workday.startWorkday();
   }
 
   async onEndWorkday(): Promise<void> {
-    this.notifier.cancel();
-    await this.dashboard.endWorkday();
-    this.stopTick();
+    await this.workday.endWorkday();
     this.dashboard.loadWeekActivities();
   }
 
   async onLogout(): Promise<void> {
     await this.auth.signOut();
     this.router.navigate(['/login']);
-  }
-
-  private startTick(): void {
-    if (this.intervalId) return;
-    this.intervalId = setInterval(() => {
-      this.now.set(Date.now());
-    }, 1000);
-  }
-
-  private stopTick(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
   }
 }

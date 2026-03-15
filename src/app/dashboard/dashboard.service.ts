@@ -28,26 +28,7 @@ export class DashboardService {
     return (this._session()?.breaks ?? []).length;
   });
 
-  readonly nextBreakAt = computed(() => {
-    const session = this._session();
-    if (!session || session.status !== 'active') return null;
-
-    const intervalMs = session.break_interval_min * 60 * 1000;
-    const breaks = session.breaks;
-
-    if (breaks.length === 0) {
-      // First break: started_at + interval
-      return new Date(session.started_at).getTime() + intervalMs;
-    }
-
-    // Next break: computed from the last break's resolution time
-    const lastBreak = breaks[breaks.length - 1];
-    // Use completedAt (finished break) or scheduledAt (skipped break) as the anchor
-    const anchor = lastBreak.completedAt ?? lastBreak.scheduledAt;
-    return new Date(anchor).getTime() + intervalMs;
-  });
-
-  async loadTodaySession(): Promise<void> {
+  async refreshSession(): Promise<void> {
     this._loading.set(true);
     try {
       const today = toDateKey();
@@ -71,6 +52,7 @@ export class DashboardService {
 
     const now = new Date();
     const today = toDateKey();
+    const breakIntervalMin = 45;
 
     const { data, error } = await this.supabase.supabase
       .from('work_sessions')
@@ -79,9 +61,10 @@ export class DashboardService {
         date: today,
         started_at: now.toISOString(),
         status: 'active',
-        break_interval_min: 45,
+        break_interval_min: breakIntervalMin,
         breaks: [],
         current_rotation_index: 0,
+        next_break_at: new Date(now.getTime() + breakIntervalMin * 60_000).toISOString(),
       })
       .select()
       .single();

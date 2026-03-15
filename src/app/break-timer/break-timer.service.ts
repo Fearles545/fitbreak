@@ -1,5 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
+import { WorkdayService } from '@shared/services/workday.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { DashboardService } from '../dashboard/dashboard.service';
 import type {
@@ -23,6 +24,7 @@ export interface RotationOption {
 export class BreakTimerService {
   private supabase = inject(SupabaseService);
   private dashboard = inject(DashboardService);
+  private workday = inject(WorkdayService);
 
   private _exercises = signal<Exercise[]>([]);
   private _currentExerciseIndex = signal(0);
@@ -102,27 +104,29 @@ export class BreakTimerService {
     const session = this.dashboard.session();
     if (!session) return;
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
       rotationType: this.suggestedRotation(),
-      scheduledAt: now,
+      scheduledAt: now.toISOString(),
       skipped: true,
     };
 
     const breaks = [...session.breaks, entry];
     const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
+    const intervalMs = session.break_interval_min * 60 * 1000;
 
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
         breaks: breaks as any,
         current_rotation_index: nextIdx,
+        next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
       })
       .eq('id', session.id);
 
     if (error) throw error;
-    await this.dashboard.loadTodaySession();
+    await this.workday.onBreakSkipped();
   }
 
   nextExercise(): boolean {
@@ -141,30 +145,32 @@ export class BreakTimerService {
     const rotation = this._activeRotation();
     if (!rotation) return;
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
       rotationType: rotation,
-      scheduledAt: this._startedAt() ?? now,
-      startedAt: this._startedAt() ?? now,
-      completedAt: now,
+      scheduledAt: this._startedAt() ?? now.toISOString(),
+      startedAt: this._startedAt() ?? now.toISOString(),
+      completedAt: now.toISOString(),
       skipped: false,
       mood,
     };
 
     const breaks = [...session.breaks, entry];
     const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
+    const intervalMs = session.break_interval_min * 60 * 1000;
 
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
         breaks: breaks as any,
         current_rotation_index: nextIdx,
+        next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
       })
       .eq('id', session.id);
 
     if (error) throw error;
-    await this.dashboard.loadTodaySession();
+    await this.workday.onBreakCompleted();
     this.reset();
   }
 
