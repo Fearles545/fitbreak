@@ -145,6 +145,10 @@ import { DashboardService } from './dashboard.service';
       text-align: center;
     }
 
+    .session-actions + .secondary-actions {
+      margin-top: 16px;
+    }
+
     .end-day {
       margin-top: 12px;
       text-align: center;
@@ -221,16 +225,18 @@ import { DashboardService } from './dashboard.service';
             }
           </div>
 
-          <div class="secondary-actions">
-            <button matButton="outlined" (click)="router.navigate(['/strength'])">
-              <mat-icon>fitness_center</mat-icon>
-              Силове
-            </button>
-            <button matButton="outlined" (click)="router.navigate(['/stepper'])">
-              <mat-icon>directions_walk</mat-icon>
-              Степер
-            </button>
-          </div>
+          @if (!isPaused()) {
+            <div class="secondary-actions">
+              <button matButton="outlined" (click)="router.navigate(['/strength'])">
+                <mat-icon>fitness_center</mat-icon>
+                Силове
+              </button>
+              <button matButton="outlined" (click)="router.navigate(['/stepper'])">
+                <mat-icon>directions_walk</mat-icon>
+                Степер
+              </button>
+            </div>
+          }
 
           <div class="end-day">
             <button matButton="text" (click)="onEndWorkday()">Завершити робочий день</button>

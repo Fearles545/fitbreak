@@ -98,10 +98,11 @@ export class WorkdayService {
       const now = new Date().toISOString();
       const pauseEntry: PauseEntry = { pausedAt: session.paused_at, resumedAt: now };
       const pauses = [...session.pauses, pauseEntry];
-      await this.supabase.supabase
+      const { error: pauseError } = await this.supabase.supabase
         .from('work_sessions')
         .update({ paused_at: null, pauses: pauses as any })
         .eq('id', session.id);
+      if (pauseError) throw pauseError;
     }
 
     await this.dashboard.endWorkday();
