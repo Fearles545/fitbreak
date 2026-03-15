@@ -98,11 +98,16 @@ create table public.work_sessions (
   started_at timestamptz not null,
   ended_at timestamptz,
   status text not null default 'active'
-    check (status in ('active', 'completed')),
+    check (status in ('active', 'paused', 'completed')),
 
   break_interval_min int not null default 45,
   breaks jsonb not null default '[]',         -- BreakEntry[]
   current_rotation_index int default 0,
+
+  -- Пауза
+  paused_at timestamptz,
+  pauses jsonb not null default '[]',          -- PauseEntry[]
+  next_break_at timestamptz,
 
   created_at timestamptz default now(),
   updated_at timestamptz default now()

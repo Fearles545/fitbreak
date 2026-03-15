@@ -22,7 +22,8 @@ Features shipped, in dependency order:
 Features scoped out during implementation — worth revisiting.
 
 ### UX Enhancements
-- **Pause workday** — pause/resume a started work session (stop break timer without ending the day). Useful for lunch, meetings, stepping away
+- **Pause workday** — pause/resume a started work session (stop break timer without ending the day). Useful for lunch, meetings, stepping away. Pauses tracked as JSONB array with timestamps for timeline visualization
+- **Day timeline** — visual diagram of the workday: work blocks, break rotations, pauses, strength/stepper workouts with clickable details. All data already available (breaks, pauses, workout_logs have timestamps)
 - **Day summary screen** — show stats (breaks taken, duration, mood trend) after ending workday instead of just returning to start screen
 - **Collapsible technique after 5+ completions** — auto-collapse the visual/technique block for exercises the user has done many times
 - **Rotation advance configurability** — setting for "always advance rotation index" vs "only advance if the suggested rotation was used"

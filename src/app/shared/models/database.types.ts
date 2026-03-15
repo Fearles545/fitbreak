@@ -158,6 +158,9 @@ export type Database = {
           date: string
           ended_at: string | null
           id: string
+          next_break_at: string | null
+          paused_at: string | null
+          pauses: Json
           started_at: string
           status: string
           updated_at: string | null
@@ -171,6 +174,9 @@ export type Database = {
           date: string
           ended_at?: string | null
           id?: string
+          next_break_at?: string | null
+          paused_at?: string | null
+          pauses?: Json
           started_at: string
           status?: string
           updated_at?: string | null
@@ -184,6 +190,9 @@ export type Database = {
           date?: string
           ended_at?: string | null
           id?: string
+          next_break_at?: string | null
+          paused_at?: string | null
+          pauses?: Json
           started_at?: string
           status?: string
           updated_at?: string | null

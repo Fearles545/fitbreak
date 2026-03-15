@@ -186,6 +186,12 @@ export interface WorkoutTemplate {
 // 3. WORK SESSION — Робочий день з мікроперервами
 // ────────────────────────────────────────────────────────────
 
+/** Запис паузи робочого дня */
+export interface PauseEntry {
+  pausedAt: string;                     // коли поставив на паузу
+  resumedAt?: string;                   // коли відновив (undefined = ще на паузі)
+}
+
 /** Одна перерва в робочому дні */
 export interface BreakEntry {
   rotationIndex: number;                // 0-3 (яка ротація)
@@ -196,6 +202,9 @@ export interface BreakEntry {
   skipped: boolean;
   replacedWith?: MicroBreakRotation;    // якщо обрав "Іншу"
   mood?: MoodRating;
+  extended?: boolean;                   // чи продовжив роботу замість перерви
+  extendedByMin?: number;              // на скільки хвилин продовжив
+  reason?: string;                      // причина продовження (опційно)
 }
 
 /**
@@ -211,11 +220,16 @@ export interface WorkSession {
   date: string;                         // "2026-03-12"
   startedAt: string;                    // "Почати робочий день" timestamp
   endedAt?: string;                     // "Завершити день" timestamp
-  status: 'active' | 'completed';
+  status: 'active' | 'paused' | 'completed';
 
   breakIntervalMin: number;             // 30 | 45 | 60
   breaks: BreakEntry[];
   currentRotationIndex: number;         // наступна ротація (0-3, циклічно)
+
+  // Пауза
+  pausedAt?: string;                    // коли поставив на паузу (null = не на паузі)
+  pauses: PauseEntry[];                 // історія всіх пауз
+  nextBreakAt?: string;                 // коли наступна перерва (обчислюється)
 
   createdAt: string;
   updatedAt: string;

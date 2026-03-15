@@ -23,7 +23,7 @@ export type MoodRating = 'great' | 'good' | 'okay' | 'bad';
 
 export type SignalType = 'beep' | 'voice' | 'vibration';
 
-export type SessionStatus = 'active' | 'completed';
+export type SessionStatus = 'active' | 'paused' | 'completed';
 
 // ────────────────────────────────────────────────────────────
 // JSONB sub-types (stored inside DB JSONB columns)
@@ -70,6 +70,12 @@ export interface StepperConfig {
   signalType: SignalType;
 }
 
+/** work_sessions.pauses — JSONB array */
+export interface PauseEntry {
+  pausedAt: string;
+  resumedAt?: string;
+}
+
 /** work_sessions.breaks — JSONB array */
 export interface BreakEntry {
   rotationIndex: number;
@@ -80,6 +86,9 @@ export interface BreakEntry {
   skipped: boolean;
   replacedWith?: MicroBreakRotation;
   mood?: MoodRating;
+  extended?: boolean;
+  extendedByMin?: number;
+  reason?: string;
 }
 
 /** workout_logs.exercises — JSONB array (strength workouts) */
@@ -127,9 +136,10 @@ export interface WorkoutTemplate extends Omit<Tables<'workout_templates'>, 'exer
   stepper_config: StepperConfig | null;
 }
 
-export interface WorkSession extends Omit<Tables<'work_sessions'>, 'breaks' | 'status'> {
+export interface WorkSession extends Omit<Tables<'work_sessions'>, 'breaks' | 'status' | 'pauses'> {
   status: SessionStatus;
   breaks: BreakEntry[];
+  pauses: PauseEntry[];
 }
 
 export interface WorkoutLog extends Omit<Tables<'workout_logs'>, 'exercises' | 'stepper_log' | 'workout_type' | 'mood'> {
