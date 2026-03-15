@@ -77,9 +77,12 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
       margin-top: 24px;
     }
 
-    .choose-another {
-      text-align: center;
-      margin-top: 8px;
+    .prompt-links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
     }
 
     .choose-link {
@@ -89,6 +92,69 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
       background: none;
       border: none;
       text-decoration: underline;
+    }
+
+    .link-divider {
+      color: var(--mat-sys-outline-variant);
+      font-size: 0.8rem;
+    }
+
+    .extend-section {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: var(--mat-sys-surface-container);
+    }
+
+    .extend-label {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 12px;
+    }
+
+    .duration-chips {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .duration-chip {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 20px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      background: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .duration-chip.selected {
+      background: var(--mat-sys-primary-container);
+      border-color: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary-container);
+      font-weight: 500;
+    }
+
+    .extend-reason {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      background: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+
+    .extend-reason:focus {
+      outline: none;
+      border-color: var(--mat-sys-primary);
+    }
+
+    .extend-reason::placeholder {
+      color: var(--mat-sys-on-surface-variant);
     }
 
     .rotation-options {
@@ -332,13 +398,46 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 
           <div class="prompt-actions">
             <button mat-flat-button (click)="onStartSuggested()">Почати розминку</button>
-            <button matButton="outlined" (click)="onSkip()">Пропустити</button>
+            <button matButton="outlined" (click)="showExtend.set(!showExtend())">
+              {{ showExtend() ? 'Сховати' : 'Потрібно ще працювати' }}
+            </button>
           </div>
 
-          <div class="choose-another">
+          @if (showExtend()) {
+            <div class="extend-section">
+              <div class="extend-label">На скільки продовжити?</div>
+              <div class="duration-chips">
+                @for (opt of extendOptions; track opt.min) {
+                  <button
+                    class="duration-chip"
+                    [class.selected]="selectedExtendMin() === opt.min"
+                    (click)="selectedExtendMin.set(opt.min)"
+                  >
+                    {{ opt.label }}
+                  </button>
+                }
+              </div>
+              <input
+                class="extend-reason"
+                placeholder="Причина (необов'язково)"
+                aria-label="Причина продовження"
+                [value]="extendReason()"
+                (input)="onReasonInput($event)"
+              />
+              <button mat-flat-button [disabled]="!selectedExtendMin()" (click)="onExtendWork()">
+                Продовжити роботу
+              </button>
+            </div>
+          }
+
+          <div class="prompt-links">
             <button class="choose-link" (click)="showOptions.set(!showOptions())">
               {{ showOptions() ? 'Сховати' : 'Обрати іншу' }}
             </button>
+            <span class="link-divider">·</span>
+            <button class="choose-link" (click)="onSkip()">Пропустити</button>
+            <span class="link-divider">·</span>
+            <button class="choose-link" (click)="onEndDay()">Завершити день</button>
           </div>
 
           @if (showOptions()) {
@@ -468,7 +567,16 @@ export class BreakTimerComponent implements OnInit {
 
   mode = signal<BreakMode>('prompt');
   showOptions = signal(false);
+  showExtend = signal(false);
+  selectedExtendMin = signal<number | null>(null);
+  extendReason = signal('');
   selectedMood = signal<string | null>(null);
+
+  readonly extendOptions = [
+    { min: 10, label: '10 хв' },
+    { min: 15, label: '15 хв' },
+    { min: 30, label: '30 хв' },
+  ];
 
   readonly moodOptions = [
     { value: 'great', emoji: '😊', label: 'Чудово' },
@@ -504,10 +612,27 @@ export class BreakTimerComponent implements OnInit {
     this.mode.set('execution');
   }
 
+  async onExtendWork(): Promise<void> {
+    const minutes = this.selectedExtendMin();
+    if (!minutes) return;
+    this.workday.onBreakStarted();
+    await this.breakService.extendWork(minutes, this.extendReason() || undefined);
+    this.router.navigate(['/dashboard']);
+  }
+
   async onSkip(): Promise<void> {
-    this.workday.onBreakStarted(); // Cancel notifier immediately, don't wait for DB
+    this.workday.onBreakStarted();
     await this.breakService.skipBreak();
     this.router.navigate(['/dashboard']);
+  }
+
+  async onEndDay(): Promise<void> {
+    await this.workday.endWorkday();
+    this.router.navigate(['/dashboard']);
+  }
+
+  onReasonInput(event: Event): void {
+    this.extendReason.set((event.target as HTMLInputElement).value);
   }
 
   onBackToPrompt(): void {

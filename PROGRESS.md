@@ -34,6 +34,11 @@
 - [x] Template: paused indicator with pulse animation, pause/resume buttons, timer ring faded when paused
 - [x] End-day button available in both active and paused states
 - [x] Build passes
-## Plan D: Break Prompt UX Improvements — TODO
+## Plan D: Break Prompt UX Improvements — DONE
+- [x] extendWork() in BreakTimerService: logs extended BreakEntry, sets custom next_break_at, no rotation advance
+- [x] "Потрібно ще працювати" expand with duration chips (10/15/30 хв) + optional reason input
+- [x] "Завершити день" link on break prompt, reuses workday.endWorkday()
+- [x] Reordered: primary (start) → secondary (extend) → tertiary links (choose another · skip · end day)
+- [x] Build passes
 ## Plan E: Stepper / Strength Integration — TODO
 ## Plan F: Auto-complete Stale Sessions — TODO

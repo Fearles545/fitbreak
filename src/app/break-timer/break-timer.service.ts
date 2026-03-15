@@ -100,6 +100,35 @@ export class BreakTimerService {
     this._exercises.set((data ?? []) as unknown as Exercise[]);
   }
 
+  async extendWork(minutes: number, reason?: string): Promise<void> {
+    const session = this.dashboard.session();
+    if (!session) return;
+
+    const now = new Date();
+    const entry: BreakEntry = {
+      rotationIndex: session.current_rotation_index ?? 0,
+      rotationType: this.suggestedRotation(),
+      scheduledAt: now.toISOString(),
+      skipped: true,
+      extended: true,
+      extendedByMin: minutes,
+      reason,
+    };
+
+    const breaks = [...session.breaks, entry];
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        breaks: breaks as any,
+        next_break_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
+      })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    await this.workday.onBreakSkipped();
+  }
+
   async skipBreak(): Promise<void> {
     const session = this.dashboard.session();
     if (!session) return;
