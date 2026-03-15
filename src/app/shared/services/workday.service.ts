@@ -184,14 +184,35 @@ export class WorkdayService {
     this.startTick();
   }
 
-  /** Stub for Plan E — pause timer when starting stepper/strength */
-  startActivity(_type: 'stepper' | 'strength'): void {
-    // Will be implemented in Plan E
+  startActivity(type: 'stepper' | 'strength'): void {
+    const session = this.dashboard.session();
+    if (session) {
+      this.notifier.cancel();
+      this.stopTick();
+    }
+    this._currentActivity.set(type);
   }
 
-  /** Stub for Plan E — resume timer after activity */
-  endActivity(): void {
-    // Will be implemented in Plan E
+  async endActivity(): Promise<void> {
+    const activity = this._currentActivity();
+    if (activity !== 'stepper' && activity !== 'strength') return;
+
+    const session = this.dashboard.session();
+    if (session) {
+      const intervalMs = session.break_interval_min * 60_000;
+      const { error } = await this.supabase.supabase
+        .from('work_sessions')
+        .update({
+          next_break_at: new Date(Date.now() + intervalMs).toISOString(),
+        })
+        .eq('id', session.id);
+      if (error) throw error;
+      await this.dashboard.refreshSession();
+      this._currentActivity.set('working');
+      this.startTick();
+    } else {
+      this._currentActivity.set('idle');
+    }
   }
 
   private startTick(): void {

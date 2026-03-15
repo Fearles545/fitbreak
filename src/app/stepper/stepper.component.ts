@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { StepperService } from './stepper.service';
+import { WorkdayService } from '@shared/services/workday.service';
 import type { MoodRating } from '@shared/models/fitbreak.models';
 
 type StepperView = 'setup' | 'running' | 'summary';
@@ -406,6 +407,7 @@ type StepperView = 'setup' | 'running' | 'summary';
 })
 export class StepperComponent implements OnInit {
   protected stepper = inject(StepperService);
+  private workday = inject(WorkdayService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -443,10 +445,12 @@ export class StepperComponent implements OnInit {
       if (this.stepper.state() === 'running' || this.stepper.state() === 'paused') {
         this.stepper.stop();
       }
+      this.workday.endActivity();
     });
   }
 
   async onStart(): Promise<void> {
+    this.workday.startActivity('stepper');
     await this.stepper.start(this.selectedDuration(), this.selectedInterval());
     this.view.set('running');
     this.resetDimTimer();
@@ -477,6 +481,7 @@ export class StepperComponent implements OnInit {
   async onFinish(): Promise<void> {
     await this.stepper.saveWorkoutLog((this.selectedMood() as MoodRating) ?? undefined);
     this.stepper.reset();
+    await this.workday.endActivity();
     this.router.navigate(['/dashboard']);
   }
 

@@ -12,6 +12,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { StrengthService, WorkoutMode } from './strength.service';
+import { WorkdayService } from '@shared/services/workday.service';
 import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
 import { SupabaseService } from '@shared/services/supabase.service';
 
@@ -549,6 +550,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
 })
 export class StrengthComponent implements OnInit {
   protected strength = inject(StrengthService);
+  private workday = inject(WorkdayService);
   protected router = inject(Router);
   private supabase = inject(SupabaseService);
   private destroyRef = inject(DestroyRef);
@@ -612,6 +614,7 @@ export class StrengthComponent implements OnInit {
       if (this.strength.state() === 'resting') {
         this.strength.skipRest();
       }
+      this.workday.endActivity();
     });
   }
 
@@ -628,6 +631,7 @@ export class StrengthComponent implements OnInit {
   }
 
   async onPickTemplate(template: WorkoutTemplate): Promise<void> {
+    this.workday.startActivity('strength');
     await this.strength.loadTemplate(template.id);
     this.strength.start(this.selectedMode());
     this.showTechnique.set(true);
@@ -641,6 +645,7 @@ export class StrengthComponent implements OnInit {
   async onFinish(): Promise<void> {
     await this.strength.saveWorkoutLog((this.selectedMood() as MoodRating) ?? undefined);
     this.strength.reset();
+    await this.workday.endActivity();
     this.router.navigate(['/dashboard']);
   }
 }

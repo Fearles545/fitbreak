@@ -40,5 +40,12 @@
 - [x] "Завершити день" link on break prompt, reuses workday.endWorkday()
 - [x] Reordered: primary (start) → secondary (extend) → tertiary links (choose another · skip · end day)
 - [x] Build passes
-## Plan E: Stepper / Strength Integration — TODO
+## Plan E: Stepper / Strength Integration — DONE
+- [x] startActivity(): stops tick + cancels notifier if session exists, sets currentActivity
+- [x] endActivity(): guarded by activity type, resets next_break_at to full interval, restarts tick
+- [x] StepperComponent: startActivity on start, endActivity on finish + destroyRef cleanup
+- [x] StrengthComponent: startActivity on pick template, endActivity on finish + destroyRef cleanup
+- [x] Dashboard: stepper/strength buttons visible during active session
+- [x] Weekend workout (no session) works without crash
+- [x] Build passes
 ## Plan F: Auto-complete Stale Sessions — TODO
