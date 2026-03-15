@@ -18,15 +18,9 @@ export class DashboardService {
   readonly session = this._session.asReadonly();
   readonly weekActivities = this._weekActivities.asReadonly();
   readonly loading = this._loading.asReadonly();
-  readonly isActive = computed(() => this._session()?.status === 'active');
-
   readonly completedBreaks = computed(() => {
     const breaks = this._session()?.breaks ?? [];
     return breaks.filter((b) => !b.skipped && b.completedAt).length;
-  });
-
-  readonly totalBreaks = computed(() => {
-    return (this._session()?.breaks ?? []).length;
   });
 
   async cleanupStaleSessions(): Promise<void> {

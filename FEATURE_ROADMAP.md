@@ -11,18 +11,18 @@ Features shipped, in dependency order:
 5. ~~**Audio + Notifications**~~ — Web Audio beeps (xylophone/buzzer), tab title change, timed reminder sequence
 6. ~~**Stepper**~~ — fullscreen cardio timer, interval signals, dim mode, wake lock, pause tracking
 7. ~~**Strength**~~ — workout execution with set tracking, rest timer, circuit training mode
+8. ~~**Pause workday + WorkdayService**~~ — pause/resume workday, break timer orchestration via WorkdayService, stepper/strength integration, extend work time, stale session cleanup
 
 ## Next Up
 
-8. **Progress** — analytics, calendar heatmap, streaks, weekly stats via `rpc()` functions
-9. **Settings** — user preferences, break intervals, exercise rotation config, sound selection
+9. **Progress** — analytics, calendar heatmap, streaks, weekly stats via `rpc()` functions
+10. **Settings** — user preferences, break intervals, exercise rotation config, sound selection
 
 ## Ideas & Deferred
 
 Features scoped out during implementation — worth revisiting.
 
 ### UX Enhancements
-- **Pause workday** — pause/resume a started work session (stop break timer without ending the day). Useful for lunch, meetings, stepping away. Pauses tracked as JSONB array with timestamps for timeline visualization
 - **Day timeline** — visual diagram of the workday: work blocks, break rotations, pauses, strength/stepper workouts with clickable details. All data already available (breaks, pauses, workout_logs have timestamps)
 - **Day summary screen** — show stats (breaks taken, duration, mood trend) after ending workday instead of just returning to start screen
 - **Collapsible technique after 5+ completions** — auto-collapse the visual/technique block for exercises the user has done many times
