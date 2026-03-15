@@ -48,4 +48,9 @@
 - [x] Dashboard: stepper/strength buttons visible during active session
 - [x] Weekend workout (no session) works without crash
 - [x] Build passes
-## Plan F: Auto-complete Stale Sessions — TODO
+## Plan F: Auto-complete Stale Sessions — DONE
+- [x] cleanupStaleSessions(): bulk updates sessions where status IN (active, paused) AND date < today
+- [x] Sets status=completed, ended_at=now, paused_at=null
+- [x] hasCleanedUp flag prevents re-running on navigation within same session
+- [x] Called before refreshSession() in ngOnInit
+- [x] Build passes

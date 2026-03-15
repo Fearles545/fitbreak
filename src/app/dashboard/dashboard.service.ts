@@ -13,6 +13,7 @@ export class DashboardService {
   private _session = signal<WorkSession | null>(null);
   private _weekActivities = signal<DayActivity[]>([]);
   private _loading = signal(false);
+  private hasCleanedUp = false;
 
   readonly session = this._session.asReadonly();
   readonly weekActivities = this._weekActivities.asReadonly();
@@ -27,6 +28,24 @@ export class DashboardService {
   readonly totalBreaks = computed(() => {
     return (this._session()?.breaks ?? []).length;
   });
+
+  async cleanupStaleSessions(): Promise<void> {
+    if (this.hasCleanedUp) return;
+    this.hasCleanedUp = true;
+
+    const today = toDateKey();
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        status: 'completed',
+        ended_at: new Date().toISOString(),
+        paused_at: null,
+      })
+      .in('status', ['active', 'paused'])
+      .lt('date', today);
+
+    if (error) throw error;
+  }
 
   async refreshSession(): Promise<void> {
     if (!this._session()) this._loading.set(true);
