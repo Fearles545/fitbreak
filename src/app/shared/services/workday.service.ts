@@ -1,12 +1,15 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { SupabaseService } from './supabase.service';
 import { BreakNotifierService } from './break-notifier.service';
 import { DashboardService } from '../../dashboard/dashboard.service';
+import type { PauseEntry } from '../models/fitbreak.models';
 
 export type WorkdayActivity = 'idle' | 'working' | 'on-break' | 'paused' | 'stepper' | 'strength';
 
 @Injectable({ providedIn: 'root' })
 export class WorkdayService {
+  private supabase = inject(SupabaseService);
   private dashboard = inject(DashboardService);
   private notifier = inject(BreakNotifierService);
   private router = inject(Router);
@@ -21,11 +24,24 @@ export class WorkdayService {
 
   readonly remainingSeconds = computed(() => {
     const session = this.dashboard.session();
-    if (!session || this._currentActivity() !== 'working') return 0;
-    const nextBreak = session.next_break_at;
-    if (!nextBreak) return 0;
-    const diff = Math.floor((new Date(nextBreak).getTime() - this._now()) / 1000);
-    return Math.max(0, diff);
+    const activity = this._currentActivity();
+
+    if (!session || !session.next_break_at) return 0;
+
+    if (activity === 'working') {
+      const diff = Math.floor((new Date(session.next_break_at).getTime() - this._now()) / 1000);
+      return Math.max(0, diff);
+    }
+
+    if (activity === 'paused' && session.paused_at) {
+      // Frozen at the moment of pause
+      const diff = Math.floor(
+        (new Date(session.next_break_at).getTime() - new Date(session.paused_at).getTime()) / 1000,
+      );
+      return Math.max(0, diff);
+    }
+
+    return 0;
   });
 
   private breakTriggerEffect = effect(() => {
@@ -57,6 +73,9 @@ export class WorkdayService {
     if (session?.status === 'active') {
       this._currentActivity.set('working');
       this.startTick();
+    } else if (session?.status === 'paused') {
+      this._currentActivity.set('paused');
+      this.stopTick();
     } else {
       this._currentActivity.set('idle');
       this.stopTick();
@@ -72,8 +91,77 @@ export class WorkdayService {
   async endWorkday(): Promise<void> {
     this.notifier.cancel();
     this.stopTick();
+
+    // If ending while paused, finalize the current pause entry
+    const session = this.dashboard.session();
+    if (session?.paused_at) {
+      const now = new Date().toISOString();
+      const pauseEntry: PauseEntry = { pausedAt: session.paused_at, resumedAt: now };
+      const pauses = [...session.pauses, pauseEntry];
+      await this.supabase.supabase
+        .from('work_sessions')
+        .update({ paused_at: null, pauses: pauses as any })
+        .eq('id', session.id);
+    }
+
     await this.dashboard.endWorkday();
     this._currentActivity.set('idle');
+  }
+
+  async pauseWorkday(): Promise<void> {
+    const session = this.dashboard.session();
+    if (!session) return;
+
+    this.notifier.cancel();
+    this.stopTick();
+    this._currentActivity.set('paused');
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        status: 'paused',
+        paused_at: new Date().toISOString(),
+      })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    await this.dashboard.refreshSession();
+  }
+
+  async resumeWorkday(): Promise<void> {
+    const session = this.dashboard.session();
+    if (!session || !session.paused_at) return;
+
+    const now = new Date();
+    const pausedAtMs = new Date(session.paused_at).getTime();
+    const nextBreakAtMs = session.next_break_at ? new Date(session.next_break_at).getTime() : null;
+
+    // Compute remaining break timer time
+    let remainingMs: number;
+    if (nextBreakAtMs && nextBreakAtMs > pausedAtMs) {
+      remainingMs = nextBreakAtMs - pausedAtMs;
+    } else {
+      // Break was due during pause — reset to full interval
+      remainingMs = session.break_interval_min * 60_000;
+    }
+
+    const pauseEntry: PauseEntry = { pausedAt: session.paused_at, resumedAt: now.toISOString() };
+    const pauses = [...session.pauses, pauseEntry];
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        status: 'active',
+        paused_at: null,
+        next_break_at: new Date(now.getTime() + remainingMs).toISOString(),
+        pauses: pauses as any,
+      })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    await this.dashboard.refreshSession();
+    this._currentActivity.set('working');
+    this.startTick();
   }
 
   onBreakStarted(): void {

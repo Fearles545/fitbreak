@@ -29,14 +29,14 @@ export class DashboardService {
   });
 
   async refreshSession(): Promise<void> {
-    this._loading.set(true);
+    if (!this._session()) this._loading.set(true);
     try {
       const today = toDateKey();
       const { data, error } = await this.supabase.supabase
         .from('work_sessions')
         .select('*')
         .eq('date', today)
-        .eq('status', 'active')
+        .in('status', ['active', 'paused'])
         .maybeSingle();
 
       if (error) throw error;

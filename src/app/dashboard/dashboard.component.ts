@@ -122,8 +122,31 @@ import { DashboardService } from './dashboard.service';
       color: var(--mat-sys-on-surface-variant);
     }
 
-    .end-day {
+    .timer-section.paused {
+      opacity: 0.5;
+    }
+
+    .paused-indicator {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 16px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .session-actions {
       margin-top: 32px;
+      text-align: center;
+    }
+
+    .end-day {
+      margin-top: 12px;
       text-align: center;
     }
 
@@ -156,15 +179,19 @@ import { DashboardService } from './dashboard.service';
 
         <app-week-calendar [activities]="dashboard.weekActivities()" />
 
-        @if (dashboard.isActive()) {
-          <!-- Active session view -->
-          <div class="timer-section">
+        @if (dashboard.session()) {
+          <!-- Active or paused session view -->
+          <div class="timer-section" [class.paused]="isPaused()">
             <app-timer-ring
               [remainingSeconds]="remainingSeconds()"
               [totalSeconds]="totalSeconds()"
               label="до перерви"
             />
           </div>
+
+          @if (isPaused()) {
+            <div class="paused-indicator">⏸ Пауза</div>
+          }
 
           @if (nextRotation()) {
             <div class="next-rotation">
@@ -180,8 +207,22 @@ import { DashboardService } from './dashboard.service';
             Перерв: {{ dashboard.completedBreaks() }} · {{ elapsedTime() }}
           </div>
 
+          <div class="session-actions">
+            @if (isPaused()) {
+              <button mat-flat-button (click)="onResumeWorkday()">
+                <mat-icon>play_arrow</mat-icon>
+                Продовжити
+              </button>
+            } @else {
+              <button matButton="outlined" (click)="onPauseWorkday()">
+                <mat-icon>pause</mat-icon>
+                Пауза
+              </button>
+            }
+          </div>
+
           <div class="end-day">
-            <button matButton="outlined" (click)="onEndWorkday()">Завершити робочий день</button>
+            <button matButton="text" (click)="onEndWorkday()">Завершити робочий день</button>
           </div>
         } @else {
           <!-- Start screen -->
@@ -226,6 +267,7 @@ export class DashboardComponent implements OnInit {
   });
 
   remainingSeconds = computed(() => this.workday.remainingSeconds());
+  isPaused = computed(() => this.workday.currentActivity() === 'paused');
 
   nextRotation = computed(() => {
     const session = this.dashboard.session();
@@ -239,8 +281,21 @@ export class DashboardComponent implements OnInit {
   elapsedTime = computed(() => {
     const session = this.dashboard.session();
     if (!session) return '';
+
     const start = new Date(session.started_at).getTime();
-    const elapsed = Math.floor((this.workday.now() - start) / 1000 / 60);
+    const now = this.workday.now();
+
+    // Subtract total paused time
+    let totalPausedMs = 0;
+    for (const pause of session.pauses) {
+      if (!pause.resumedAt) continue;
+      totalPausedMs += new Date(pause.resumedAt).getTime() - new Date(pause.pausedAt).getTime();
+    }
+    if (session.paused_at) {
+      totalPausedMs += Math.max(0, now - new Date(session.paused_at).getTime());
+    }
+
+    const elapsed = Math.floor((now - start - totalPausedMs) / 1000 / 60);
     const hours = Math.floor(elapsed / 60);
     const mins = elapsed % 60;
     if (hours > 0) return `${hours}г ${mins}хв`;
@@ -256,6 +311,14 @@ export class DashboardComponent implements OnInit {
   async onStartWorkday(): Promise<void> {
     this.audio.init();
     await this.workday.startWorkday();
+  }
+
+  async onPauseWorkday(): Promise<void> {
+    await this.workday.pauseWorkday();
+  }
+
+  async onResumeWorkday(): Promise<void> {
+    await this.workday.resumeWorkday();
   }
 
   async onEndWorkday(): Promise<void> {

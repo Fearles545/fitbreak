@@ -22,7 +22,18 @@
 - [x] BreakTimerComponent: uses workday.onBreakStarted() instead of notifier.cancel()
 - [x] Visibilitychange listener moved to WorkdayService (root-level, survives navigation)
 - [x] Build passes
-## Plan C: Pause / Resume Workday — TODO
+## Plan C: Pause / Resume Workday — DONE
+- [x] pauseWorkday(): cancel notifier, stop tick, update DB (status='paused', paused_at=now)
+- [x] resumeWorkday(): compute remaining from next_break_at-paused_at, append PauseEntry, update DB, restart tick
+- [x] Resume edge case: if break was due during pause, reset to full interval
+- [x] refreshSession() now queries .in('status', ['active', 'paused'])
+- [x] refreshSession() only shows loading spinner on initial load (no flash on pause/resume)
+- [x] init() handles paused session state
+- [x] remainingSeconds shows frozen time when paused (next_break_at - paused_at)
+- [x] elapsedTime subtracts total paused time (completed pauses + current active pause)
+- [x] Template: paused indicator with pulse animation, pause/resume buttons, timer ring faded when paused
+- [x] End-day button available in both active and paused states
+- [x] Build passes
 ## Plan D: Break Prompt UX Improvements — TODO
 ## Plan E: Stepper / Strength Integration — TODO
 ## Plan F: Auto-complete Stale Sessions — TODO
