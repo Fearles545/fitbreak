@@ -43,6 +43,9 @@ __screenshots__/
 .env
 src/environments/environment.development.ts
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # System files
 .DS_Store
 Thumbs.db
