@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
 import { BreakNotifierService } from './break-notifier.service';
 import { DashboardService } from '../../dashboard/dashboard.service';
-import type { PauseEntry } from '../models/fitbreak.models';
+import type { PauseEntry, WorkSession } from '../models/fitbreak.models';
 
 export type WorkdayActivity = 'idle' | 'working' | 'on-break' | 'paused' | 'stepper' | 'strength';
 
@@ -68,9 +68,12 @@ export class WorkdayService {
   }
 
   /** Sync workday state with the loaded session. Call after refreshSession(). */
-  init(): void {
+  async init(): Promise<void> {
     const session = this.dashboard.session();
     if (session?.status === 'active') {
+      if (!session.next_break_at) {
+        await this.backfillNextBreakAt(session);
+      }
       this._currentActivity.set('working');
       this.startTick();
     } else if (session?.status === 'paused') {
@@ -214,6 +217,27 @@ export class WorkdayService {
     } else {
       this._currentActivity.set('idle');
     }
+  }
+
+  /** Backfill next_break_at for sessions created before Plan B migration */
+  private async backfillNextBreakAt(session: WorkSession): Promise<void> {
+    const intervalMs = session.break_interval_min * 60_000;
+    let nextBreakAtMs: number;
+
+    if (session.breaks.length === 0) {
+      nextBreakAtMs = new Date(session.started_at).getTime() + intervalMs;
+    } else {
+      const lastBreak = session.breaks[session.breaks.length - 1];
+      const anchor = lastBreak.completedAt ?? lastBreak.scheduledAt;
+      nextBreakAtMs = new Date(anchor).getTime() + intervalMs;
+    }
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({ next_break_at: new Date(nextBreakAtMs).toISOString() })
+      .eq('id', session.id);
+    if (error) throw error;
+    await this.dashboard.refreshSession();
   }
 
   private startTick(): void {

@@ -322,7 +322,7 @@ export class DashboardComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.dashboard.cleanupStaleSessions();
     await this.dashboard.refreshSession();
-    this.workday.init();
+    await this.workday.init();
     this.dashboard.loadWeekActivities();
   }
 
