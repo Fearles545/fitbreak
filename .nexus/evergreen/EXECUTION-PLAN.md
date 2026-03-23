@@ -1,17 +1,34 @@
 # Execution Plan — FitBreak
 
-## Current Sprint
+## Sprint 1 (2026-03-24)
 
-_No sprint defined yet. Run `/nexus-plan` to plan the first sprint._
+### Goals
+1. Make the daily loop customizable (Settings)
+2. Add the daily reward moment (Day Summary)
+3. Build the motivational mirror (Progress V1)
+
+### Sprint Backlog
+
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Stepper timer layout fix | 0 | pending |
+| 2 | Settings page — daily-loop settings (break interval, enabled rotations, rest timer, stepper defaults) | 1 | pending |
+| 3 | Day summary screen — show breaks, completion rate, workouts, mood when ending workday | 1 | pending |
+| 4 | Progress page V1 — streak counter, this week vs last week comparison | 2 | pending |
+
+**WIP limit:** 2 active features
+
+### Notes
+- Settings must wire up `user_settings` table to `startWorkday()` — break interval is currently hardcoded at 45min
+- Day summary data already exists in `work_sessions.breaks[]` and `workout_logs`
+- Progress V1 can leverage existing `weekly_break_stats()` and `weekly_workout_stats()` RPCs
+- Skip for V1: calendar heatmap, exercise progression charts, monthly view, theme/language settings
 
 ## Parking Lot
 
-Items mentioned by CEO, to be prioritized in sprint planning:
-
-- [ ] **Manual add/edit of fitbreaks** — ability to manually log or edit break entries
-- [ ] **Stepper timer layout issue** — small layout bug to investigate and fix
-- [ ] **Progress page** — analytics, calendar heatmap, streaks (currently a stub)
-- [ ] **Settings page** — user preferences UI (currently a stub)
+- [ ] **Manual add/edit of fitbreaks** — deferred from Sprint 1. Revisit when CEO feels the need weekly.
+- [ ] **Progress V2** — calendar heatmap, exercise progression, monthly view
+- [ ] **Settings V2** — theme, language, notification sounds, advanced preferences
 
 ## Completed Sprints
 
