@@ -1,24 +1,33 @@
 ---
-description: "Sprint planning — analyze current state, consult product and domain agents, define priorities with CEO. Run weekly or at the start of a new sprint."
+description: "Sprint planning — structured analysis from product and technical perspectives, interactive dialog with CEO to define priorities. Run weekly or at the start of a new sprint."
 ---
 
 # Nexus Plan
 
-You are facilitating a sprint planning session. Your role is to coordinate
-between product perspective and CEO's decisions.
+You are facilitating a sprint planning session with CEO.
+This is a structured dialog — analyze from multiple angles, discuss with CEO,
+help them make informed decisions.
+
+**Do NOT roleplay as agents.** Read agent files (`.claude/agents/nexus-*.md`)
+as knowledge sources for project-specific context, domain expertise, and
+decision-making principles. Use this knowledge to inform your analysis,
+but speak as yourself — a knowledgeable facilitator.
 
 ## Steps
 
 ### 1. Load context
 
-Read these files:
+Read:
 - `.nexus/evergreen/PROJECT-IDENTITY.md` — mission, north star, boundaries
 - `.nexus/evergreen/EXECUTION-PLAN.md` — current roadmap, backlog, completed work
 - `.nexus/evergreen/DECISION-LOG.md` — recent decisions (last 5-10)
 - `.nexus/evergreen/WORKFLOW-STATUS.md` — current state
 - `.nexus/evergreen/RETROSPECTIVE-LOG.md` — recent lessons (last 3-5)
+- `.claude/agents/nexus-product-lead.md` — product thinking and domain expertise
+- `.claude/agents/nexus-frontend-architect.md` — technical perspective (if exists)
+- `.claude/agents/nexus-backend-engineer.md` — backend perspective (if exists)
 
-### 2. Present current state to CEO
+### 2. Present current state
 
 ```
 📋 Sprint Planning: [Project Name]
@@ -34,46 +43,56 @@ Read these files:
 🅿️ Parking lot: [ideas not yet prioritized]
 ```
 
-### 3. Product perspective
+**Wait for CEO's reaction before proceeding.**
 
-Delegate to `nexus-product-lead` agent (or apply product thinking if agent unavailable):
+### 3. Product analysis
 
-- Based on PROJECT-IDENTITY and current state, what are the highest-impact items?
+Using knowledge from product-lead agent file and PROJECT-IDENTITY, analyze:
+
+- What are the highest-impact items and why?
 - Are there user needs not reflected in the backlog?
 - Do any parking lot items deserve promotion?
-- Are any backlog items no longer relevant (should be removed or deprioritized)?
+- Any items no longer relevant?
 
-Present product recommendations to CEO.
+Present recommendations with reasoning. **Wait for CEO to discuss.**
+Engage in genuine dialog — if CEO disagrees, explore why.
 
-### 4. Discussion with CEO
+### 4. Technical assessment
 
-Ask CEO:
-- "Do you agree with these priorities?"
-- "Anything you want to add, remove, or reorder?"
-- "What's your capacity this sprint? (How many hours/days)"
+Using knowledge from architect/backend agent files and ARCHITECTURE, assess:
+
+- Realistic complexity and level (0-4) for each proposed item
+- Hidden dependencies between items
+- Technical risks or prerequisites
+- Items that should be split or reordered based on technical reality
+
+Present assessment. **Wait for CEO to discuss.**
+CEO may challenge estimates or propose alternatives — especially
+on frontend tasks where they have deep expertise.
+
+### 5. Synthesis and decision
+
+Help CEO bring it together:
+
+- "Here's what I'd suggest for the sprint based on both perspectives: [synthesis]"
+- "What's your capacity this sprint?"
 - "Any external deadlines or constraints?"
 
-If CEO mentions a feature that conflicts with boundaries in PROJECT-IDENTITY,
-flag it (per Agent-Core-Principles).
+If CEO proposes something that conflicts with PROJECT-IDENTITY boundaries,
+flag it honestly with reasoning (per nexus-helpers.md#Agent-Core-Principles).
 
-### 5. Define sprint
+### 6. Define sprint
 
 Based on discussion, define:
 - Sprint goals (2-3 max)
 - Sprint backlog with levels assigned to each task
 - WIP limit (default: 2 active features)
 
-Use Level-Assessment from `nexus-helpers.md#Level-Assessment` to assign levels.
+Use `nexus-helpers.md#Level-Assessment` to assign levels.
 
-### 6. Update EXECUTION-PLAN
+### 7. Update files
 
-Update `.nexus/evergreen/EXECUTION-PLAN.md` with:
-- New sprint section (number, dates, goals, backlog)
-- Updated backlog priorities
-- Moved items between backlog/parking lot as decided
-
-### 7. Update WORKFLOW-STATUS
-
+Update `.nexus/evergreen/EXECUTION-PLAN.md` with new sprint.
 Update `.nexus/evergreen/WORKFLOW-STATUS.md` with new sprint context.
 
 ## Output
@@ -93,13 +112,16 @@ Update `.nexus/evergreen/WORKFLOW-STATUS.md` with new sprint context.
 
 ⚡ WIP Limit: [N]
 
-⏭️ Start with: [first task] → use /nexus-quick or /nexus-explore depending on level
+⏭️ Start with: [first task] → use /nexus-task or /nexus-explore depending on level
 ```
 
 ## Rules
 
+- **This is a dialog.** Wait for CEO input after each analysis step.
 - CEO has final say on priorities. Your job is to inform, not decide.
 - Be realistic about capacity. Better to plan 3 items and finish all than 7 and finish 2.
-- If backlog is empty, facilitate a brainstorm — consult product lead perspective.
-- Reference retrospective lessons when planning — don't repeat past mistakes.
+- If backlog is empty, facilitate a brainstorm using product knowledge.
+- Reference retrospective lessons — don't repeat past mistakes.
 - Every task needs a level (0-4). This determines which pipeline it follows.
+- Apply nexus-helpers.md#Agent-Core-Principles: critical thinking, honesty, don't just agree.
+- **For deeper product strategy discussion** — suggest CEO runs `claude --agent nexus-product-lead` for a dedicated session.

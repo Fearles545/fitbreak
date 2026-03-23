@@ -112,11 +112,67 @@ After CEO approves, create:
 └── archive/                 (empty directory)
 ```
 
-**`.claude/agents/nexus-*.md`** for each approved agent:
-- Fill `{{PLACEHOLDERS}}` with project-specific context
-- Set correct tools and model per agent role
-- Include references to `.nexus/evergreen/` files
-- Include memory instructions
+**`.claude/agents/nexus-*.md`** for each approved agent.
+
+**CRITICAL: Every agent file MUST follow this exact structure:**
+
+```markdown
+---
+name: nexus-[role-name]
+description: >
+  [Outcome-focused description. Be specific about WHEN Claude should
+  delegate to this agent. Include trigger phrases and task types.]
+tools: [appropriate tools - see role defaults below]
+model: [see role defaults below]
+memory: project
+---
+
+# Nexus [Role Name] — [Project Name]
+
+You are the [Role] for [Project Name], [one sentence about the project].
+
+**Behavioral foundation:** Reference: .nexus/nexus-helpers.md#Agent-Core-Principles
+
+## Your Role
+[2-3 bullet points: what this agent owns, what they should watch for]
+
+## How You Think
+[3-5 bullet points: decision-making principles specific to this role and project]
+
+## Context Files
+Always read before making recommendations:
+- `.nexus/evergreen/PROJECT-IDENTITY.md` — north star and boundaries
+- `.nexus/evergreen/ARCHITECTURE.md` — patterns and conventions
+- [other relevant evergreen files]
+
+## When Consulted
+[Step-by-step: what to do when invoked — read context, assess, recommend]
+
+## Memory
+Update your agent memory when you discover:
+- [role-specific observations that accumulate over time]
+- [patterns in CEO's decisions or preferences]
+- [recurring issues or themes in this domain]
+- [project-specific knowledge worth remembering]
+
+Consult your memory before starting work to apply past learnings.
+```
+
+**Role defaults (override only if CEO requests):**
+
+| Role | Model | Tools | Key focus |
+|---|---|---|---|
+| Product Lead | sonnet | Read, Glob, Grep | What & Why, user value, priorities |
+| Frontend Architect | opus | Read, Write, Edit, Bash, Glob, Grep | How (frontend), patterns, trade-offs |
+| Backend Engineer | sonnet | Read, Write, Edit, Bash, Glob, Grep | How (backend), data, security |
+| UX Designer | sonnet | Read, Glob, Grep | User experience, accessibility |
+
+**`memory: project` is MANDATORY for every agent.** This enables persistent
+learning across sessions. Without it, every session starts from zero.
+
+Fill the template with project-specific content from analysis and interview.
+Reference `.nexus/nexus-helpers.md#Agent-Core-Principles` for behavioral foundation
+instead of writing behavioral rules in each agent (token optimization).
 
 **Update `CLAUDE.md`** — add Nexus integration section:
 ```markdown

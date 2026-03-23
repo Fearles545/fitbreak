@@ -1,12 +1,17 @@
 ---
-description: "Feature preparation pipeline — consult product, UX, architecture, and QA perspectives to create a comprehensive Feature Spec before coding. Use for Level 2+ tasks."
+description: "Feature preparation pipeline — structured analysis from product, UX, technical, and QA perspectives to create a Feature Spec before coding. Use for Level 2+ tasks."
 ---
 
 # Nexus Explore
 
 You are running the preparation pipeline — the core value of Nexus.
-Before any code is written, the feature is examined from multiple perspectives.
-The output is a Feature Spec that makes implementation focused and high-quality.
+Before any code is written, the feature is examined from multiple perspectives
+through an interactive dialog with CEO.
+
+**Do NOT roleplay as agents.** Read agent files (`.claude/agents/nexus-*.md`)
+as knowledge sources — domain expertise, decision-making principles, project
+context. Use this knowledge to inform your analysis from each angle,
+but speak as yourself — a knowledgeable facilitator.
 
 **Reference:** `.nexus/nexus-helpers.md#Feature-Spec-Format` for output format.
 
@@ -23,23 +28,27 @@ Read:
 - `.nexus/evergreen/PROJECT-IDENTITY.md` — north star, boundaries, target user
 - `.nexus/evergreen/ARCHITECTURE.md` — current patterns, anti-patterns
 - `.nexus/evergreen/DECISION-LOG.md` — relevant past decisions
-- `.nexus/evergreen/EXECUTION-PLAN.md` — where this feature fits in the plan
+- `.claude/agents/nexus-product-lead.md` — product thinking, domain expertise
+- `.claude/agents/nexus-frontend-architect.md` — technical perspective
+- `.claude/agents/nexus-backend-engineer.md` — backend perspective (if relevant)
+- `.claude/agents/nexus-ux-designer.md` — UX principles
 
-### 2. Product perspective
+### 2. Product analysis
 
-Delegate to `nexus-product-lead` agent (or apply product thinking):
+Using product-lead knowledge and PROJECT-IDENTITY:
 
 - Why are we building this? What user problem does it solve?
-- Write user stories with concrete acceptance criteria
+- Propose user stories with concrete acceptance criteria
 - Identify edge cases from user perspective
-- Check alignment with PROJECT-IDENTITY boundaries
+- Check alignment with boundaries
 - Define what "done" looks like
 
-Present to CEO for feedback before proceeding.
+Present to CEO and **wait for discussion**.
+CEO may refine scope, reject stories, add constraints.
 
-### 3. UX & Accessibility perspective
+### 3. UX & Accessibility analysis
 
-Delegate to `nexus-ux-designer` agent (or apply UX thinking):
+Using UX-designer knowledge:
 
 - Design the user flow (step by step)
 - Identify all UI states: empty, loading, error, success, edge
@@ -47,11 +56,11 @@ Delegate to `nexus-ux-designer` agent (or apply UX thinking):
 - Cognitive load considerations
 - Mobile/responsive behavior
 
-Present to CEO for feedback before proceeding.
+Present to CEO and **wait for discussion**.
 
-### 4. Technical perspective
+### 4. Technical analysis
 
-Delegate to `nexus-frontend-architect` and/or `nexus-backend-engineer` agents:
+Using architect and backend knowledge plus ARCHITECTURE.md:
 
 - Components to create or modify
 - State management approach
@@ -60,28 +69,27 @@ Delegate to `nexus-frontend-architect` and/or `nexus-backend-engineer` agents:
 - Integration with existing architecture
 - Performance considerations
 
-Present to CEO for feedback before proceeding.
+Present to CEO and **wait for discussion**.
+CEO's frontend expertise is strongest here — they may propose better approaches.
 
-### 5. QA perspective
-
-Apply QA thinking (or delegate to QA agent if exists):
+### 5. Risk analysis
 
 - Edge cases that could break
 - Error scenarios and recovery
 - What needs testing
-- Risk assessment (what's the blast radius if this goes wrong?)
+- Risk assessment (blast radius if this goes wrong)
+
+Present briefly. **Wait for CEO input** in case they see risks you missed.
 
 ### 6. Synthesize Feature Spec
 
 Create `.nexus/active/feature-[name].md` using format from
 `nexus-helpers.md#Feature-Spec-Format`.
 
-Combine all perspectives into one document. Flag any conflicts
-between perspectives (e.g., PM wants feature X but architect says it conflicts with pattern Y).
+Combine all analysis, incorporating CEO's feedback from each step.
+Flag any unresolved conflicts or open questions.
 
 ### 7. CEO Review
-
-Present the complete Feature Spec summary:
 
 ```
 📐 Feature Spec: [Name]
@@ -95,16 +103,16 @@ Present the complete Feature Spec summary:
 
 📄 Full spec: .nexus/active/feature-[name].md
 
-Ready to implement? Proceed with coding using the spec above.
+Ready to implement? Use the spec above as your guide.
 ```
-
-Ask CEO if anything needs adjustment before implementation begins.
 
 ## Rules
 
-- Each perspective step should be concise but thorough. Not a 10-page doc, but not 2 sentences either.
-- Present each perspective to CEO before moving to the next — they may have input that changes direction.
-- If a feature clearly violates PROJECT-IDENTITY boundaries, flag it at step 2 and let CEO decide.
-- Don't skip perspectives even if they seem unnecessary — UX review on a "simple" feature often catches the most issues.
-- Open Questions section is important — it's okay to not resolve everything. Better to flag unknowns than pretend certainty.
+- **This is a dialog.** Wait for CEO after EACH perspective. Don't present everything at once.
+- Each analysis should be concise but thorough.
+- If a feature violates PROJECT-IDENTITY boundaries, flag it at step 2.
+- Don't skip perspectives — UX analysis on a "simple" feature often catches the most issues.
+- Open Questions section is important — better to flag unknowns than pretend certainty.
 - If CEO wants to skip a perspective for speed, respect that but note what was skipped.
+- Apply nexus-helpers.md#Agent-Core-Principles: critical thinking, honesty.
+- **For deeper discussion on any angle** — suggest CEO runs `claude --agent nexus-[specialist]` for a dedicated session.
