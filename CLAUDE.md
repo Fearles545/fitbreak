@@ -48,6 +48,7 @@ src/app/
 ```
 
 **Rules:**
+
 - Each feature folder contains its own components, services, routes, and models
 - `shared/` is ONLY for code reused across 2+ features
 - No barrel files (index.ts) unless there are 5+ exports from a folder
@@ -70,6 +71,7 @@ src/app/
 ## Architecture Patterns
 
 ### State Management
+
 Pure Angular Signals. No NgRx, no BehaviorSubjects for state.
 
 ```typescript
@@ -77,20 +79,22 @@ Pure Angular Signals. No NgRx, no BehaviorSubjects for state.
 @Injectable({ providedIn: 'root' })
 export class BreakTimerService {
   private _session = signal<WorkSession | null>(null);
-  
+
   readonly session = this._session.asReadonly();
   readonly isActive = computed(() => this._session()?.status === 'active');
-  
+
   // Methods mutate signals directly
   async startSession() { ... }
 }
 ```
 
 RxJS is used ONLY for:
+
 - Wrapping Supabase SDK promises into Observables (via `from()`)
 - Stream-based operations where signals don't fit (e.g., timer intervals)
 
 ### Supabase Integration
+
 Domain-based services. `SupabaseService` in shared holds only the client instance and auth methods. Each feature has its own service for data operations.
 
 ```typescript
@@ -98,8 +102,12 @@ Domain-based services. `SupabaseService` in shared holds only the client instanc
 @Injectable({ providedIn: 'root' })
 export class SupabaseService {
   private client = createClient(environment.supabaseUrl, environment.supabaseKey);
-  get supabase() { return this.client; }
-  get auth() { return this.client.auth; }
+  get supabase() {
+    return this.client;
+  }
+  get auth() {
+    return this.client.auth;
+  }
 }
 
 // break-timer/break-timer.service.ts — domain logic
@@ -111,6 +119,7 @@ export class BreakTimerService {
 ```
 
 ### Supabase Query Pattern
+
 Wrap Supabase calls in a reusable helper to convert to Observable with error handling:
 
 ```typescript
@@ -128,11 +137,13 @@ query<T>(queryPromise: PromiseLike<{ data: T | null; error: any }>): Observable<
 ## Coding Conventions
 
 ### Language
+
 - Code, comments, commit messages — **English**
 - UI text (labels, buttons, messages, exercise names) — **Ukrainian** (hardcoded, no i18n)
 - Exercise names have both `name` (Ukrainian) and `nameEn` (English, for YouTube search)
 
 ### Angular (project-specific conventions)
+
 - `changeDetection: ChangeDetectionStrategy.OnPush` on all components
 - Prefer inline templates for small components
 - WCAG AA compliance required — must pass AXE checks
@@ -142,6 +153,7 @@ query<T>(queryPromise: PromiseLike<{ data: T | null; error: any }>): Observable<
 _Generic Angular 21 best practices (standalone, signals, inject(), control flow, etc.) are covered by `.claude/skills/angular-*`._
 
 ### Material M3
+
 - Do NOT use `color="primary"` on components — M2 pattern, doesn't work in M3
 - Style with CSS tokens: `background: var(--mat-sys-primary); color: var(--mat-sys-on-primary);`
 - Icons: Material Symbols Outlined (not legacy Material Icons). Default font set configured in `app.config.ts` via `MAT_ICON_DEFAULT_OPTIONS`
@@ -149,10 +161,12 @@ _Generic Angular 21 best practices (standalone, signals, inject(), control flow,
 - Dark mode: `color-scheme: light dark` on body — auto-follows OS preference via M3 `light-dark()` tokens
 
 ### Styling
+
 - Component-scoped styles (default ViewEncapsulation)
 - Responsive design: desktop-first for dashboard/break-timer, mobile-friendly for strength/stepper
 
 ### File Naming
+
 - `feature-name.component.ts` / `.html` / `.scss`
 - `feature-name.service.ts`
 - `feature-name.routes.ts`
@@ -188,3 +202,15 @@ All sounds generated programmatically via Web Audio API (OscillatorNode). No aud
 - `docs/fitbreak-supabase-schema.sql` — complete DB schema (source of truth)
 
 Read these files before making architectural decisions. When in doubt — check the brief.
+
+## Nexus Integration
+
+This project uses Nexus for project context management.
+
+**CEO:** Ihor — self-taught Angular developer, wants full AI support with critical thinking and engagement.
+
+**Entry point:** `.nexus/NEXUS-INDEX.md`
+
+**Evergreen docs:** `.nexus/evergreen/` — project identity, architecture, decisions, execution plan, workflow status, retrospectives. Consult these before major decisions.
+
+**Agents:** `.claude/agents/nexus-*.md` — product lead, frontend architect, backend engineer, UX designer, QA engineer. Auto-delegated via Nexus commands.
