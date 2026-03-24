@@ -348,8 +348,11 @@ export class DashboardComponent implements OnInit {
   }
 
   async onEndWorkday(): Promise<void> {
+    const sessionId = this.dashboard.session()?.id;
     await this.workday.endWorkday();
-    this.dashboard.loadWeekActivities();
+    if (sessionId) {
+      this.router.navigate(['/day-summary', sessionId]);
+    }
   }
 
   async onLogout(): Promise<void> {

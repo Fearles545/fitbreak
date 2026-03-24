@@ -4,7 +4,7 @@
 
 ## Current State
 
-🟡 **Sprint 1 in progress — 2 of 4 tasks done**
+🟡 **Sprint 1 in progress — 3 of 4 tasks done**
 
 ## Sprint 1 Progress
 
@@ -12,8 +12,8 @@
 |---|------|--------|
 | 1 | Stepper timer layout fix | ✅ done |
 | 2 | Settings page | ✅ done |
-| 3 | Day summary screen | ⬜ next up |
-| 4 | Progress page V1 | ⬜ pending |
+| 3 | Day summary screen | ✅ done |
+| 4 | Progress page V1 | ⬜ next up |
 
 ## What Was Done (2026-03-24)
 
@@ -21,17 +21,12 @@
 - Stepper: fixed dimmed opacity (0.15→0.5), forced dark color-scheme, cleaned lint issues
 - Settings: full feature — service with lazy load, page with chip selectors + custom input, wired into dashboard/stepper/strength, DB CHECK constraints added
 - Test account created in Supabase (test@fitbreak.local) for testing without affecting real data
+- Day summary: new screen at `/day-summary/:id` — shows fitbreak count (hero metric), work duration, avg mood, break list with rotation badges and status, workout list. Navigated to automatically on "Завершити робочий день"
 
 ## Active Work
 
-_None — session ended. Next: Day summary screen._
+_None. Next: Progress page V1._
 
 ## Blockers
 
 _None._
-
-## Commits Ahead of Origin
-
-2 commits on main, not pushed:
-- `d555d23` fix(stepper): improve timer visibility in dimmed and light modes
-- `44e71e1` feat(settings): add settings page with break interval, stepper defaults, and rest timer

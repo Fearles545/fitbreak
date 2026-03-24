@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./stepper/stepper.component').then(m => m.StepperComponent),
   },
   {
+    path: 'day-summary/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./day-summary/day-summary.component').then(m => m.DaySummaryComponent),
+  },
+  {
     path: 'progress',
     canActivate: [authGuard],
     loadComponent: () => import('./progress/progress.component').then(m => m.ProgressComponent),
