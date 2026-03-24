@@ -3,6 +3,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
 import { AudioService } from '@shared/services/audio.service';
 import { toDateKey } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
+import { SettingsService } from '../settings/settings.service';
 import type {
   Exercise,
   ExerciseLog,
@@ -28,6 +29,7 @@ export class StrengthService {
   private supabase = inject(SupabaseService);
   private audio = inject(AudioService);
   private auth = inject(AuthService);
+  private settings = inject(SettingsService);
 
   private _state = signal<StrengthState>('idle');
   private _mode = signal<WorkoutMode>('classic');
@@ -108,7 +110,7 @@ export class StrengthService {
         targetSets: slot.overrideSets ?? exercise.default_sets ?? 3,
         targetReps: slot.overrideReps ?? exercise.default_reps,
         targetDurationSec: slot.overrideDurationSec ?? exercise.default_duration_sec,
-        restSec: slot.overrideRestSec ?? exercise.default_rest_sec ?? 60,
+        restSec: slot.overrideRestSec ?? exercise.default_rest_sec ?? this.settings.restBetweenSetsSec(),
         completedSets: [],
       });
     }

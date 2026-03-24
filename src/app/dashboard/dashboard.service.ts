@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { toDateKey, getLast7Days } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
+import { SettingsService } from '../settings/settings.service';
 import type { WorkSession } from '@shared/models/fitbreak.models';
 import type { DayActivity } from '@shared/components/week-calendar/week-calendar.component';
 
@@ -9,6 +10,7 @@ import type { DayActivity } from '@shared/components/week-calendar/week-calendar
 export class DashboardService {
   private supabase = inject(SupabaseService);
   private auth = inject(AuthService);
+  private settings = inject(SettingsService);
 
   private _session = signal<WorkSession | null>(null);
   private _weekActivities = signal<DayActivity[]>([]);
@@ -65,7 +67,7 @@ export class DashboardService {
 
     const now = new Date();
     const today = toDateKey();
-    const breakIntervalMin = 45;
+    const breakIntervalMin = this.settings.breakIntervalMin();
 
     const { data, error } = await this.supabase.supabase
       .from('work_sessions')

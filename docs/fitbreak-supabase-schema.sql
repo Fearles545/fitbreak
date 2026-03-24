@@ -152,18 +152,22 @@ create table public.user_settings (
   user_id uuid references auth.users(id) on delete cascade not null unique,
 
   -- Робочий день
-  default_break_interval_min int default 45,
+  default_break_interval_min int default 45
+    check (default_break_interval_min is null or default_break_interval_min between 5 and 120),
   enabled_rotations text[] default '{neck-eyes,thoracic-shoulders,hips-lower-back,active}',
   rotation_order text[] default '{neck-eyes,thoracic-shoulders,hips-lower-back,active}',
 
   -- Степер
-  default_stepper_duration_min int default 60,
-  default_stepper_interval_min int default 5,
+  default_stepper_duration_min int default 60
+    check (default_stepper_duration_min is null or default_stepper_duration_min between 5 and 120),
+  default_stepper_interval_min int default 5
+    check (default_stepper_interval_min is null or default_stepper_interval_min between 1 and 30),
   stepper_signal_type text default 'beep'
     check (stepper_signal_type in ('beep', 'voice', 'vibration')),
 
   -- Силове
-  default_rest_between_sets_sec int default 60,
+  default_rest_between_sets_sec int default 60
+    check (default_rest_between_sets_sec is null or default_rest_between_sets_sec between 10 and 300),
 
   -- UI
   theme text default 'system'

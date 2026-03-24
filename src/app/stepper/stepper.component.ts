@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { StepperService } from './stepper.service';
 import { WorkdayService } from '@shared/services/workday.service';
+import { SettingsService } from '../settings/settings.service';
 import type { MoodRating } from '@shared/models/fitbreak.models';
 
 type StepperView = 'setup' | 'running' | 'summary';
@@ -408,6 +409,7 @@ type StepperView = 'setup' | 'running' | 'summary';
 export class StepperComponent implements OnInit {
   protected stepper = inject(StepperService);
   private workday = inject(WorkdayService);
+  private settings = inject(SettingsService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
@@ -424,11 +426,16 @@ export class StepperComponent implements OnInit {
     }
   });
 
-  selectedDuration = signal(60);
-  selectedInterval = signal(5);
+  selectedDuration = signal(this.settings.stepperDurationMin());
+  selectedInterval = signal(this.settings.stepperIntervalMin());
 
-  readonly durationOptions = [20, 30, 45, 60, 90];
-  readonly intervalOptions = [3, 5, 10, 15];
+  readonly durationOptions = this.buildOptions([20, 30, 45, 60, 90], this.settings.stepperDurationMin());
+  readonly intervalOptions = this.buildOptions([3, 5, 10, 15], this.settings.stepperIntervalMin());
+
+  private buildOptions(defaults: number[], current: number): number[] {
+    if (defaults.includes(current)) return defaults;
+    return [...defaults, current].sort((a, b) => a - b);
+  }
 
   readonly moodOptions = [
     { value: 'great', emoji: '😊', label: 'Чудово' },
@@ -452,6 +459,10 @@ export class StepperComponent implements OnInit {
   async onStart(): Promise<void> {
     this.workday.startActivity('stepper');
     await this.stepper.start(this.selectedDuration(), this.selectedInterval());
+    this.settings.update({
+      default_stepper_duration_min: this.selectedDuration(),
+      default_stepper_interval_min: this.selectedInterval(),
+    });
     this.view.set('running');
     this.resetDimTimer();
   }

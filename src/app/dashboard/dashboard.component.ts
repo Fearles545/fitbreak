@@ -16,6 +16,7 @@ import { WorkdayService } from '@shared/services/workday.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { toDisplayDate } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
+import { SettingsService } from '../settings/settings.service';
 import { DashboardService } from './dashboard.service';
 
 @Component({
@@ -176,9 +177,14 @@ import { DashboardService } from './dashboard.service';
             <h1 class="greeting">Привіт, {{ firstName() }}!</h1>
             <div class="date">{{ formattedDate() }}</div>
           </div>
-          <button mat-icon-button class="logout-btn" (click)="onLogout()" aria-label="Вийти">
-            <mat-icon>logout</mat-icon>
-          </button>
+          <div>
+            <button mat-icon-button (click)="router.navigate(['/settings'])" aria-label="Налаштування">
+              <mat-icon>settings</mat-icon>
+            </button>
+            <button mat-icon-button class="logout-btn" (click)="onLogout()" aria-label="Вийти">
+              <mat-icon>logout</mat-icon>
+            </button>
+          </div>
         </div>
 
         <app-week-calendar [activities]="dashboard.weekActivities()" />
@@ -267,6 +273,7 @@ export class DashboardComponent implements OnInit {
   protected workday = inject(WorkdayService);
   private auth = inject(AuthService);
   private audio = inject(AudioService);
+  private settings = inject(SettingsService);
   protected router = inject(Router);
 
   firstName = computed(() => {
@@ -280,7 +287,7 @@ export class DashboardComponent implements OnInit {
 
   totalSeconds = computed(() => {
     const session = this.dashboard.session();
-    return (session?.break_interval_min ?? 45) * 60;
+    return (session?.break_interval_min ?? this.settings.breakIntervalMin()) * 60;
   });
 
   remainingSeconds = computed(() => this.workday.remainingSeconds());
@@ -320,6 +327,7 @@ export class DashboardComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    await this.settings.ensureLoaded();
     await this.dashboard.cleanupStaleSessions();
     await this.dashboard.refreshSession();
     await this.workday.init();
