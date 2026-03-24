@@ -1,1 +1,0 @@
-import{Ib as r,Va as o,nb as n,ob as s}from"./chunk-2ATYAPYT.js";var p=class t{static \u0275fac=function(e){return new(e||t)};static \u0275cmp=o({type:t,selectors:[["app-progress"]],decls:2,vars:0,template:function(e,i){e&1&&(n(0,"h1"),r(1,"\u041F\u0440\u043E\u0433\u0440\u0435\u0441"),s())},encapsulation:2,changeDetection:0})};export{p as ProgressComponent};
