@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   DestroyRef,
   effect,
   inject,
@@ -90,6 +89,7 @@ type StepperView = 'setup' | 'running' | 'summary';
     /* ── Running (dark fullscreen) ── */
     .running {
       background: #0a0a0a;
+      color-scheme: dark;
       min-height: 100vh;
       min-height: 100dvh;
       display: flex;
@@ -102,7 +102,7 @@ type StepperView = 'setup' | 'running' | 'summary';
     }
 
     .running.dimmed {
-      opacity: 0.15;
+      opacity: 0.5;
     }
 
     .big-timer {
@@ -320,7 +320,7 @@ type StepperView = 'setup' | 'running' | 'summary';
       }
 
       @case ('running') {
-        <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (touchstart)="onTap()">
+        <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (keydown.enter)="onTap()" (touchstart)="onTap()" tabindex="0" role="button" aria-label="Торкніться, щоб скинути таймер затемнення">
           <div class="big-timer">{{ stepper.remainingFormatted() }}</div>
           <div class="timer-label">залишилось</div>
 
@@ -416,7 +416,7 @@ export class StepperComponent implements OnInit {
   isDimmed = signal(false);
 
   // Auto-transition to summary when stepper finishes (timer reaches 0)
-  private autoFinish = effect(() => {
+  private _autoFinish = effect(() => {
     if (this.stepper.state() === 'finished' && this.view() === 'running') {
       this.clearDimTimer();
       this.isDimmed.set(false);
