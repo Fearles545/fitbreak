@@ -318,6 +318,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      streak_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          current_streak: number
+          longest_streak: number
+        }[]
+      }
       weekly_break_stats: {
         Args: { weeks_back?: number }
         Returns: {

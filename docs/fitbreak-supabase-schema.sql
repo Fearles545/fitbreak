@@ -363,3 +363,44 @@ language sql security definer as $$
   group by date_trunc('week', date)
   order by week_start desc;
 $$;
+
+-- Серії (поточна та найдовша)
+create or replace function public.streak_stats()
+returns table (
+  current_streak bigint,
+  longest_streak bigint
+)
+language sql security definer as $$
+  with active_dates as (
+    select distinct s.date
+    from public.work_sessions s
+    where s.user_id = auth.uid()
+      and s.status = 'completed'
+      and exists (
+        select 1 from jsonb_array_elements(s.breaks) b
+        where (b->>'skipped')::boolean = false
+          and b->>'completedAt' is not null
+      )
+  ),
+  grouped as (
+    select date,
+           date - (row_number() over (order by date))::int as grp
+    from active_dates
+  ),
+  streaks as (
+    select count(*) as streak_length,
+           max(date) as streak_end
+    from grouped
+    group by grp
+  )
+  select
+    coalesce((
+      select s.streak_length
+      from streaks s
+      where s.streak_end >= current_date - 1
+      order by s.streak_end desc
+      limit 1
+    ), 0) as current_streak,
+    coalesce(max(streak_length), 0) as longest_streak
+  from streaks;
+$$;

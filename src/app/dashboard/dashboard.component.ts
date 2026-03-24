@@ -178,6 +178,9 @@ import { DashboardService } from './dashboard.service';
             <div class="date">{{ formattedDate() }}</div>
           </div>
           <div>
+            <button mat-icon-button (click)="router.navigate(['/progress'])" aria-label="Прогрес">
+              <mat-icon>bar_chart</mat-icon>
+            </button>
             <button mat-icon-button (click)="router.navigate(['/settings'])" aria-label="Налаштування">
               <mat-icon>settings</mat-icon>
             </button>

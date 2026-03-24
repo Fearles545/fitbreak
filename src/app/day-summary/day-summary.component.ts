@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SupabaseService } from '@shared/services/supabase.service';
+import { AuthService } from '../auth/auth.service';
 import { ROTATION_INFO } from '@shared/models/rotation.constants';
 import { toDisplayDate } from '@shared/utils/date.utils';
 import type { WorkSession, WorkoutLog, BreakEntry, MoodRating } from '@shared/models/fitbreak.models';
@@ -291,6 +292,7 @@ const MOOD_EMOJI: Record<MoodRating, string> = {
 export class DaySummaryComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private supabase = inject(SupabaseService);
+  private auth = inject(AuthService);
   protected router = inject(Router);
 
   protected loading = signal(true);
@@ -395,14 +397,22 @@ export class DaySummaryComponent implements OnInit {
       return;
     }
 
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      this.router.navigate(['/login']);
+      return;
+    }
+
     try {
       const { data, error } = await this.supabase.supabase
         .from('work_sessions')
         .select('*')
         .eq('id', sessionId)
+        .eq('user_id', userId)
+        .eq('status', 'completed')
         .single();
 
-      if (error || !data) {
+      if (error || !data || !data.ended_at) {
         this.router.navigate(['/dashboard']);
         return;
       }
@@ -415,6 +425,7 @@ export class DaySummaryComponent implements OnInit {
         .from('workout_logs')
         .select('*')
         .eq('date', session.date)
+        .eq('user_id', userId)
         .in('workout_type', ['strength', 'stepper']);
 
       if (workouts) {
