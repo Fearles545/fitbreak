@@ -35,3 +35,17 @@ Record of key architectural and product decisions.
 **Decision:** Hardcode all UI text in Ukrainian. No i18n framework.
 **Alternatives considered:** i18n with translation files
 **Rationale:** Single-user app. i18n overhead not justified. Exercise names have both Ukrainian (`name`) and English (`nameEn`) for YouTube search.
+
+### DECISION-004: Hybrid Settings — dedicated page + in-context persistence
+**Date:** 2026-03-24
+**Context:** Settings page needed for break interval, stepper defaults, rest timer. Question of where to put the controls.
+**Decision:** Dedicated `/settings` page as the primary UI. Stepper auto-persists last-used values silently. No in-context settings on dashboard for V1.
+**Alternatives considered:** (A) Dedicated page only, (B) In-context only (configure where you use it), (C) Hybrid
+**Rationale:** CEO confirmed dedicated page is a good investment for future settings (theme, language, notifications). In-context for stepper is natural since setup screen already has pickers. Break interval is "set once, forget" — doesn't need to be on dashboard.
+
+### DECISION-005: Lazy-load SettingsService with ensureLoaded() pattern
+**Date:** 2026-03-24
+**Context:** Settings are consumed by multiple lazy-loaded routes (dashboard, stepper, strength). Loading only in DashboardComponent leaves other routes unserved on direct navigation.
+**Decision:** SettingsService uses a lazy `ensureLoaded()` pattern — first consumer triggers load, subsequent calls reuse the same promise. Non-null computed signals with `?? defaults` ensure safe reads.
+**Alternatives considered:** APP_INITIALIZER (eager), load in authGuard, load only in dashboard
+**Rationale:** Lazy pattern is most resilient — works regardless of which route loads first, no wasted calls if settings aren't needed. QA review identified cross-route timing as the biggest risk (R8).

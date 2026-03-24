@@ -12,7 +12,7 @@
 | # | Task | Level | Status |
 |---|------|-------|--------|
 | 1 | Stepper timer layout fix | 0 | done |
-| 2 | Settings page — daily-loop settings (break interval, rest timer, stepper defaults) | 2 | in progress |
+| 2 | Settings page — daily-loop settings (break interval, rest timer, stepper defaults) | 2 | done |
 | 3 | Day summary screen — show breaks, completion rate, workouts, mood when ending workday | 1 | pending |
 | 4 | Progress page V1 — streak counter, this week vs last week comparison | 2 | pending |
 
