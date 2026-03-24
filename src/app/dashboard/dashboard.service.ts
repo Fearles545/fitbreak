@@ -34,7 +34,7 @@ export class DashboardService {
       .from('work_sessions')
       .update({
         status: 'completed',
-        ended_at: new Date().toISOString(),
+        ended_at: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
         paused_at: null,
       })
       .in('status', ['active', 'paused'])

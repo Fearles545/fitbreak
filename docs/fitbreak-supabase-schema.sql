@@ -198,51 +198,51 @@ alter table public.user_settings enable row level security;
 
 -- Exercises
 create policy "exercises_select" on public.exercises
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "exercises_insert" on public.exercises
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "exercises_update" on public.exercises
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "exercises_delete" on public.exercises
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- Workout Templates
 create policy "templates_select" on public.workout_templates
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "templates_insert" on public.workout_templates
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "templates_update" on public.workout_templates
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "templates_delete" on public.workout_templates
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- Work Sessions
 create policy "sessions_select" on public.work_sessions
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "sessions_insert" on public.work_sessions
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "sessions_update" on public.work_sessions
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "sessions_delete" on public.work_sessions
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- Workout Logs
 create policy "logs_select" on public.workout_logs
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "logs_insert" on public.workout_logs
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "logs_update" on public.workout_logs
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "logs_delete" on public.workout_logs
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 -- User Settings
 create policy "settings_select" on public.user_settings
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "settings_insert" on public.user_settings
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "settings_update" on public.user_settings
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 
 
 -- ────────────────────────────────────────────────────────────
@@ -268,13 +268,18 @@ create index idx_logs_user_date
 create index idx_logs_user_type
   on public.workout_logs(user_id, workout_type);
 
+create index idx_logs_template
+  on public.workout_logs(workout_template_id);
+
 
 -- ────────────────────────────────────────────────────────────
 -- AUTO-UPDATE updated_at TRIGGER
 -- ────────────────────────────────────────────────────────────
 
 create or replace function public.update_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = ''
+as $$
 begin
   new.updated_at = now();
   return new;
@@ -315,29 +320,31 @@ returns table (
   skipped_breaks bigint,
   completion_rate numeric
 )
-language sql security definer as $$
+language sql security definer
+set search_path = ''
+as $$
   select
     date_trunc('week', s.date)::date as week_start,
     sum(jsonb_array_length(s.breaks)) as total_breaks,
-    sum((
-      select count(*) from jsonb_array_elements(s.breaks) b
-      where (b->>'skipped')::boolean = false
-        and b->>'completedAt' is not null
-    )) as completed_breaks,
-    sum((
-      select count(*) from jsonb_array_elements(s.breaks) b
-      where (b->>'skipped')::boolean = true
-    )) as skipped_breaks,
+    sum(completed.cnt) as completed_breaks,
+    sum(skipped.cnt) as skipped_breaks,
     round(
-      sum((
-        select count(*) from jsonb_array_elements(s.breaks) b
-        where (b->>'skipped')::boolean = false
-          and b->>'completedAt' is not null
-      ))::numeric
+      sum(completed.cnt)::numeric
       / nullif(sum(jsonb_array_length(s.breaks)), 0) * 100
     , 1) as completion_rate
   from public.work_sessions s
-  where s.user_id = auth.uid()
+  left join lateral (
+    select count(*) as cnt
+    from jsonb_array_elements(s.breaks) b
+    where (b->>'skipped')::boolean = false
+      and b->>'completedAt' is not null
+  ) completed on true
+  left join lateral (
+    select count(*) as cnt
+    from jsonb_array_elements(s.breaks) b
+    where (b->>'skipped')::boolean = true
+  ) skipped on true
+  where s.user_id = (select auth.uid())
     and s.date >= current_date - (weeks_back * 7)
   group by date_trunc('week', s.date)
   order by week_start desc;
@@ -351,14 +358,16 @@ returns table (
   stepper_count bigint,
   total_duration_min bigint
 )
-language sql security definer as $$
+language sql security definer
+set search_path = ''
+as $$
   select
     date_trunc('week', date)::date as week_start,
     count(*) filter (where workout_type = 'strength') as strength_count,
     count(*) filter (where workout_type = 'stepper') as stepper_count,
     sum(duration_min) as total_duration_min
   from public.workout_logs
-  where user_id = auth.uid()
+  where user_id = (select auth.uid())
     and date >= current_date - (weeks_back * 7)
   group by date_trunc('week', date)
   order by week_start desc;
@@ -370,11 +379,13 @@ returns table (
   current_streak bigint,
   longest_streak bigint
 )
-language sql security definer as $$
+language sql security definer
+set search_path = ''
+as $$
   with active_dates as (
     select distinct s.date
     from public.work_sessions s
-    where s.user_id = auth.uid()
+    where s.user_id = (select auth.uid())
       and s.status = 'completed'
       and exists (
         select 1 from jsonb_array_elements(s.breaks) b

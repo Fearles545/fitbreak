@@ -330,8 +330,10 @@ export class DashboardComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await this.settings.ensureLoaded();
-    await this.dashboard.cleanupStaleSessions();
+    await Promise.all([
+      this.settings.ensureLoaded(),
+      this.dashboard.cleanupStaleSessions(),
+    ]);
     await this.dashboard.refreshSession();
     await this.workday.init();
     this.dashboard.loadWeekActivities();
