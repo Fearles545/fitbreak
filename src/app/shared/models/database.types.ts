@@ -318,6 +318,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_stale_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       streak_stats: {
         Args: Record<PropertyKey, never>
         Returns: {

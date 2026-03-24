@@ -308,6 +308,28 @@ create trigger settings_updated_at
 
 
 -- ────────────────────────────────────────────────────────────
+-- SESSION MAINTENANCE
+-- ────────────────────────────────────────────────────────────
+
+-- Завершити «забуті» сесії попередніх днів.
+-- ended_at = updated_at (останній відомий момент активності).
+create or replace function public.cleanup_stale_sessions()
+returns void
+language sql security definer
+set search_path = ''
+as $$
+  update public.work_sessions
+  set
+    status = 'completed',
+    ended_at = updated_at,
+    paused_at = null
+  where user_id = (select auth.uid())
+    and status in ('active', 'paused')
+    and date < current_date;
+$$;
+
+
+-- ────────────────────────────────────────────────────────────
 -- ANALYTICS FUNCTIONS
 -- ────────────────────────────────────────────────────────────
 

@@ -29,17 +29,7 @@ export class DashboardService {
     if (this.hasCleanedUp) return;
     this.hasCleanedUp = true;
 
-    const today = toDateKey();
-    const { error } = await this.supabase.supabase
-      .from('work_sessions')
-      .update({
-        status: 'completed',
-        ended_at: new Date(new Date().setHours(0, 0, 0, 0)).toISOString(),
-        paused_at: null,
-      })
-      .in('status', ['active', 'paused'])
-      .lt('date', today);
-
+    const { error } = await this.supabase.supabase.rpc('cleanup_stale_sessions');
     if (error) throw error;
   }
 
