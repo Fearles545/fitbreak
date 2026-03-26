@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { getLast7Days, isToday as checkIsToday, toDateKey } from '@shared/utils/date.utils';
@@ -8,7 +9,7 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
 @Component({
   selector: 'app-week-calendar',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [],
+  imports: [MatIconModule],
   styles: `
     :host {
       display: block;
@@ -16,7 +17,7 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
 
     .week {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       justify-content: center;
     }
 
@@ -24,8 +25,9 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      min-width: 40px;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
     }
 
     .day-label {
@@ -33,6 +35,7 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
       font-weight: 500;
       color: var(--mat-sys-on-surface-variant);
       text-transform: uppercase;
+      letter-spacing: 0.02em;
     }
 
     .day.today .day-label {
@@ -40,50 +43,64 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
       font-weight: 700;
     }
 
-    .day-circle {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
+    .day-cell {
+      width: 100%;
+      aspect-ratio: 1;
+      max-width: 48px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 2px;
       background: var(--mat-sys-surface-container);
-      font-size: 0.65rem;
-      gap: 1px;
+      transition: background 0.2s, outline-color 0.2s;
     }
 
-    .day.today .day-circle {
+    .day.today .day-cell {
       outline: 2px solid var(--mat-sys-primary);
-      outline-offset: 2px;
+      outline-offset: 1px;
     }
 
-    .day.has-activity .day-circle {
+    .day.has-activity .day-cell {
       background: var(--mat-sys-primary-container);
     }
 
-    .icons {
-      display: flex;
-      gap: 2px;
-      align-items: center;
-      font-size: 0.75rem;
+    .day-number {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface);
       line-height: 1;
     }
 
-    .break-count {
-      font-size: 0.6rem;
-      font-weight: 600;
+    .day.has-activity .day-number {
       color: var(--mat-sys-on-primary-container);
     }
 
-    .workout-icon {
+    .activity-icons {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      height: 16px;
+    }
+
+    .activity-icons mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      color: var(--mat-sys-on-primary-container);
+    }
+
+    .break-badge {
       font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--mat-sys-on-primary-container);
       line-height: 1;
     }
 
-    .empty {
-      width: 6px;
-      height: 6px;
+    .empty-dot {
+      width: 4px;
+      height: 4px;
       border-radius: 50%;
       background: var(--mat-sys-outline-variant);
     }
@@ -93,21 +110,23 @@ import type { DayActivity } from '@shared/models/fitbreak.models';
       @for (day of days(); track day.date) {
         <div class="day" [class.today]="day.isToday" [class.has-activity]="day.hasActivity">
           <span class="day-label">{{ day.label }}</span>
-          <div class="day-circle">
+          <div class="day-cell">
+            <span class="day-number">{{ day.dayNumber }}</span>
             @if (day.hasActivity) {
-              <div class="icons">
+              <div class="activity-icons">
                 @if (day.breakCount > 0) {
-                  <span class="break-count">⏰{{ day.breakCount }}</span>
+                  <span class="break-badge">{{ day.breakCount }}</span>
+                  <mat-icon>timer</mat-icon>
                 }
                 @if (day.hasStrength) {
-                  <span class="workout-icon">🏋️</span>
+                  <mat-icon>fitness_center</mat-icon>
                 }
                 @if (day.hasStepper) {
-                  <span class="workout-icon">🪜</span>
+                  <mat-icon>directions_walk</mat-icon>
                 }
               </div>
             } @else {
-              <div class="empty"></div>
+              <div class="empty-dot"></div>
             }
           </div>
         </div>
@@ -130,6 +149,7 @@ export class WeekCalendarComponent {
       return {
         date: dateStr,
         label: format(date, 'EEEEEE', { locale: uk }),
+        dayNumber: format(date, 'd'),
         isToday: checkIsToday(date),
         breakCount: activity?.breakCount ?? 0,
         hasStrength: activity?.hasStrength ?? false,

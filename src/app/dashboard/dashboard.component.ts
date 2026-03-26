@@ -4,11 +4,11 @@ import {
   computed,
   inject,
   OnInit,
+  signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
@@ -17,6 +17,7 @@ import { AudioService } from '@shared/services/audio.service';
 import { WorkdayService } from '@shared/services/workday.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { toDisplayDate } from '@shared/utils/date.utils';
+import { getTodayTip } from '@shared/constants/health-tips';
 import { AuthService } from '../auth/auth.service';
 import { SettingsService } from '../settings/settings.service';
 import { SessionService } from '@shared/services/session.service';
@@ -28,7 +29,6 @@ import { DashboardService } from './dashboard.service';
   imports: [
     MatButtonModule,
     MatIconModule,
-    MatProgressSpinnerModule,
     AnimatedTimerComponent,
     TimerRingComponent,
     WeekCalendarComponent,
@@ -39,7 +39,7 @@ import { DashboardService } from './dashboard.service';
       min-height: 100vh;
       min-height: 100dvh;
       background: var(--mat-sys-surface);
-      padding: 24px 16px;
+      padding: 20px 16px;
     }
 
     .container {
@@ -47,57 +47,238 @@ import { DashboardService } from './dashboard.service';
       margin: 0 auto;
     }
 
+    /* ── Transitions ── */
+    .fade-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-in { animation: none; }
+      .paused-indicator { animation: none; }
+      .loading-spinner { animation-duration: 1.5s; }
+    }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex;
+      justify-content: center;
+      padding: 64px 0;
+    }
+
+    .loading-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--mat-sys-surface-container-high);
+      border-top-color: var(--mat-sys-primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Header ── */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .greeting {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 600;
       color: var(--mat-sys-on-surface);
       margin: 0;
     }
 
     .date {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: var(--mat-sys-on-surface-variant);
       margin-top: 2px;
     }
 
-    .actions {
+    /* ── Nav island ── */
+    .nav-island {
+      display: flex;
+      gap: 4px;
+      background: var(--mat-sys-surface-container);
+      border-radius: 16px;
+      padding: 4px;
+    }
+
+    .nav-island button {
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    /* ── Streak card ── */
+    .streak-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: var(--mat-sys-primary-container);
+      margin-top: 16px;
+    }
+
+    .streak-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .streak-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .streak-number {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--mat-sys-on-primary-container);
+      line-height: 1.2;
+    }
+
+    .streak-label {
+      font-size: 0.8rem;
+      color: var(--mat-sys-on-primary-container);
+      opacity: 0.8;
+    }
+
+    /* ── Start CTA ── */
+    .start-section {
+      margin-top: 28px;
+    }
+
+    .start-button {
+      width: 100%;
+      height: 56px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 16px;
+      letter-spacing: 0.01em;
+    }
+
+    .start-button mat-icon {
+      margin-right: 8px;
+    }
+
+    /* ── Quick launch island ── */
+    .quick-launch {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .quick-launch-card {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 32px;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      border-radius: 16px;
+      background: var(--mat-sys-surface-container);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: var(--mat-sys-on-surface);
     }
 
-    .secondary-actions {
+    .quick-launch-card:hover {
+      background: var(--mat-sys-surface-container-high);
+    }
+
+    .quick-launch-card:active {
+      background: var(--mat-sys-surface-container-highest);
+    }
+
+    .quick-launch-card:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
+
+    .quick-launch-card mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: var(--mat-sys-primary);
+    }
+
+    .quick-launch-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    /* ── Health tip ── */
+    .health-tip {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--mat-sys-surface-container);
       display: flex;
       gap: 12px;
+      align-items: flex-start;
     }
 
-    .secondary-actions button {
-      flex: 1;
+    .health-tip mat-icon {
+      color: var(--mat-sys-primary);
+      flex-shrink: 0;
+      margin-top: 1px;
     }
 
-    /* Active session */
+    .health-tip-text {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      line-height: 1.5;
+    }
+
+    /* ── Active session ── */
     .timer-section {
       display: flex;
       justify-content: center;
-      margin: 16px 0 24px;
+      margin: 12px 0 20px;
     }
 
     .timer-section app-timer-ring {
-      width: 220px;
-      height: 220px;
+      width: 200px;
+      height: 200px;
     }
 
+    .timer-label {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-top: 4px;
+    }
+
+    .timer-section.paused {
+      opacity: 0.5;
+    }
+
+    .paused-indicator {
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 12px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Next rotation ── */
     .next-rotation {
       text-align: center;
-      padding: 16px;
+      padding: 14px;
       border-radius: 16px;
       background: var(--mat-sys-surface-container);
     }
@@ -120,90 +301,102 @@ import { DashboardService } from './dashboard.service';
       margin-top: 2px;
     }
 
+    /* ── Day stats ── */
     .day-stats {
       text-align: center;
-      margin-top: 16px;
+      margin-top: 12px;
       font-size: 0.85rem;
       color: var(--mat-sys-on-surface-variant);
     }
 
-    .timer-label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-top: 4px;
-    }
-
-    .timer-section.paused {
-      opacity: 0.5;
-    }
-
-    .paused-indicator {
-      text-align: center;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 16px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
+    /* ── Session actions ── */
     .session-actions {
-      margin-top: 32px;
+      margin-top: 24px;
       text-align: center;
-    }
-
-    .session-actions + .secondary-actions {
-      margin-top: 16px;
     }
 
     .end-day {
-      margin-top: 12px;
+      margin-top: 8px;
       text-align: center;
     }
 
-    .loading {
-      display: flex;
-      justify-content: center;
-      padding: 64px 0;
+    /* ── Error state ── */
+    .error-state {
+      text-align: center;
+      padding: 48px 24px;
     }
 
-    .logout-btn {
+    .error-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      color: var(--mat-sys-error);
+    }
+
+    .error-text {
+      font-size: 0.9rem;
       color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 16px;
+    }
+
+    /* ── Responsive ── */
+    @media (min-width: 400px) {
+      :host { padding: 24px 16px; }
+      .header { margin-bottom: 24px; }
+      .greeting { font-size: 1.5rem; }
+      .timer-section { margin: 16px 0 24px; }
+      .timer-section app-timer-ring { width: 220px; height: 220px; }
+      .session-actions { margin-top: 32px; }
+      .start-section { margin-top: 32px; }
+      .streak-card { margin-top: 20px; }
     }
   `,
   template: `
     <div class="container">
-      @if (sessionService.loading()) {
-        <div class="loading">
-          <mat-spinner diameter="40" />
+      <!-- Header (always visible) -->
+      <div class="header">
+        <div>
+          <h1 class="greeting">Привіт, {{ firstName() }}!</h1>
+          <div class="date">{{ formattedDate() }}</div>
+        </div>
+        <nav class="nav-island" aria-label="Навігація">
+          <button mat-icon-button (click)="onNavigate('/progress')" aria-label="Прогрес">
+            <mat-icon aria-hidden="true">bar_chart</mat-icon>
+          </button>
+          <button mat-icon-button (click)="onNavigate('/settings')" aria-label="Налаштування">
+            <mat-icon aria-hidden="true">settings</mat-icon>
+          </button>
+          <button mat-icon-button (click)="onLogout()" aria-label="Вийти">
+            <mat-icon aria-hidden="true">logout</mat-icon>
+          </button>
+        </nav>
+      </div>
+
+      @if (loadError()) {
+        <!-- ═══ Error state ═══ -->
+        <div class="error-state">
+          <div class="error-icon">
+            <mat-icon aria-hidden="true" style="font-size: inherit; width: auto; height: auto">cloud_off</mat-icon>
+          </div>
+          <div class="error-text">Не вдалося завантажити дані</div>
+          <button mat-flat-button (click)="onRetry()">Спробувати ще раз</button>
+        </div>
+      } @else if (isLoading()) {
+        <!-- ═══ First load spinner ═══ -->
+        <div class="loading" role="status" aria-label="Завантаження...">
+          <div class="loading-spinner"></div>
         </div>
       } @else {
-        <div class="header">
-          <div>
-            <h1 class="greeting">Привіт, {{ firstName() }}!</h1>
-            <div class="date">{{ formattedDate() }}</div>
-          </div>
-          <div>
-            <button mat-icon-button (click)="router.navigate(['/progress'])" aria-label="Прогрес">
-              <mat-icon>bar_chart</mat-icon>
-            </button>
-            <button mat-icon-button (click)="router.navigate(['/settings'])" aria-label="Налаштування">
-              <mat-icon>settings</mat-icon>
-            </button>
-            <button mat-icon-button class="logout-btn" (click)="onLogout()" aria-label="Вийти">
-              <mat-icon>logout</mat-icon>
-            </button>
-          </div>
-        </div>
-
+        <div class="fade-in">
+        <!-- Week calendar -->
         <app-week-calendar [activities]="dashboard.weekActivities()" />
 
         @if (sessionService.session()) {
-          <!-- Active or paused session view -->
+          <!-- ═══ Active session ═══ -->
+
+          @if (isPaused()) {
+            <div class="paused-indicator" aria-label="Пауза">⏸ Пауза</div>
+          }
+
           <div class="timer-section" [class.paused]="isPaused()">
             <app-timer-ring
               [remainingSeconds]="remainingSeconds()"
@@ -216,10 +409,6 @@ import { DashboardService } from './dashboard.service';
               </app-animated-timer>
             </app-timer-ring>
           </div>
-
-          @if (isPaused()) {
-            <div class="paused-indicator">⏸ Пауза</div>
-          }
 
           @if (nextRotation()) {
             <div class="next-rotation">
@@ -238,26 +427,26 @@ import { DashboardService } from './dashboard.service';
           <div class="session-actions">
             @if (isPaused()) {
               <button mat-flat-button (click)="onResumeWorkday()">
-                <mat-icon>play_arrow</mat-icon>
+                <mat-icon aria-hidden="true">play_arrow</mat-icon>
                 Продовжити
               </button>
             } @else {
               <button matButton="outlined" (click)="onPauseWorkday()">
-                <mat-icon>pause</mat-icon>
+                <mat-icon aria-hidden="true">pause</mat-icon>
                 Пауза
               </button>
             }
           </div>
 
           @if (!isPaused()) {
-            <div class="secondary-actions">
-              <button matButton="outlined" (click)="router.navigate(['/strength'])">
-                <mat-icon>fitness_center</mat-icon>
-                Силове
+            <div class="quick-launch">
+              <button class="quick-launch-card" (click)="onNavigate('/strength')" aria-label="Силове тренування">
+                <mat-icon aria-hidden="true">fitness_center</mat-icon>
+                <span class="quick-launch-label">Силове</span>
               </button>
-              <button matButton="outlined" (click)="router.navigate(['/stepper'])">
-                <mat-icon>directions_walk</mat-icon>
-                Степер
+              <button class="quick-launch-card" (click)="onNavigate('/stepper')" aria-label="Степер">
+                <mat-icon aria-hidden="true">directions_walk</mat-icon>
+                <span class="quick-launch-label">Степер</span>
               </button>
             </div>
           }
@@ -266,22 +455,46 @@ import { DashboardService } from './dashboard.service';
             <button matButton="text" (click)="onEndWorkday()">Завершити робочий день</button>
           </div>
         } @else {
-          <!-- Start screen -->
-          <div class="actions">
-            <button mat-flat-button (click)="onStartWorkday()">Почати робочий день</button>
+          <!-- ═══ Start screen ═══ -->
 
-            <div class="secondary-actions">
-              <button matButton="outlined" (click)="router.navigate(['/strength'])">
-                <mat-icon>fitness_center</mat-icon>
-                Силове
-              </button>
-              <button matButton="outlined" (click)="router.navigate(['/stepper'])">
-                <mat-icon>directions_walk</mat-icon>
-                Степер
-              </button>
+          <!-- Streak -->
+          @if (dashboard.currentStreak() > 0) {
+            <div class="streak-card" role="status" [attr.aria-label]="'Поточна серія: ' + dashboard.currentStreak() + ' днів'">
+              <span class="streak-icon" aria-hidden="true">🔥</span>
+              <div class="streak-content">
+                <div class="streak-number">{{ dashboard.currentStreak() }} {{ streakDaysLabel() }}</div>
+                <div class="streak-label">{{ streakMessage() }}</div>
+              </div>
             </div>
+          }
+
+          <!-- Start CTA -->
+          <div class="start-section">
+            <button mat-flat-button class="start-button" (click)="onStartWorkday()">
+              <mat-icon aria-hidden="true">play_circle</mat-icon>
+              Почати робочий день
+            </button>
+          </div>
+
+          <!-- Quick launch -->
+          <div class="quick-launch">
+            <button class="quick-launch-card" (click)="onNavigate('/strength')" aria-label="Силове тренування">
+              <mat-icon aria-hidden="true">fitness_center</mat-icon>
+              <span class="quick-launch-label">Силове</span>
+            </button>
+            <button class="quick-launch-card" (click)="onNavigate('/stepper')" aria-label="Степер">
+              <mat-icon aria-hidden="true">directions_walk</mat-icon>
+              <span class="quick-launch-label">Степер</span>
+            </button>
+          </div>
+
+          <!-- Health tip -->
+          <div class="health-tip">
+            <mat-icon aria-hidden="true">lightbulb</mat-icon>
+            <span class="health-tip-text">{{ healthTip }}</span>
           </div>
         }
+        </div><!-- /fade-in -->
       }
     </div>
   `,
@@ -293,8 +506,15 @@ export class DashboardComponent implements OnInit {
   private auth = inject(AuthService);
   private audio = inject(AudioService);
   protected settings = inject(SettingsService);
-  protected router = inject(Router);
+  private router = inject(Router);
   private snackBar = inject(MatSnackBar);
+
+  protected readonly healthTip = getTodayTip();
+  protected loadError = signal(false);
+
+  protected isLoading = computed(() =>
+    this.sessionService.loading() || this.dashboard.loading(),
+  );
 
   firstName = computed(() => {
     const user = this.auth.user();
@@ -322,6 +542,24 @@ export class DashboardComponent implements OnInit {
     return info ? { name: info.name, icon: info.icon, duration: info.defaultDurationMin } : null;
   });
 
+  streakDaysLabel = computed(() => {
+    const n = this.dashboard.currentStreak();
+    const lastTwo = n % 100;
+    if (lastTwo >= 11 && lastTwo <= 14) return 'днів';
+    const lastOne = n % 10;
+    if (lastOne === 1) return 'день';
+    if (lastOne >= 2 && lastOne <= 4) return 'дні';
+    return 'днів';
+  });
+
+  streakMessage = computed(() => {
+    const streak = this.dashboard.currentStreak();
+    if (streak >= 14) return 'Неймовірна стабільність!';
+    if (streak >= 7) return 'Тижнева серія — чудово!';
+    if (streak >= 3) return 'Гарна серія, не зупиняйся!';
+    return 'Продовжуй у тому ж дусі!';
+  });
+
   elapsedTime = computed(() => {
     const session = this.sessionService.session();
     if (!session) return '';
@@ -329,7 +567,6 @@ export class DashboardComponent implements OnInit {
     const start = new Date(session.started_at).getTime();
     const now = this.workday.now();
 
-    // Subtract total paused time
     let totalPausedMs = 0;
     for (const pause of session.pauses) {
       if (!pause.resumedAt) continue;
@@ -347,16 +584,32 @@ export class DashboardComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    await this.loadDashboard();
+  }
+
+  protected onNavigate(path: string): void {
+    this.router.navigate([path]);
+  }
+
+  async onRetry(): Promise<void> {
+    this.loadError.set(false);
+    await this.loadDashboard();
+  }
+
+  private async loadDashboard(): Promise<void> {
     try {
       await Promise.all([
         this.settings.ensureLoaded(),
         this.sessionService.cleanupStaleSessions(),
       ]);
       await this.sessionService.refreshSession();
-      await this.workday.init();
-      this.dashboard.loadWeekActivities();
+      await Promise.all([
+        this.workday.init(),
+        this.dashboard.loadAll(),
+      ]);
     } catch {
-      this.snackBar.open('Не вдалося завантажити дані. Спробуйте оновити сторінку.', 'OK', { duration: 5000 });
+      this.loadError.set(true);
+      this.snackBar.open('Не вдалося завантажити дані.', 'OK', { duration: 5000 });
     }
   }
 
