@@ -149,11 +149,12 @@ export interface WorkoutLog extends Omit<Tables<'workout_logs'>, 'exercises' | '
   mood: MoodRating | null;
 }
 
-export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_rotations' | 'rotation_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound'> {
+export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_rotations' | 'rotation_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound' | 'timer_animation_style'> {
   enabled_rotations: MicroBreakRotation[] | null;
   rotation_order: MicroBreakRotation[] | null;
   stepper_signal_type: SignalType | null;
   theme: 'light' | 'dark' | 'system' | null;
   language: 'uk' | 'en' | null;
   break_notification_sound: 'gentle' | 'energetic' | 'default' | null;
+  timer_animation_style: 'roll' | 'fade' | 'scale' | 'blur' | 'slot';
 }

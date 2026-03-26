@@ -15,6 +15,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { SettingsService } from './settings.service';
 import { DashboardService } from '../dashboard/dashboard.service';
+import type { TablesUpdate } from '@shared/models/database.types';
 
 @Component({
   selector: 'app-settings',
@@ -267,6 +268,28 @@ import { DashboardService } from '../dashboard/dashboard.service';
         </div>
       </div>
 
+      <!-- Таймер -->
+      <div class="section">
+        <div class="section-title">Таймер</div>
+
+        <div class="setting-group">
+          <div class="setting-label">Анімація таймера</div>
+          <div class="chips" role="radiogroup" aria-label="Анімація таймера">
+            @for (opt of timerAnimationOptions; track opt.value) {
+              <button
+                class="chip"
+                [class.selected]="timerAnimation() === opt.value"
+                (click)="setTimerAnimation(opt.value)"
+                role="radio"
+                [attr.aria-checked]="timerAnimation() === opt.value"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
       <!-- Силове -->
       <div class="section">
         <div class="section-title">Силове</div>
@@ -329,6 +352,15 @@ export class SettingsComponent implements OnInit {
   stepperDuration = signal(60);
   stepperInterval = signal(5);
   restBetweenSets = signal(60);
+  timerAnimation = signal<string>('roll');
+
+  readonly timerAnimationOptions = [
+    { value: 'roll', label: 'Прокрутка' },
+    { value: 'fade', label: 'Згасання' },
+    { value: 'scale', label: 'Пульс' },
+    { value: 'blur', label: 'Розмиття' },
+    { value: 'slot', label: 'Барабан' },
+  ];
 
   breakCustomActive = signal(false);
   stepperDurationCustomActive = signal(false);
@@ -354,6 +386,7 @@ export class SettingsComponent implements OnInit {
         !this.stepperIntervalOptions.includes(this.stepperInterval()),
       );
       this.restCustomActive.set(!this.restOptions.includes(this.restBetweenSets()));
+      this.timerAnimation.set(s.timer_animation_style ?? 'flip');
     }
   }
 
@@ -385,6 +418,11 @@ export class SettingsComponent implements OnInit {
     this.save({ default_rest_between_sets_sec: value });
   }
 
+  setTimerAnimation(value: string): void {
+    this.timerAnimation.set(value);
+    this.save({ timer_animation_style: value });
+  }
+
   activateBreakCustom(): void {
     this.breakCustomActive.set(true);
   }
@@ -405,7 +443,7 @@ export class SettingsComponent implements OnInit {
     this.router.navigate(['/dashboard']);
   }
 
-  private async save(changes: Record<string, number>): Promise<void> {
+  private async save(changes: TablesUpdate<'user_settings'>): Promise<void> {
     try {
       await this.settingsService.update(changes);
     } catch {

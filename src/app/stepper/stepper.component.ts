@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
 import { StepperService } from './stepper.service';
 import { WorkdayService } from '@shared/services/workday.service';
 import { SettingsService } from '../settings/settings.service';
@@ -21,7 +22,7 @@ type StepperView = 'setup' | 'running' | 'summary';
 @Component({
   selector: 'app-stepper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, AnimatedTimerComponent],
   styles: `
     :host {
       display: block;
@@ -106,16 +107,12 @@ type StepperView = 'setup' | 'running' | 'summary';
       opacity: 0.5;
     }
 
-    .big-timer {
-      font-family: 'Exo 2', monospace;
-      font-size: 5rem;
-      font-weight: 700;
+    .stepper-timer {
+      --timer-font-size: 5rem;
       color: #fff;
-      line-height: 1;
-      letter-spacing: 2px;
     }
 
-    .timer-label {
+    .stepper-timer-label {
       font-size: 1rem;
       color: rgba(255, 255, 255, 0.5);
       margin-top: 8px;
@@ -322,8 +319,12 @@ type StepperView = 'setup' | 'running' | 'summary';
 
       @case ('running') {
         <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (keydown.enter)="onTap()" (touchstart)="onTap()" tabindex="0" role="button" aria-label="Торкніться, щоб скинути таймер затемнення">
-          <div class="big-timer">{{ stepper.remainingFormatted() }}</div>
-          <div class="timer-label">залишилось</div>
+          <app-animated-timer
+            class="stepper-timer"
+            [remainingSeconds]="stepper.remainingSec()"
+            size="big">
+            <span class="stepper-timer-label">залишилось</span>
+          </app-animated-timer>
 
           <div class="elapsed">{{ stepper.elapsedFormatted() }} пройшло</div>
           <div class="interval-info">сигнал кожні {{ stepper.intervalMin() }} хв</div>

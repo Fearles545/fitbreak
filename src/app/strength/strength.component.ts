@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
 import { StrengthService, WorkoutMode } from './strength.service';
 import { WorkdayService } from '@shared/services/workday.service';
 import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
@@ -19,7 +20,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
 @Component({
   selector: 'app-strength',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, AnimatedTimerComponent],
   styles: `
     :host {
       display: block;
@@ -274,11 +275,8 @@ import { SupabaseService } from '@shared/services/supabase.service';
     }
 
     .rest-timer {
-      font-family: 'Exo 2', monospace;
-      font-size: 4rem;
-      font-weight: 700;
       color: var(--mat-sys-on-surface);
-      line-height: 1;
+      --timer-font-size: 4rem;
     }
 
     .rest-progress {
@@ -491,7 +489,9 @@ import { SupabaseService } from '@shared/services/supabase.service';
         @case ('resting') {
           <div class="rest-wrapper">
             <div class="rest-label">Відпочинок</div>
-            <div class="rest-timer">{{ restFormatted() }}</div>
+            <app-animated-timer class="rest-timer"
+              [remainingSeconds]="strength.restRemainingSec()"
+              size="big" />
 
             <div class="rest-progress">
               <mat-progress-bar mode="determinate" [value]="restProgress()" />
@@ -571,13 +571,6 @@ export class StrengthComponent implements OnInit {
     const total = this.strength.exerciseCount();
     if (total === 0) return 0;
     return ((this.strength.currentExerciseIndex() + 1) / total) * 100;
-  });
-
-  restFormatted = computed(() => {
-    const sec = Math.max(0, this.strength.restRemainingSec());
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
   });
 
   restProgress = computed(() => {

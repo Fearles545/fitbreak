@@ -110,6 +110,7 @@ export type Database = {
           rotation_order: string[] | null
           stepper_signal_type: string | null
           theme: string | null
+          timer_animation_style: string
           updated_at: string | null
           user_id: string
         }
@@ -127,6 +128,7 @@ export type Database = {
           rotation_order?: string[] | null
           stepper_signal_type?: string | null
           theme?: string | null
+          timer_animation_style?: string
           updated_at?: string | null
           user_id: string
         }
@@ -144,6 +146,7 @@ export type Database = {
           rotation_order?: string[] | null
           stepper_signal_type?: string | null
           theme?: string | null
+          timer_animation_style?: string
           updated_at?: string | null
           user_id?: string
         }

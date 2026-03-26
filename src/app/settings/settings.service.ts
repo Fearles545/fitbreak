@@ -20,6 +20,8 @@ export class SettingsService {
     this._settings()?.default_stepper_interval_min ?? 5);
   readonly restBetweenSetsSec = computed(() =>
     this._settings()?.default_rest_between_sets_sec ?? 60);
+  readonly timerAnimationStyle = computed(() =>
+    this._settings()?.timer_animation_style ?? 'roll');
 
   private loadPromise: Promise<void> | null = null;
 

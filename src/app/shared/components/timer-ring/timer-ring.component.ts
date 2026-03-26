@@ -41,20 +41,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       justify-content: center;
       align-items: center;
     }
-
-    .time {
-      font-family: 'Exo 2', monospace;
-      font-size: 2.5rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-      line-height: 1;
-    }
-
-    .label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-top: 4px;
-    }
   `,
   template: `
     <div class="timer-ring-wrapper">
@@ -67,10 +53,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
                 [attr.stroke-dashoffset]="dashOffset()" />
       </svg>
       <div class="content">
-        <span class="time">{{ formattedTime() }}</span>
-        @if (label()) {
-          <span class="label">{{ label() }}</span>
-        }
+        <ng-content />
       </div>
     </div>
   `,
@@ -78,7 +61,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 export class TimerRingComponent {
   remainingSeconds = input.required<number>();
   totalSeconds = input.required<number>();
-  label = input<string>('');
   strokeWidth = input<number>(8);
 
   readonly radius = 90;
@@ -89,12 +71,5 @@ export class TimerRingComponent {
     if (total <= 0) return this.circumference;
     const progress = Math.max(0, Math.min(1, this.remainingSeconds() / total));
     return this.circumference * (1 - progress);
-  });
-
-  formattedTime = computed(() => {
-    const total = Math.max(0, this.remainingSeconds());
-    const minutes = Math.floor(total / 60);
-    const seconds = total % 60;
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
   });
 }

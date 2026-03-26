@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
 import { AudioService } from '@shared/services/audio.service';
@@ -26,6 +27,7 @@ import { DashboardService } from './dashboard.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    AnimatedTimerComponent,
     TimerRingComponent,
     WeekCalendarComponent,
   ],
@@ -123,6 +125,12 @@ import { DashboardService } from './dashboard.service';
       color: var(--mat-sys-on-surface-variant);
     }
 
+    .timer-label {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-top: 4px;
+    }
+
     .timer-section.paused {
       opacity: 0.5;
     }
@@ -197,9 +205,13 @@ import { DashboardService } from './dashboard.service';
           <div class="timer-section" [class.paused]="isPaused()">
             <app-timer-ring
               [remainingSeconds]="remainingSeconds()"
-              [totalSeconds]="totalSeconds()"
-              label="до перерви"
-            />
+              [totalSeconds]="totalSeconds()">
+              <app-animated-timer
+                [remainingSeconds]="remainingSeconds()"
+                size="big">
+                <span class="timer-label">до перерви</span>
+              </app-animated-timer>
+            </app-timer-ring>
           </div>
 
           @if (isPaused()) {
