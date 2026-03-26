@@ -1,11 +1,11 @@
 ---
-name: streak_stats RPC not in schema SQL
-description: The streak_stats function is in database.types.ts (generated from live DB) but not in docs/fitbreak-supabase-schema.sql — fresh deployments will break
+name: streak_stats RPC confirmed in schema SQL
+description: streak_stats function IS present in schema SQL (lines 401-441) -- originally flagged as missing but verified present as of 2026-03-26
 type: project
 ---
 
-The ProgressService calls `rpc('streak_stats')` but this function is not defined in the schema SQL file. It was likely created directly in the Supabase SQL editor. The generated types include it, confirming it exists in the live database.
+Previously flagged as missing from `docs/fitbreak-supabase-schema.sql`, but confirmed present at lines 401-441. The function returns `current_streak` and `longest_streak`. Both DashboardService and ProgressService call it.
 
-**Why:** The schema SQL file is documented as the source of truth for deployments. Any function not in it will be missing on a fresh setup.
+**Why:** Corrects a false-positive QA finding from an earlier review.
 
-**How to apply:** When reviewing new RPC usage, always verify the function exists in the schema SQL file. Flag any RPC calls that reference functions not in the schema.
+**How to apply:** No action needed -- the schema file is in sync with the live DB for this function.

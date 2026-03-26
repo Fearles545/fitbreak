@@ -34,9 +34,10 @@ src/app/
 ├── settings/       — settings page + settings.service (lazy-load pattern)
 ├── shared/
 │   ├── components/ — timer-ring, week-calendar, animated-timer (with strategies/),
-│   │                 mood-picker, chip-selector
+│   │                 mood-picker, chip-selector, confirm-dialog
 │   ├── services/   — supabase, audio, wake-lock, break-notifier, workday, session
 │   ├── models/     — database.types, fitbreak.models (incl. DayActivity), rotation.constants
+│   ├── constants/  — health-tips (static data, future DB candidates)
 │   └── utils/      — date.utils, supabase.utils (asJson helper)
 └── app.routes.ts   — lazy-loaded routes with auth guards
 ```
@@ -98,7 +99,24 @@ Source of truth: `docs/fitbreak-supabase-schema.sql`
 - `TimerRingComponent` — SVG ring with `<ng-content>` for flexible content
 - `MoodPickerComponent` — reusable mood selector with model input, ARIA radiogroup semantics
 - `ChipSelectorComponent` — reusable numeric chip selector with optional custom input
+- `SkeletonComponent` — inline shimmer element (width/height/variant inputs), CSS-only animation. Available for future use.
+- `ConfirmDialogComponent` — lightweight reusable confirm dialog (message + confirm/cancel labels). Used by dashboard for pause/early-break.
 - Adding new animation: create strategy component + add `@case` + add DB value
+
+### WorkdayService: Activity State Machine
+```
+idle → working → break-due → on-break → back-to-work → working → ...
+                 ↘ paused ↗
+```
+- `'break-due'`: timer expired, overtime counting up, single beep fired
+- `'back-to-work'`: break completed, waiting for user to resume
+- State reconstructed from DB on reload: `next_break_at = null` → back-to-work, `next_break_at <= now` → break-due
+- `BreakNotifierService`: single beep + persistent tab title (no repeated beeps)
+
+### Loading: Stale-While-Revalidate
+- `DashboardService` uses `_loaded` signal — `loading` is `computed(() => !_loaded())`. First visit shows spinner, re-visits show cached data with silent refresh.
+- `SessionService` has similar pattern: `refreshSession()` only sets loading if no session exists yet.
+- Pattern: show previous data instantly, refresh in background. Spinner only on truly empty state.
 
 ### Supabase Type Safety
 - `asJson<T>(value: T): Json` helper in `shared/utils/supabase.utils.ts` for JSONB writes
@@ -113,6 +131,6 @@ Source of truth: `docs/fitbreak-supabase-schema.sql`
 
 ## Current State (2026-03-26)
 
-- **Working:** Auth, dashboard, break rotation, strength, stepper, settings, day summary, progress, animated timers, route transitions, tab timer
+- **Working:** Auth, dashboard, break rotation, strength, stepper, settings, day summary, progress, animated timers, route transitions, tab timer, timer flow redesign (break-due/back-to-work states)
 - **Tests:** None written (Vitest configured)
-- **Sprint 2 in progress** — tasks 1-3 done, tech debt sprint complete, tasks 4-5 remaining
+- **Sprint 2 complete** — all 5 tasks done, ready for Sprint 3 planning

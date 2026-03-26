@@ -12,8 +12,8 @@
 | 2 | Route transitions — View Transitions API, smooth page navigation | 1 | done |
 | 3 | Timer number animations — 5 strategies (roll, fade, scale, blur, slot) | 2 | done |
 | 3.5 | **Tech debt sprint** — FE arch review, 8-phase refactoring (bugs, error handling, shared components, SessionService extraction, component decomposition, polish) | 2 | done |
-| 4 | Dashboard UX refresh — UX research → implementation | 2 | todo |
-| 5 | Timer flow redesign — no auto-restart, "ready for break" button, actual work time tracking | 3 | todo |
+| 4 | Dashboard UX refresh — streak card, health tips, nav island, calendar upgrade, stale-while-revalidate loading | 2 | done |
+| 5 | Timer flow redesign — no auto-restart, "ready for break" button, actual work time tracking | 3 | done |
 
 **Sequence:** Polish first (1-3), tech debt addressed (3.5), then UX refresh (4), then core feature (5).
 

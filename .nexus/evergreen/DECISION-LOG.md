@@ -70,3 +70,24 @@ Record of key architectural and product decisions.
 **Decision:** Pause feature work. Execute an 8-phase tech debt sprint addressing all findings before continuing with Sprint 2 tasks 4-5.
 **Alternatives considered:** (A) Fix only critical bugs and continue, (B) Address debt incrementally during feature work
 **Rationale:** The architecture violations (shared→feature imports) would compound with every new feature. Component sizes (655, 644 LOC) were approaching unmaintainable. Addressing it all at once is cleaner than piecemeal fixes scattered across feature PRs.
+
+### DECISION-009: Stale-while-revalidate loading for dashboard
+**Date:** 2026-03-26
+**Context:** Dashboard loading UX went through 4 iterations: (1) skeleton overlay — too clunky, (2) inline skeleton elements — didn't look right, (3) dimmed overlay with spinner — caused shaky transitions on re-navigation because content rendered underneath changed when data loaded, (4) stale-while-revalidate.
+**Decision:** First visit shows a simple spinner (no data cached yet). Re-visits show previous data instantly and silently refresh in background. `DashboardService._loaded` signal stays true after first successful load; `loading` computed is `!_loaded`. `SessionService` already had a similar pattern.
+**Alternatives considered:** (A) Skeleton loader overlay, (B) Inline skeleton elements, (C) Dimmed overlay + spinner, (D) Stale-while-revalidate
+**Rationale:** Options A-C all caused visual artifacts — either flash on fast loads, layout mismatch between skeleton and content, or shaky transitions when re-navigating. Stale-while-revalidate is the standard pattern for pages with cached data. The data rarely changes within a session, so showing stale data for ~500ms is invisible to the user.
+
+### DECISION-010: User-controlled break flow (no auto-navigation)
+**Date:** 2026-03-26
+**Context:** Timer expiry auto-navigated to `/break`, which felt intrusive when mid-thought. Auto-restart after break counted non-work time (coffee, chat) as work. Repeated beeps (5 at 1-min intervals) were annoying when consciously working longer.
+**Decision:** Timer expiry shows "break due" state on dashboard (overtime counter, big CTA) instead of navigating away. After break completion, "back to work" state waits for user to signal readiness. Single beep + tab title on expiry, no repeated notifications. Early break available via icon button with confirmation dialog. `next_break_at = null` in DB marks back-to-work state.
+**Alternatives considered:** (A) Escalating beep intervals (backoff), (B) Single beep + visual only, (C) Two beeps then snooze chip
+**Rationale:** CEO has established break habit — minimal notification is enough. Option B chosen for beeps. User-controlled flow tracks actual work time accurately (`actualWorkSeconds` in BreakEntry). The app becomes a supportive companion, not a demanding boss.
+
+### DECISION-011: Confirm dialog for pause and early break
+**Date:** 2026-03-26
+**Context:** Pause and early-break buttons moved to icon-only buttons flanking the timer ring. Small touch targets near the timer increase risk of accidental taps.
+**Decision:** Both buttons open a lightweight `ConfirmDialogComponent` before executing. Reusable component in `shared/components/confirm-dialog/`.
+**Alternatives considered:** (A) No confirmation, (B) Inline toggle (tap to arm, tap to confirm), (C) Long press
+**Rationale:** Simple dialog is the standard Material pattern, minimal code, prevents accidental pauses/breaks without adding cognitive load.
