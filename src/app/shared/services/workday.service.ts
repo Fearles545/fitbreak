@@ -1,19 +1,17 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
 import { BreakNotifierService } from './break-notifier.service';
 import { SessionService } from './session.service';
-import type { PauseEntry, WorkSession } from '../models/fitbreak.models';
+import type { PauseEntry } from '../models/fitbreak.models';
 import { asJson } from '../utils/supabase.utils';
 
-export type WorkdayActivity = 'idle' | 'working' | 'on-break' | 'paused' | 'stepper' | 'strength';
+export type WorkdayActivity = 'idle' | 'working' | 'on-break' | 'paused' | 'break-due' | 'back-to-work' | 'stepper' | 'strength';
 
 @Injectable({ providedIn: 'root' })
 export class WorkdayService {
   private supabase = inject(SupabaseService);
   private session = inject(SessionService);
   private notifier = inject(BreakNotifierService);
-  private router = inject(Router);
 
   private _currentActivity = signal<WorkdayActivity>('idle');
   private _now = signal(Date.now());
@@ -23,26 +21,30 @@ export class WorkdayService {
   readonly currentActivity = this._currentActivity.asReadonly();
   readonly now = this._now.asReadonly();
 
+  /** Seconds remaining until break. Negative = overtime. */
   readonly remainingSeconds = computed(() => {
     const session = this.session.session();
     const activity = this._currentActivity();
 
     if (!session || !session.next_break_at) return 0;
 
-    if (activity === 'working') {
-      const diff = Math.floor((new Date(session.next_break_at).getTime() - this._now()) / 1000);
-      return Math.max(0, diff);
+    if (activity === 'working' || activity === 'break-due') {
+      return Math.floor((new Date(session.next_break_at).getTime() - this._now()) / 1000);
     }
 
     if (activity === 'paused' && session.paused_at) {
-      // Frozen at the moment of pause
-      const diff = Math.floor(
+      return Math.floor(
         (new Date(session.next_break_at).getTime() - new Date(session.paused_at).getTime()) / 1000,
       );
-      return Math.max(0, diff);
     }
 
     return 0;
+  });
+
+  /** Positive overtime seconds (0 when not in overtime) */
+  readonly overtimeSeconds = computed(() => {
+    const remaining = this.remainingSeconds();
+    return remaining < 0 ? Math.abs(remaining) : 0;
   });
 
   private breakTriggerEffect = effect(() => {
@@ -50,10 +52,10 @@ export class WorkdayService {
     const activity = this._currentActivity();
     const session = this.session.session();
 
-    if (activity === 'working' && remaining === 0 && session?.next_break_at && !this.breakTriggered) {
+    if (activity === 'working' && remaining <= 0 && session?.next_break_at && !this.breakTriggered) {
       this.breakTriggered = true;
+      this._currentActivity.set('break-due');
       this.notifier.trigger();
-      this.router.navigate(['/break']);
     }
     if (remaining > 0) {
       this.breakTriggered = false;
@@ -64,7 +66,7 @@ export class WorkdayService {
     const activity = this._currentActivity();
     const remaining = this.remainingSeconds();
 
-    // Break notifier manages its own title — don't override it
+    // Break notifier manages its own title when break-due
     if (this.notifier.isActive()) return;
 
     switch (activity) {
@@ -87,6 +89,7 @@ export class WorkdayService {
       case 'strength':
         document.title = '💪 Тренування — FitBreak';
         break;
+      case 'back-to-work':
       case 'idle':
       default:
         document.title = 'FitBreak';
@@ -96,7 +99,8 @@ export class WorkdayService {
 
   constructor() {
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && this._currentActivity() === 'working') {
+      const activity = this._currentActivity();
+      if (!document.hidden && (activity === 'working' || activity === 'break-due')) {
         this._now.set(Date.now());
       }
     });
@@ -107,10 +111,22 @@ export class WorkdayService {
     const session = this.session.session();
     if (session?.status === 'active') {
       if (!session.next_break_at) {
-        await this.backfillNextBreakAt(session);
+        // Back-to-work: session active but no next_break_at (set after break completion)
+        this._currentActivity.set('back-to-work');
+        this.stopTick();
+      } else {
+        const nextBreakMs = new Date(session.next_break_at).getTime();
+        if (nextBreakMs <= Date.now()) {
+          // Break is overdue — restore break-due state
+          this._currentActivity.set('break-due');
+          this.breakTriggered = true;
+          this.notifier.trigger();
+          this.startTick();
+        } else {
+          this._currentActivity.set('working');
+          this.startTick();
+        }
       }
-      this._currentActivity.set('working');
-      this.startTick();
     } else if (session?.status === 'paused') {
       this._currentActivity.set('paused');
       this.stopTick();
@@ -203,6 +219,28 @@ export class WorkdayService {
     this.startTick();
   }
 
+  /** User taps "back to work" after completing a break */
+  async resumeAfterBreak(): Promise<void> {
+    const session = this.session.session();
+    if (!session) return;
+
+    const now = new Date();
+    const intervalMs = session.break_interval_min * 60_000;
+
+    const { error } = await this.supabase.supabase
+      .from('work_sessions')
+      .update({
+        next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
+      })
+      .eq('id', session.id);
+
+    if (error) throw error;
+    await this.session.refreshSession();
+    this.breakTriggered = false;
+    this._currentActivity.set('working');
+    this.startTick();
+  }
+
   onBreakStarted(): void {
     this.notifier.cancel();
     this.stopTick();
@@ -211,14 +249,15 @@ export class WorkdayService {
 
   async onBreakCompleted(): Promise<void> {
     this.notifier.cancel();
+    this.stopTick();
     await this.session.refreshSession();
-    this._currentActivity.set('working');
-    this.startTick();
+    this._currentActivity.set('back-to-work');
   }
 
   async onBreakSkipped(): Promise<void> {
     this.notifier.cancel();
     await this.session.refreshSession();
+    this.breakTriggered = false;
     this._currentActivity.set('working');
     this.startTick();
   }
@@ -252,27 +291,6 @@ export class WorkdayService {
     } else {
       this._currentActivity.set('idle');
     }
-  }
-
-  /** Backfill next_break_at for sessions created before Plan B migration */
-  private async backfillNextBreakAt(session: WorkSession): Promise<void> {
-    const intervalMs = session.break_interval_min * 60_000;
-    let nextBreakAtMs: number;
-
-    if (session.breaks.length === 0) {
-      nextBreakAtMs = new Date(session.started_at).getTime() + intervalMs;
-    } else {
-      const lastBreak = session.breaks[session.breaks.length - 1];
-      const anchor = lastBreak.completedAt ?? lastBreak.scheduledAt;
-      nextBreakAtMs = new Date(anchor).getTime() + intervalMs;
-    }
-
-    const { error } = await this.supabase.supabase
-      .from('work_sessions')
-      .update({ next_break_at: new Date(nextBreakAtMs).toISOString() })
-      .eq('id', session.id);
-    if (error) throw error;
-    await this.session.refreshSession();
   }
 
   private startTick(): void {

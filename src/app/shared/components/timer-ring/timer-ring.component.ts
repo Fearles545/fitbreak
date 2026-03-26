@@ -28,7 +28,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
     .progress {
       fill: none;
-      stroke: var(--mat-sys-primary);
+      stroke: var(--timer-ring-progress-color, var(--mat-sys-primary));
       stroke-linecap: round;
       transition: stroke-dashoffset 0.5s ease;
     }

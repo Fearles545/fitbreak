@@ -8,6 +8,7 @@ import type {
   Exercise,
   MicroBreakRotation,
   MoodRating,
+  WorkSession,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
 import { asJson } from '@shared/utils/supabase.utils';
@@ -176,32 +177,48 @@ export class BreakTimerService {
     if (!rotation) return;
 
     const now = new Date();
+
+    // Calculate actual work seconds: from last break/session start to break start
+    const breakStartedAt = this._startedAt() ?? now.toISOString();
+    const lastAnchor = this.getLastWorkAnchor(session);
+    const actualWorkSeconds = Math.floor(
+      (new Date(breakStartedAt).getTime() - new Date(lastAnchor).getTime()) / 1000,
+    );
+
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
       rotationType: rotation,
       scheduledAt: this._startedAt() ?? now.toISOString(),
-      startedAt: this._startedAt() ?? now.toISOString(),
+      startedAt: breakStartedAt,
       completedAt: now.toISOString(),
       skipped: false,
       mood,
+      actualWorkSeconds: Math.max(0, actualWorkSeconds),
     };
 
     const breaks = [...session.breaks, entry];
     const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
-    const intervalMs = session.break_interval_min * 60 * 1000;
 
+    // Set next_break_at to null — signals "back to work" state
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
         breaks: asJson(breaks),
         current_rotation_index: nextIdx,
-        next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
+        next_break_at: null,
       })
       .eq('id', session.id);
 
     if (error) throw error;
     await this.workday.onBreakCompleted();
     this.reset();
+  }
+
+  /** Get the timestamp from which work time should be measured */
+  private getLastWorkAnchor(session: WorkSession): string {
+    if (session.breaks.length === 0) return session.started_at;
+    const lastBreak = session.breaks[session.breaks.length - 1];
+    return lastBreak.completedAt ?? lastBreak.scheduledAt ?? session.started_at;
   }
 
   reset(): void {

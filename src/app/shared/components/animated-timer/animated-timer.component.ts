@@ -86,6 +86,9 @@ type TimerSize = 'big' | 'medium' | 'small';
       <span class="sr-only">{{ formattedTime() }}</span>
 
       <div class="digits" aria-hidden="true">
+        @if (prefix()) {
+          <span class="colon">{{ prefix() }}</span>
+        }
         @for (digit of digitStates(); track $index; let idx = $index) {
           @if (idx === 2) {
             <span class="colon">:</span>
@@ -116,6 +119,7 @@ export class AnimatedTimerComponent {
   remainingSeconds = input.required<number>();
   size = input<TimerSize>('medium');
   mode = input<AnimationMode | undefined>(undefined);
+  prefix = input<string>('');
 
   private _digitStates = signal<DigitState[]>([
     { current: 0, previous: 0, animating: false },
@@ -144,7 +148,8 @@ export class AnimatedTimerComponent {
     const total = Math.max(0, this.remainingSeconds());
     const m = Math.floor(total / 60);
     const s = total % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
+    const p = this.prefix();
+    return `${p}${m}:${String(s).padStart(2, '0')}`;
   });
 
   private updateEffect = effect(() => {

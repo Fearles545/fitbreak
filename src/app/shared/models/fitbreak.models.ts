@@ -89,6 +89,7 @@ export interface BreakEntry {
   extended?: boolean;
   extendedByMin?: number;
   reason?: string;
+  actualWorkSeconds?: number;
 }
 
 /** workout_logs.exercises — JSONB array (strength workouts) */

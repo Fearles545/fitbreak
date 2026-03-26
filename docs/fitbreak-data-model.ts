@@ -205,6 +205,7 @@ export interface BreakEntry {
   extended?: boolean;                   // чи продовжив роботу замість перерви
   extendedByMin?: number;              // на скільки хвилин продовжив
   reason?: string;                      // причина продовження (опційно)
+  actualWorkSeconds?: number;           // фактичний час роботи від старту/відновлення до початку перерви
 }
 
 /**

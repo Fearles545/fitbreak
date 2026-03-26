@@ -8,9 +8,12 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
+import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
 import { AudioService } from '@shared/services/audio.service';
@@ -29,6 +32,7 @@ import { DashboardService } from './dashboard.service';
   imports: [
     MatButtonModule,
     MatIconModule,
+    MatTooltipModule,
     AnimatedTimerComponent,
     TimerRingComponent,
     WeekCalendarComponent,
@@ -61,6 +65,7 @@ import { DashboardService } from './dashboard.service';
       .fade-in { animation: none; }
       .paused-indicator { animation: none; }
       .loading-spinner { animation-duration: 1.5s; }
+      .break-due-cta { animation: none; }
     }
 
     /* ── Loading ── */
@@ -243,6 +248,8 @@ import { DashboardService } from './dashboard.service';
     .timer-section {
       display: flex;
       justify-content: center;
+      align-items: center;
+      gap: 12px;
       margin: 12px 0 20px;
     }
 
@@ -259,6 +266,12 @@ import { DashboardService } from './dashboard.service';
 
     .timer-section.paused {
       opacity: 0.5;
+    }
+
+    .timer-action {
+      color: var(--mat-sys-on-surface-variant);
+      align-self: flex-end;
+      margin-bottom: 8px;
     }
 
     .paused-indicator {
@@ -318,6 +331,69 @@ import { DashboardService } from './dashboard.service';
     .end-day {
       margin-top: 8px;
       text-align: center;
+    }
+
+    /* ── Break due state ── */
+    .timer-section.break-due app-timer-ring {
+      --timer-ring-progress-color: var(--mat-sys-tertiary);
+    }
+
+    .overtime-label {
+      font-size: 0.85rem;
+      color: var(--mat-sys-tertiary);
+      margin-top: 4px;
+    }
+
+    .break-due-cta {
+      width: 100%;
+      height: 56px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 16px;
+      letter-spacing: 0.01em;
+      margin-top: 20px;
+      animation: gentlePulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes gentlePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .break-due-cta mat-icon {
+      margin-right: 8px;
+    }
+
+    /* ── Back to work state ── */
+    .back-to-work-section {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .back-to-work-message {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-surface);
+      margin-bottom: 4px;
+    }
+
+    .back-to-work-sub {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-bottom: 20px;
+    }
+
+    .back-to-work-cta {
+      width: 100%;
+      height: 56px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 16px;
+      letter-spacing: 0.01em;
+    }
+
+    .back-to-work-cta mat-icon {
+      margin-right: 8px;
     }
 
     /* ── Error state ── */
@@ -391,54 +467,117 @@ import { DashboardService } from './dashboard.service';
         <app-week-calendar [activities]="dashboard.weekActivities()" />
 
         @if (sessionService.session()) {
-          <!-- ═══ Active session ═══ -->
+          @if (isBackToWork()) {
+            <!-- ═══ Back to work state ═══ -->
+            <div class="back-to-work-section">
+              <div class="back-to-work-message">Перерва завершена!</div>
+              <div class="back-to-work-sub">Натисни, коли будеш готовий працювати</div>
 
-          @if (isPaused()) {
-            <div class="paused-indicator" aria-label="Пауза">⏸ Пауза</div>
-          }
-
-          <div class="timer-section" [class.paused]="isPaused()">
-            <app-timer-ring
-              [remainingSeconds]="remainingSeconds()"
-              [totalSeconds]="totalSeconds()">
-              <app-animated-timer
-                [remainingSeconds]="remainingSeconds()"
-                [mode]="settings.timerAnimationStyle()"
-                size="big">
-                <span class="timer-label">до перерви</span>
-              </app-animated-timer>
-            </app-timer-ring>
-          </div>
-
-          @if (nextRotation()) {
-            <div class="next-rotation">
-              <div class="next-rotation-label">Наступна розминка</div>
-              <div class="next-rotation-name">
-                {{ nextRotation()!.icon }} {{ nextRotation()!.name }}
-              </div>
-              <div class="next-rotation-meta">~{{ nextRotation()!.duration }} хв</div>
+              <button mat-flat-button class="back-to-work-cta" (click)="onResumeAfterBreak()">
+                <mat-icon aria-hidden="true">play_circle</mat-icon>
+                Повернутись до роботи
+              </button>
             </div>
-          }
 
-          <div class="day-stats">
-            Перерв: {{ sessionService.completedBreaks() }} · {{ elapsedTime() }}
-          </div>
+          } @else if (isBreakDue()) {
+            <!-- ═══ Break due state ═══ -->
+            <div class="timer-section break-due">
+              <app-timer-ring
+                [remainingSeconds]="0"
+                [totalSeconds]="totalSeconds()">
+                <app-animated-timer
+                  [remainingSeconds]="workday.overtimeSeconds()"
+                  [mode]="settings.timerAnimationStyle()"
+                  size="big"
+                  [prefix]="'+'">
+                  <span class="overtime-label">понад інтервал</span>
+                </app-animated-timer>
+              </app-timer-ring>
+            </div>
 
-          <div class="session-actions">
-            @if (isPaused()) {
+            @if (nextRotation()) {
+              <div class="next-rotation">
+                <div class="next-rotation-label">Запропонована розминка</div>
+                <div class="next-rotation-name">
+                  {{ nextRotation()!.icon }} {{ nextRotation()!.name }}
+                </div>
+                <div class="next-rotation-meta">~{{ nextRotation()!.duration }} хв</div>
+              </div>
+            }
+
+            <button
+              mat-flat-button
+              class="break-due-cta"
+              (click)="onStartBreak()"
+              [attr.aria-label]="'Час на перерву. Ви працюєте на ' + overtimeMinutes() + ' хвилин довше'">
+              <mat-icon aria-hidden="true">self_improvement</mat-icon>
+              Час на перерву
+            </button>
+
+          } @else if (isPaused()) {
+            <!-- ═══ Paused state ═══ -->
+            <div class="paused-indicator" aria-label="Пауза">⏸ Пауза</div>
+
+            <div class="timer-section paused">
+              <app-timer-ring
+                [remainingSeconds]="remainingSeconds()"
+                [totalSeconds]="totalSeconds()">
+                <app-animated-timer
+                  [remainingSeconds]="remainingSeconds()"
+                  [mode]="settings.timerAnimationStyle()"
+                  size="big">
+                  <span class="timer-label">до перерви</span>
+                </app-animated-timer>
+              </app-timer-ring>
+            </div>
+
+            <div class="session-actions">
               <button mat-flat-button (click)="onResumeWorkday()">
                 <mat-icon aria-hidden="true">play_arrow</mat-icon>
                 Продовжити
               </button>
-            } @else {
-              <button matButton="outlined" (click)="onPauseWorkday()">
+            </div>
+
+          } @else {
+            <!-- ═══ Working state ═══ -->
+            <div class="timer-section">
+              <button mat-icon-button class="timer-action" (click)="onConfirmPause()" aria-label="Пауза" matTooltip="Пауза">
                 <mat-icon aria-hidden="true">pause</mat-icon>
-                Пауза
               </button>
+
+              <app-timer-ring
+                [remainingSeconds]="remainingSeconds()"
+                [totalSeconds]="totalSeconds()">
+                <app-animated-timer
+                  [remainingSeconds]="remainingSeconds()"
+                  [mode]="settings.timerAnimationStyle()"
+                  size="big">
+                  <span class="timer-label">до перерви</span>
+                </app-animated-timer>
+              </app-timer-ring>
+
+              <button mat-icon-button class="timer-action" (click)="onConfirmEarlyBreak()" aria-label="Перерва зараз" matTooltip="Перерва зараз">
+                <mat-icon aria-hidden="true">self_improvement</mat-icon>
+              </button>
+            </div>
+
+            @if (nextRotation()) {
+              <div class="next-rotation">
+                <div class="next-rotation-label">Наступна розминка</div>
+                <div class="next-rotation-name">
+                  {{ nextRotation()!.icon }} {{ nextRotation()!.name }}
+                </div>
+                <div class="next-rotation-meta">~{{ nextRotation()!.duration }} хв</div>
+              </div>
             }
+          }
+
+          <!-- Day stats (all active session states) -->
+          <div class="day-stats">
+            Перерв: {{ sessionService.completedBreaks() }} · {{ elapsedTime() }}
           </div>
 
-          @if (!isPaused()) {
+          @if (!isBackToWork()) {
             <div class="quick-launch">
               <button class="quick-launch-card" (click)="onNavigate('/strength')" aria-label="Силове тренування">
                 <mat-icon aria-hidden="true">fitness_center</mat-icon>
@@ -507,6 +646,7 @@ export class DashboardComponent implements OnInit {
   private audio = inject(AudioService);
   protected settings = inject(SettingsService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 
   protected readonly healthTip = getTodayTip();
@@ -530,8 +670,12 @@ export class DashboardComponent implements OnInit {
     return (session?.break_interval_min ?? this.settings.breakIntervalMin()) * 60;
   });
 
-  remainingSeconds = computed(() => this.workday.remainingSeconds());
+  remainingSeconds = computed(() => Math.max(0, this.workday.remainingSeconds()));
   isPaused = computed(() => this.workday.currentActivity() === 'paused');
+  isBreakDue = computed(() => this.workday.currentActivity() === 'break-due');
+  isBackToWork = computed(() => this.workday.currentActivity() === 'back-to-work');
+
+  overtimeMinutes = computed(() => Math.floor(this.workday.overtimeSeconds() / 60));
 
   nextRotation = computed(() => {
     const session = this.sessionService.session();
@@ -636,6 +780,40 @@ export class DashboardComponent implements OnInit {
     } catch {
       this.snackBar.open('Не вдалося відновити роботу.', 'OK', { duration: 5000 });
     }
+  }
+
+  async onResumeAfterBreak(): Promise<void> {
+    try {
+      this.audio.init();
+      await this.workday.resumeAfterBreak();
+    } catch {
+      this.snackBar.open('Не вдалося відновити роботу.', 'OK', { duration: 5000 });
+    }
+  }
+
+  onConfirmPause(): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { message: 'Поставити на паузу?', confirmLabel: 'Пауза' },
+      autoFocus: false,
+    });
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) this.onPauseWorkday();
+    });
+  }
+
+  onConfirmEarlyBreak(): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { message: 'Почати перерву зараз?', confirmLabel: 'Почати' },
+      autoFocus: false,
+    });
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) this.onStartBreak();
+    });
+  }
+
+  onStartBreak(): void {
+    this.audio.init();
+    this.router.navigate(['/break']);
   }
 
   async onEndWorkday(): Promise<void> {
