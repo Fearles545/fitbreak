@@ -4,27 +4,21 @@
 
 ## Current State
 
-🟢 **Sprint 1 complete — ready for Sprint 2 planning**
+🟡 **Sprint 2 in progress — polish + timer flow redesign**
 
-## Sprint 1 Summary (completed)
+## Sprint 2
 
-| # | Task | Status |
-|---|------|--------|
-| 1 | Stepper timer layout fix | ✅ done |
-| 2 | Settings page | ✅ done |
-| 3 | Day summary screen | ✅ done |
-| 4 | Progress page V1 | ✅ done |
-
-## Also Delivered
-
-- RLS hardening: `(select auth.uid())` optimization across all policies
-- SQL functions: `SET search_path = ''`, FK index, lateral join optimization
-- Stale session cleanup: moved to `cleanup_stale_sessions()` RPC using `updated_at` as `ended_at`
-- Dashboard init parallelized: settings + cleanup run concurrently via `Promise.all`
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Tab timer display + logo/favicon | 1 | todo |
+| 2 | Route transitions | 1 | todo |
+| 3 | Timer number animations (flip clock) | 2 | todo |
+| 4 | Dashboard UX refresh | 2 | todo |
+| 5 | Timer flow redesign | 3 | todo |
 
 ## Active Work
 
-_None._
+_None yet — starting with task 1._
 
 ## Blockers
 
@@ -32,5 +26,4 @@ _None._
 
 ## Next Steps
 
-1. Run `/nexus-plan` for Sprint 2
-2. CEO updated NEXUS-INDEX.md and nexus-helpers.md — these changes are committed separately
+1. Start task 1: tab timer + logo/favicon → `/nexus-task`
