@@ -214,3 +214,11 @@ This project uses Nexus for project context management.
 **Evergreen docs:** `.nexus/evergreen/` — project identity, architecture, decisions, execution plan, workflow status, retrospectives. Consult these before major decisions.
 
 **Agents:** `.claude/agents/nexus-*.md` — product lead, frontend architect, backend engineer, UX designer, QA engineer. Auto-delegated via Nexus commands.
+
+## Session Protocol
+
+**Starting a session:** Run `/nexus-status` to see where you left off.
+
+**Ending a session:** Always run `/nexus-save` before closing. This preserves decisions, creates handoff notes, and keeps the project brain current. If CEO says "I'm done", "finishing up", "closing", "на сьогодні все", "закінчую" — remind them to run `/nexus-save` first.
+
+**If you see a .nexus/.save-reminder file** — previous session ended without saving. Remind CEO immediately.

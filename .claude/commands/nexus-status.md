@@ -1,5 +1,5 @@
 ---
-description: "Daily standup — show current project state, active tasks, blockers, and next steps. Run at the start of every session."
+description: 'Daily standup — show current project state, active tasks, blockers, and next steps. Run at the start of every session.'
 ---
 
 # Nexus Status
@@ -8,9 +8,14 @@ You are running a quick status check for the CEO. This is the "daily standup" of
 
 ## Steps
 
-1. **Read** `.nexus/evergreen/WORKFLOW-STATUS.md`
-2. **Read** the most recent file in `.nexus/handoffs/` (if any exist)
-3. **Present** a concise status report in this format:
+1. **Check** if `.nexus/.save-reminder` exists. If yes — show warning first:
+   ```
+   ⚠️ Previous session ended without /nexus-save!
+   Context from last session may be lost. Run /nexus-save now to recover what you can.
+   ```
+2. **Read** `.nexus/evergreen/WORKFLOW-STATUS.md`
+3. **Read** the most recent file in `.nexus/handoffs/` (if any exist)
+4. **Present** a concise status report in this format:
 
 ```
 📍 Status: [Project Name]
