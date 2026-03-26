@@ -23,10 +23,11 @@ src/app/
 ├── auth/           — login, auth guard, auth service
 ├── dashboard/      — start screen, active session, timer-ring, week-calendar
 ├── break-timer/    — break prompt, break execution, break-timer service
+├── day-summary/    — end-of-day summary shown after ending workday
 ├── strength/       — strength execution, rest timer, program editor
 ├── stepper/        — stepper fullscreen timer
-├── progress/       — analytics (stub)
-├── settings/       — user settings (stub)
+├── progress/       — streaks, weekly comparison (progress.service + progress.component)
+├── settings/       — settings page + settings.service (lazy-load pattern)
 ├── shared/
 │   ├── components/ — timer-ring, week-calendar
 │   ├── services/   — supabase, audio, wake-lock, break-notifier, workday
@@ -48,7 +49,8 @@ No NgRx, no BehaviorSubjects for state. RxJS only for Supabase promise wrapping.
 ### Services: Domain-Based
 - `SupabaseService` — thin wrapper (client + auth only)
 - Each feature has its own service for queries and mutations
-- `query<T>()` helper wraps Supabase calls into Observables
+- `SettingsService` uses lazy `ensureLoaded()` pattern — first consumer triggers load, others reuse same promise
+- Non-null computed signals with `?? defaults` for safe cross-feature reads
 
 ### Components: OnPush + Standalone
 - All components use `ChangeDetectionStrategy.OnPush`
@@ -67,18 +69,19 @@ No NgRx, no BehaviorSubjects for state. RxJS only for Supabase promise wrapping.
 
 ## Database
 
-5 tables with RLS (`auth.uid() = user_id`):
+5 tables with RLS (`(select auth.uid()) = user_id`):
 - `exercises` — exercise library
 - `workout_templates` — workout programs
 - `work_sessions` — daily sessions with breaks/pauses (JSONB)
 - `workout_logs` — completed workout logs (JSONB)
-- `user_settings` — preferences
+- `user_settings` — preferences (CHECK constraints on integer ranges)
+
+SQL functions: `weekly_break_stats()`, `weekly_workout_stats()`, `streak_stats()`, `cleanup_stale_sessions()`
 
 Source of truth: `docs/fitbreak-supabase-schema.sql`
 
-## Current State (2026-03-23)
+## Current State (2026-03-26)
 
-- **Working:** Auth, dashboard, break rotation, strength workouts, stepper timer
-- **Stubs:** Progress (analytics), Settings
+- **Working:** Auth, dashboard, break rotation, strength, stepper, settings, day summary, progress
 - **Tests:** None written (Vitest configured)
-- **LOC:** ~4,500 across 27 TS files, 9 components, 10 services
+- **All Sprint 1 features delivered**

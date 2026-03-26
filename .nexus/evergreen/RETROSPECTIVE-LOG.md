@@ -25,3 +25,9 @@ Lessons learned from sprints and incidents.
 **What happened:** During settings feature exploration, ran QA agent for risk analysis. It found 4 red-severity risks (load timing across routes, upsert without onConflict, null→NOT NULL constraint) that were incorporated into the implementation before coding.
 **What we learned:** Running QA before implementation (not just after) prevents architectural bugs that are expensive to fix later. The cross-route settings loading issue (R8) would have been a real production bug.
 **Action:** Continue using QA agent during /nexus-explore for risk analysis on Level 2+ features.
+
+### RETRO-003: Sprint 1 completed in a single session
+**Date:** 2026-03-26
+**What happened:** All 4 Sprint 1 tasks completed in one session — stepper fix (Level 0), settings (Level 2), day summary (Level 1), progress V1 (Level 2). Infrastructure hardening (RLS, SQL functions, stale session cleanup) was done alongside feature work.
+**What we learned:** The /nexus-explore pipeline for settings caught risks early (QA agent found 4 red-severity issues before coding). Having a clear feature spec before implementation made coding faster. Nexus workflow (plan → explore → build → save) worked well for the first sprint.
+**Action:** Keep the same workflow for Sprint 2. Consider running QA review after implementation too (not just before).

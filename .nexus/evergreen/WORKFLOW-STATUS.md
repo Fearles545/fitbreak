@@ -1,12 +1,12 @@
 # Workflow Status — FitBreak
 
-**Last updated:** 2026-03-25
+**Last updated:** 2026-03-26
 
 ## Current State
 
-🟢 **Sprint 1 complete — ready for sprint 2 planning**
+🟢 **Sprint 1 complete — ready for Sprint 2 planning**
 
-## Sprint 1 Progress
+## Sprint 1 Summary (completed)
 
 | # | Task | Status |
 |---|------|--------|
@@ -15,14 +15,12 @@
 | 3 | Day summary screen | ✅ done |
 | 4 | Progress page V1 | ✅ done |
 
-## What Was Done (2026-03-25)
+## Also Delivered
 
-- Day summary: new screen at `/day-summary/:id` — fitbreak count as hero metric, work duration, avg mood, break list with rotation badges, workout list
-- Progress V1: streak counter (current + longest via `streak_stats()` RPC), weekly comparison with trend indicators, dashboard bar_chart link
-- Infrastructure hardening: RLS `(select auth.uid())` optimization, SQL `SET search_path = ''`, FK index, `weekly_break_stats` lateral join optimization
-- Stale session cleanup: moved to `cleanup_stale_sessions()` RPC, uses `updated_at` (last known activity) as `ended_at`
-- Day summary defense-in-depth: explicit `user_id` filter, `status`/`ended_at` guards
-- Dashboard init parallelized: settings + cleanup run concurrently
+- RLS hardening: `(select auth.uid())` optimization across all policies
+- SQL functions: `SET search_path = ''`, FK index, lateral join optimization
+- Stale session cleanup: moved to `cleanup_stale_sessions()` RPC using `updated_at` as `ended_at`
+- Dashboard init parallelized: settings + cleanup run concurrently via `Promise.all`
 
 ## Active Work
 
@@ -32,10 +30,7 @@ _None._
 
 _None._
 
-## Commits (unpushed)
+## Next Steps
 
-4 commits on main:
-- `dd95783` feat(day-summary): add day summary screen shown on workday end
-- `55aaf71` feat(progress): add progress page with streaks and weekly comparison
-- `29592ac` fix: harden RLS, SQL functions, and dashboard init
-- `bfe4545` fix(dashboard): use updated_at as ended_at for stale sessions
+1. Run `/nexus-plan` for Sprint 2
+2. CEO updated NEXUS-INDEX.md and nexus-helpers.md — these changes are committed separately

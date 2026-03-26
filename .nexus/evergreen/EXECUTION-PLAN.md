@@ -1,29 +1,8 @@
 # Execution Plan — FitBreak
 
-## Sprint 1 (2026-03-24)
+## Current Sprint
 
-### Goals
-1. Make the daily loop customizable (Settings)
-2. Add the daily reward moment (Day Summary)
-3. Build the motivational mirror (Progress V1)
-
-### Sprint Backlog
-
-| # | Task | Level | Status |
-|---|------|-------|--------|
-| 1 | Stepper timer layout fix | 0 | done |
-| 2 | Settings page — daily-loop settings (break interval, rest timer, stepper defaults) | 2 | done |
-| 3 | Day summary screen — show breaks, completion rate, workouts, mood when ending workday | 1 | pending |
-| 4 | Progress page V1 — streak counter, this week vs last week comparison | 2 | pending |
-
-**WIP limit:** 2 active features
-
-### Notes
-- Settings must wire up `user_settings` table to `startWorkday()` — break interval is currently hardcoded at 45min
-- Day summary data already exists in `work_sessions.breaks[]` and `workout_logs`
-- Progress V1 can leverage existing `weekly_break_stats()` and `weekly_workout_stats()` RPCs
-- Skip for V1: calendar heatmap, exercise progression charts, monthly view, theme/language settings
-- Settings should support custom values in addition to predefined options
+_No sprint defined. Run `/nexus-plan` to plan Sprint 2._
 
 ## Parking Lot
 
@@ -36,4 +15,15 @@
 
 ## Completed Sprints
 
-_None yet._
+### Sprint 1 (2026-03-24 → 2026-03-26)
+
+**Goals:** Make the daily loop customizable, add daily reward moment, build motivational mirror
+
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Stepper timer layout fix — visibility in dimmed/light mode | 0 | done |
+| 2 | Settings page — break interval, stepper defaults, rest timer with custom values | 2 | done |
+| 3 | Day summary screen — fitbreak count hero, work duration, mood, break/workout lists | 1 | done |
+| 4 | Progress page V1 — streak counter, weekly comparison with trend indicators | 2 | done |
+
+**Also delivered:** RLS hardening, SQL function optimization, stale session cleanup RPC, dashboard init parallelization.
