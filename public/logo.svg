@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Deep Purple rounded square -->
+  <rect width="512" height="512" rx="108" fill="#5E35B1"/>
+
+  <!-- Stretching figure — arms raised in V, wide stance -->
+  <circle cx="256" cy="118" r="42" fill="white"/>
+
+  <g fill="none" stroke="white" stroke-width="36" stroke-linecap="round">
+    <!-- Body -->
+    <line x1="256" y1="160" x2="256" y2="316"/>
+    <!-- Left arm up -->
+    <line x1="256" y1="216" x2="164" y2="116"/>
+    <!-- Right arm up -->
+    <line x1="256" y1="216" x2="348" y2="116"/>
+    <!-- Left leg -->
+    <line x1="256" y1="316" x2="180" y2="418"/>
+    <!-- Right leg -->
+    <line x1="256" y1="316" x2="332" y2="418"/>
+  </g>
+</svg>

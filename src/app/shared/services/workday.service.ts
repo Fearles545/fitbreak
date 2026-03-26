@@ -59,6 +59,40 @@ export class WorkdayService {
     }
   });
 
+  private tabTitleEffect = effect(() => {
+    const activity = this._currentActivity();
+    const remaining = this.remainingSeconds();
+
+    // Break notifier manages its own title — don't override it
+    if (this.notifier.isActive) return;
+
+    switch (activity) {
+      case 'working': {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        document.title = `${m}:${s.toString().padStart(2, '0')} — FitBreak`;
+        break;
+      }
+      case 'paused': {
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        document.title = `⏸ ${m}:${s.toString().padStart(2, '0')} — FitBreak`;
+        break;
+      }
+      case 'on-break':
+        document.title = '🏃 Перерва — FitBreak';
+        break;
+      case 'stepper':
+      case 'strength':
+        document.title = '💪 Тренування — FitBreak';
+        break;
+      case 'idle':
+      default:
+        document.title = 'FitBreak';
+        break;
+    }
+  });
+
   constructor() {
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && this._currentActivity() === 'working') {

@@ -40,7 +40,7 @@ export class BreakNotifierService {
   cancel(): void {
     this.pendingTimeouts.forEach(t => clearTimeout(t));
     this.pendingTimeouts = [];
-    document.title = this.originalTitle;
+    document.title = 'FitBreak';
     this.active = false;
   }
 
