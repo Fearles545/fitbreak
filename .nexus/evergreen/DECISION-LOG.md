@@ -49,3 +49,24 @@ Record of key architectural and product decisions.
 **Decision:** SettingsService uses a lazy `ensureLoaded()` pattern — first consumer triggers load, subsequent calls reuse the same promise. Non-null computed signals with `?? defaults` ensure safe reads.
 **Alternatives considered:** APP_INITIALIZER (eager), load in authGuard, load only in dashboard
 **Rationale:** Lazy pattern is most resilient — works regardless of which route loads first, no wasted calls if settings aren't needed. QA review identified cross-route timing as the biggest risk (R8).
+
+### DECISION-006: SRP strategy pattern for timer animations
+**Date:** 2026-03-26
+**Context:** Animated timer component needed multiple animation modes (flip, roll, etc.). Initial implementation had all animation CSS/templates inline in one component — over 200 lines of mixed concerns. CEO requested SRP separation.
+**Decision:** Extract each animation mode into its own digit component under `strategies/`. The orchestrator (`AnimatedTimerComponent`) handles layout, sizing, and digit state tracking; delegates rendering to the active strategy via `@switch`. Flip mode dropped — replaced with 5 working modes: roll, fade, scale, blur, slot.
+**Alternatives considered:** (A) All-in-one component with CSS classes, (B) Angular CDK animation strategies, (C) Third-party flip clock library (FlipClock.js, FlipDown.js)
+**Rationale:** Sub-components give clean SRP — adding a new animation = 1 new file + 1 `@case`. Libraries were overkill (full countdown widgets, not digit-level animation). Flip clock CSS is notoriously broken (z-layering, split-panel positioning) — simpler CSS transitions are more reliable.
+
+### DECISION-007: Extract SessionService from DashboardService
+**Date:** 2026-03-26
+**Context:** FE architecture review found that `WorkdayService` (shared/) imported `DashboardService` (feature/) for session state — a layering violation. `AnimatedTimerComponent` (shared/) also imported `SettingsService` (feature/). These cross-boundary imports made the dependency graph fragile.
+**Decision:** Extract session ownership (`_session` signal, `refreshSession()`, `startWorkday()`, `endWorkday()`, `cleanupStaleSessions()`, `completedBreaks`) into a new `SessionService` in `shared/services/`. DashboardService keeps only `weekActivities` + `loadWeekActivities()`. AnimatedTimerComponent receives animation mode via `@Input` instead of injecting SettingsService.
+**Alternatives considered:** (A) Leave as-is and accept the coupling, (B) Move DashboardService to shared/ entirely
+**Rationale:** Option B would move feature logic into shared. Option A is a ticking time bomb. Extracting just the session state (consumed by 4 services/components) is the minimal clean cut. AnimatedTimerComponent as a pure presentational component (inputs only) is the correct pattern.
+
+### DECISION-008: Tech debt sprint before continuing features
+**Date:** 2026-03-26
+**Context:** After Sprint 2 tasks 1-3, CEO felt accumulated tech debt would slow future development. FE architect review found 2 bugs, 2 architecture violations, 4 oversized components, duplicated patterns, missing error handling, and accessibility gaps.
+**Decision:** Pause feature work. Execute an 8-phase tech debt sprint addressing all findings before continuing with Sprint 2 tasks 4-5.
+**Alternatives considered:** (A) Fix only critical bugs and continue, (B) Address debt incrementally during feature work
+**Rationale:** The architecture violations (shared→feature imports) would compound with every new feature. Component sizes (655, 644 LOC) were approaching unmaintainable. Addressing it all at once is cleaner than piecemeal fixes scattered across feature PRs.
