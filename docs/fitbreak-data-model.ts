@@ -325,6 +325,7 @@ export interface UserSettings {
   // --- UI ---
   theme: 'light' | 'dark' | 'system';
   language: 'uk' | 'en';
+  timerAnimationStyle: 'flip' | 'roll';  // анімація таймера
 
   // --- Нотифікації ---
   breakNotificationSound: 'gentle' | 'energetic' | 'default';

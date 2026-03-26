@@ -174,6 +174,8 @@ create table public.user_settings (
     check (theme in ('light', 'dark', 'system')),
   language text default 'uk'
     check (language in ('uk', 'en')),
+  timer_animation_style text default 'roll'
+    check (timer_animation_style in ('roll', 'fade', 'scale', 'blur', 'slot')),
 
   -- Нотифікації
   break_notification_sound text default 'default'
