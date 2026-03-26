@@ -11,16 +11,24 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { StrengthService, WorkoutMode } from './strength.service';
+import { StrengthRestComponent } from './strength-rest/strength-rest.component';
+import { StrengthFinishComponent } from './strength-finish/strength-finish.component';
 import { WorkdayService } from '@shared/services/workday.service';
+import { SettingsService } from '../settings/settings.service';
 import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
-import { SupabaseService } from '@shared/services/supabase.service';
 
 @Component({
   selector: 'app-strength',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, AnimatedTimerComponent],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    StrengthRestComponent,
+    StrengthFinishComponent,
+  ],
   styles: `
     :host {
       display: block;
@@ -98,16 +106,8 @@ import { SupabaseService } from '@shared/services/supabase.service';
       border-color: var(--mat-sys-primary);
     }
 
-    .mode-chip-label {
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    .mode-chip-desc {
-      font-size: 0.7rem;
-      opacity: 0.8;
-      margin-top: 2px;
-    }
+    .mode-chip-label { font-size: 0.9rem; font-weight: 500; }
+    .mode-chip-desc { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
 
     .round-indicator {
       text-align: center;
@@ -116,9 +116,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
       margin-bottom: 12px;
     }
 
-    .back-link {
-      margin-top: 16px;
-    }
+    .back-link { margin-top: 16px; }
 
     /* ── Exercise ── */
     .exec-header {
@@ -157,23 +155,9 @@ import { SupabaseService } from '@shared/services/supabase.service';
       margin-bottom: 20px;
     }
 
-    .set-label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-primary-container);
-    }
-
-    .set-number {
-      font-family: 'Exo 2', monospace;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--mat-sys-on-primary-container);
-    }
-
-    .set-target {
-      font-size: 0.9rem;
-      color: var(--mat-sys-on-primary-container);
-      opacity: 0.7;
-    }
+    .set-label { font-size: 0.85rem; color: var(--mat-sys-on-primary-container); }
+    .set-number { font-family: 'Exo 2', monospace; font-size: 2rem; font-weight: 700; color: var(--mat-sys-on-primary-container); }
+    .set-target { font-size: 0.9rem; color: var(--mat-sys-on-primary-container); opacity: 0.7; }
 
     .exercise-params {
       display: flex;
@@ -190,15 +174,9 @@ import { SupabaseService } from '@shared/services/supabase.service';
       color: var(--mat-sys-on-surface-variant);
     }
 
-    .param mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
+    .param mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
-    .technique {
-      margin-bottom: 16px;
-    }
+    .technique { margin-bottom: 16px; }
 
     .technique-toggle {
       font-size: 0.8rem;
@@ -230,10 +208,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
       font-weight: 600;
     }
 
-    .step-text {
-      color: var(--mat-sys-on-surface);
-      font-size: 0.85rem;
-    }
+    .step-text { color: var(--mat-sys-on-surface); font-size: 0.85rem; }
 
     .key-point {
       color: var(--mat-sys-primary);
@@ -249,9 +224,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
       margin-top: 24px;
     }
 
-    .skip-link {
-      text-align: center;
-    }
+    .skip-link { text-align: center; }
 
     .skip-btn {
       color: var(--mat-sys-on-surface-variant);
@@ -260,114 +233,6 @@ import { SupabaseService } from '@shared/services/supabase.service';
       background: none;
       border: none;
       text-decoration: underline;
-    }
-
-    /* ── Rest ── */
-    .rest-wrapper {
-      text-align: center;
-      padding-top: 32px;
-    }
-
-    .rest-label {
-      font-size: 1rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 16px;
-    }
-
-    .rest-timer {
-      color: var(--mat-sys-on-surface);
-      --timer-font-size: 4rem;
-    }
-
-    .rest-progress {
-      margin: 24px auto;
-      max-width: 300px;
-    }
-
-    .rest-next {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin: 16px 0 24px;
-    }
-
-    .rest-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-    }
-
-    /* ── Summary ── */
-    .summary {
-      text-align: center;
-      padding-top: 48px;
-    }
-
-    .summary-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-      margin-bottom: 24px;
-    }
-
-    .summary-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 32px;
-      text-align: left;
-      max-width: 250px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .stat {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.95rem;
-    }
-
-    .stat-label {
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .stat-value {
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .mood-section {
-      margin-bottom: 32px;
-    }
-
-    .mood-label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 12px;
-    }
-
-    .mood-options {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .mood-btn {
-      font-size: 1.8rem;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--mat-sys-outline-variant);
-      background: var(--mat-sys-surface);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .mood-btn.selected {
-      border-color: var(--mat-sys-primary);
-      background: var(--mat-sys-primary-container);
     }
   `,
   template: `
@@ -396,7 +261,7 @@ import { SupabaseService } from '@shared/services/supabase.service';
           </div>
 
           <div class="template-list">
-            @for (t of templates(); track t.id) {
+            @for (t of strength.templates(); track t.id) {
               <button class="template-card" (click)="onPickTemplate(t)">
                 <div class="template-name">{{ t.icon }} {{ t.name }}</div>
                 <div class="template-meta">
@@ -487,62 +352,22 @@ import { SupabaseService } from '@shared/services/supabase.service';
         }
 
         @case ('resting') {
-          <div class="rest-wrapper">
-            <div class="rest-label">Відпочинок</div>
-            <app-animated-timer class="rest-timer"
-              [remainingSeconds]="strength.restRemainingSec()"
-              size="big" />
-
-            <div class="rest-progress">
-              <mat-progress-bar mode="determinate" [value]="restProgress()" />
-            </div>
-
-            <div class="rest-next">
-              @if (nextPreview()) {
-                Далі: {{ nextPreview() }}
-              }
-            </div>
-
-            <div class="rest-actions">
-              <button matButton="outlined" (click)="strength.extendRest(30)">+30 сек</button>
-              <button mat-flat-button (click)="strength.skipRest()">Пропустити відпочинок</button>
-            </div>
-          </div>
+          <app-strength-rest
+            [remainingSec]="strength.restRemainingSec()"
+            [progressPercent]="restProgress()"
+            [nextPreview]="nextPreview()"
+            [animationMode]="settings.timerAnimationStyle()"
+            (skip)="strength.skipRest()"
+            (extend)="strength.extendRest($event)"
+          />
         }
 
         @case ('finished') {
-          <div class="summary">
-            <div class="summary-title">Тренування завершено! 🎉</div>
-
-            <div class="summary-stats">
-              <div class="stat">
-                <span class="stat-label">Програма</span>
-                <span class="stat-value">{{ strength.template()?.name }}</span>
-              </div>
-              <div class="stat">
-                <span class="stat-label">Вправ</span>
-                <span class="stat-value">{{ strength.exerciseCount() }}</span>
-              </div>
-            </div>
-
-            <div class="mood-section">
-              <div class="mood-label">Як ти себе почуваєш?</div>
-              <div class="mood-options">
-                @for (m of moodOptions; track m.value) {
-                  <button
-                    class="mood-btn"
-                    [class.selected]="selectedMood() === m.value"
-                    (click)="selectedMood.set(m.value)"
-                    [attr.aria-label]="m.label"
-                  >
-                    {{ m.emoji }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <button mat-flat-button (click)="onFinish()">Зберегти і вийти</button>
-          </div>
+          <app-strength-finish
+            [templateName]="strength.template()?.name ?? ''"
+            [exerciseCount]="strength.exerciseCount()"
+            (finish)="onFinish($event)"
+          />
         }
       }
     </div>
@@ -552,20 +377,12 @@ export class StrengthComponent implements OnInit {
   protected strength = inject(StrengthService);
   private workday = inject(WorkdayService);
   protected router = inject(Router);
-  private supabase = inject(SupabaseService);
+  protected settings = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
+  private snackBar = inject(MatSnackBar);
 
-  templates = signal<WorkoutTemplate[]>([]);
   selectedMode = signal<WorkoutMode>('circuit');
   showTechnique = signal(false);
-  selectedMood = signal<string | null>(null);
-
-  readonly moodOptions = [
-    { value: 'great', emoji: '😊', label: 'Чудово' },
-    { value: 'good', emoji: '🙂', label: 'Добре' },
-    { value: 'okay', emoji: '😐', label: 'Нормально' },
-    { value: 'bad', emoji: '😫', label: 'Погано' },
-  ];
 
   exerciseProgress = computed(() => {
     const total = this.strength.exerciseCount();
@@ -602,7 +419,9 @@ export class StrengthComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadTemplates();
+    this.strength.loadStrengthTemplates().catch(() => {
+      this.snackBar.open('Не вдалося завантажити шаблони тренувань.', 'OK', { duration: 5000 });
+    });
     this.destroyRef.onDestroy(() => {
       if (this.strength.state() === 'resting') {
         this.strength.skipRest();
@@ -611,23 +430,15 @@ export class StrengthComponent implements OnInit {
     });
   }
 
-  async loadTemplates(): Promise<void> {
-    const { data, error } = await this.supabase.supabase
-      .from('workout_templates')
-      .select('*')
-      .eq('workout_type', 'strength')
-      .eq('is_active', true)
-      .order('sort_order');
-
-    if (error) throw error;
-    this.templates.set((data ?? []) as unknown as WorkoutTemplate[]);
-  }
-
   async onPickTemplate(template: WorkoutTemplate): Promise<void> {
-    this.workday.startActivity('strength');
-    await this.strength.loadTemplate(template.id);
-    this.strength.start(this.selectedMode());
-    this.showTechnique.set(true);
+    try {
+      this.workday.startActivity('strength');
+      await this.strength.loadTemplate(template.id);
+      this.strength.start(this.selectedMode());
+      this.showTechnique.set(true);
+    } catch {
+      this.snackBar.open('Не вдалося завантажити тренування.', 'OK', { duration: 5000 });
+    }
   }
 
   onCompleteSet(): void {
@@ -635,10 +446,14 @@ export class StrengthComponent implements OnInit {
     this.showTechnique.set(false);
   }
 
-  async onFinish(): Promise<void> {
-    await this.strength.saveWorkoutLog((this.selectedMood() as MoodRating) ?? undefined);
-    this.strength.reset();
-    await this.workday.endActivity();
-    this.router.navigate(['/dashboard']);
+  async onFinish(mood?: MoodRating): Promise<void> {
+    try {
+      await this.strength.saveWorkoutLog(mood);
+      this.strength.reset();
+      await this.workday.endActivity();
+      this.router.navigate(['/dashboard']);
+    } catch {
+      this.snackBar.open('Не вдалося зберегти результат тренування.', 'OK', { duration: 5000 });
+    }
   }
 }

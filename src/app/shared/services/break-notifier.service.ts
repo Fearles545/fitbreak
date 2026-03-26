@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { AudioService } from './audio.service';
 
 /**
@@ -13,12 +13,14 @@ export class BreakNotifierService {
   private audio = inject(AudioService);
   private pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
   private originalTitle = 'FitBreak';
-  private active = false;
+  private _active = signal(false);
+
+  readonly isActive = this._active.asReadonly();
 
   /** Start the notification sequence */
   trigger(): void {
-    if (this.active) return;
-    this.active = true;
+    if (this._active()) return;
+    this._active.set(true);
 
     // Change tab title
     this.originalTitle = document.title;
@@ -41,10 +43,6 @@ export class BreakNotifierService {
     this.pendingTimeouts.forEach(t => clearTimeout(t));
     this.pendingTimeouts = [];
     document.title = 'FitBreak';
-    this.active = false;
-  }
-
-  get isActive(): boolean {
-    return this.active;
+    this._active.set(false);
   }
 }

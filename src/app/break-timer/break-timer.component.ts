@@ -8,10 +8,13 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MoodPickerComponent } from '@shared/components/mood-picker/mood-picker.component';
 import { WorkdayService } from '@shared/services/workday.service';
+import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { BreakTimerService } from './break-timer.service';
+import { BreakPromptComponent } from './break-prompt/break-prompt.component';
+import { BreakExecutionComponent } from './break-execution/break-execution.component';
 import type { MicroBreakRotation, MoodRating } from '@shared/models/fitbreak.models';
 
 type BreakMode = 'prompt' | 'execution' | 'mood';
@@ -19,7 +22,7 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 @Component({
   selector: 'app-break-timer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule],
+  imports: [MatButtonModule, MoodPickerComponent, BreakPromptComponent, BreakExecutionComponent],
   styles: `
     :host {
       display: block;
@@ -34,302 +37,6 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
       margin: 0 auto;
     }
 
-    /* ── Prompt ── */
-    .prompt-title {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-      margin-bottom: 24px;
-    }
-
-    .suggested-card {
-      padding: 20px;
-      border-radius: 16px;
-      background: var(--mat-sys-primary-container);
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .suggested-icon {
-      font-size: 2rem;
-      line-height: 1;
-    }
-
-    .suggested-name {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-primary-container);
-      margin-top: 8px;
-    }
-
-    .suggested-meta {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-primary-container);
-      opacity: 0.8;
-      margin-top: 4px;
-    }
-
-    .prompt-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    .prompt-links {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .choose-link {
-      color: var(--mat-sys-primary);
-      cursor: pointer;
-      font-size: 0.85rem;
-      background: none;
-      border: none;
-      text-decoration: underline;
-    }
-
-    .link-divider {
-      color: var(--mat-sys-outline-variant);
-      font-size: 0.8rem;
-    }
-
-    .extend-section {
-      margin-top: 16px;
-      padding: 16px;
-      border-radius: 16px;
-      background: var(--mat-sys-surface-container);
-    }
-
-    .extend-label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 12px;
-    }
-
-    .duration-chips {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .duration-chip {
-      flex: 1;
-      padding: 8px 0;
-      border-radius: 20px;
-      border: 1px solid var(--mat-sys-outline-variant);
-      background: var(--mat-sys-surface);
-      color: var(--mat-sys-on-surface);
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
-
-    .duration-chip.selected {
-      background: var(--mat-sys-primary-container);
-      border-color: var(--mat-sys-primary);
-      color: var(--mat-sys-on-primary-container);
-      font-weight: 500;
-    }
-
-    .extend-reason {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--mat-sys-outline-variant);
-      background: var(--mat-sys-surface);
-      color: var(--mat-sys-on-surface);
-      font-size: 0.85rem;
-      margin-bottom: 12px;
-      box-sizing: border-box;
-    }
-
-    .extend-reason:focus {
-      outline: none;
-      border-color: var(--mat-sys-primary);
-    }
-
-    .extend-reason::placeholder {
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .rotation-options {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .rotation-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--mat-sys-surface-container);
-      cursor: pointer;
-      border: none;
-      width: 100%;
-      text-align: left;
-    }
-
-    .rotation-option:hover {
-      background: var(--mat-sys-surface-container-high);
-    }
-
-    .rotation-option-icon {
-      font-size: 1.3rem;
-    }
-
-    .rotation-option-info {
-      flex: 1;
-    }
-
-    .rotation-option-name {
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .rotation-option-meta {
-      font-size: 0.75rem;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    /* ── Execution ── */
-    .exec-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .exec-progress-text {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .exercise-name {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-      margin: 16px 0 4px;
-    }
-
-    .exercise-desc {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 16px;
-    }
-
-    .exercise-params {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .param {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .param mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .technique {
-      margin-bottom: 20px;
-    }
-
-    .technique-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 8px;
-    }
-
-    .technique-step {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .step-number {
-      flex-shrink: 0;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .step-text {
-      color: var(--mat-sys-on-surface);
-      font-size: 0.9rem;
-    }
-
-    .key-point {
-      color: var(--mat-sys-primary);
-      font-weight: 500;
-      font-size: 0.8rem;
-      margin-top: 2px;
-    }
-
-    .warnings {
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: var(--mat-sys-error-container);
-      margin-bottom: 16px;
-    }
-
-    .warnings-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-error-container);
-      margin-bottom: 4px;
-    }
-
-    .warnings li {
-      font-size: 0.8rem;
-      color: var(--mat-sys-on-error-container);
-      margin-left: 16px;
-    }
-
-    .bilateral-indicator {
-      text-align: center;
-      padding: 8px 16px;
-      border-radius: 8px;
-      background: var(--mat-sys-tertiary-container);
-      color: var(--mat-sys-on-tertiary-container);
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-
-    .exec-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 24px;
-    }
-
-    /* ── Mood ── */
     .mood-section {
       text-align: center;
       padding-top: 48px;
@@ -347,192 +54,32 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
       color: var(--mat-sys-on-surface-variant);
       margin-bottom: 32px;
     }
-
-    .mood-options {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .mood-btn {
-      font-size: 2rem;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      border: 2px solid var(--mat-sys-outline-variant);
-      background: var(--mat-sys-surface);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        border-color 0.15s,
-        transform 0.15s;
-    }
-
-    .mood-btn:hover {
-      transform: scale(1.1);
-    }
-
-    .mood-btn.selected {
-      border-color: var(--mat-sys-primary);
-      background: var(--mat-sys-primary-container);
-    }
   `,
   template: `
     <div class="container">
       @switch (mode()) {
         @case ('prompt') {
-          <div class="prompt-title">⏰ Час на перерву!</div>
-
-          @if (suggestedOption(); as option) {
-            <div class="suggested-card">
-              <div class="suggested-icon">{{ option.icon }}</div>
-              <div class="suggested-name">{{ option.name }}</div>
-              <div class="suggested-meta">
-                ~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ
-              </div>
-            </div>
-          }
-
-          <div class="prompt-actions">
-            <button mat-flat-button (click)="onStartSuggested()">Почати розминку</button>
-            <button matButton="outlined" (click)="showExtend.set(!showExtend())">
-              {{ showExtend() ? 'Сховати' : 'Потрібно ще працювати' }}
-            </button>
-          </div>
-
-          @if (showExtend()) {
-            <div class="extend-section">
-              <div class="extend-label">На скільки продовжити?</div>
-              <div class="duration-chips">
-                @for (opt of extendOptions; track opt.min) {
-                  <button
-                    class="duration-chip"
-                    [class.selected]="selectedExtendMin() === opt.min"
-                    (click)="selectedExtendMin.set(opt.min)"
-                  >
-                    {{ opt.label }}
-                  </button>
-                }
-              </div>
-              <input
-                class="extend-reason"
-                placeholder="Причина (необов'язково)"
-                aria-label="Причина продовження"
-                [value]="extendReason()"
-                (input)="onReasonInput($event)"
-              />
-              <button mat-flat-button [disabled]="!selectedExtendMin()" (click)="onExtendWork()">
-                Продовжити роботу
-              </button>
-            </div>
-          }
-
-          <div class="prompt-links">
-            <button class="choose-link" (click)="showOptions.set(!showOptions())">
-              {{ showOptions() ? 'Сховати' : 'Обрати іншу' }}
-            </button>
-            <span class="link-divider">·</span>
-            <button class="choose-link" (click)="onSkip()">Пропустити</button>
-            <span class="link-divider">·</span>
-            <button class="choose-link" (click)="onEndDay()">Завершити день</button>
-          </div>
-
-          @if (showOptions()) {
-            <div class="rotation-options">
-              @for (option of breakService.rotationOptions(); track option.key) {
-                @if (!option.isSuggested) {
-                  <button class="rotation-option" (click)="onPickRotation(option.key)">
-                    <span class="rotation-option-icon">{{ option.icon }}</span>
-                    <div class="rotation-option-info">
-                      <div class="rotation-option-name">{{ option.name }}</div>
-                      <div class="rotation-option-meta">
-                        ~{{ option.durationMin }} хв · {{ option.exerciseCount }} вправ
-                      </div>
-                    </div>
-                  </button>
-                }
-              }
-            </div>
-          }
+          <app-break-prompt
+            [suggestedOption]="suggestedOption()"
+            [rotationOptions]="breakService.rotationOptions()"
+            (startSuggested)="onStartSuggested()"
+            (pickRotation)="onPickRotation($event)"
+            (extendWork)="onExtendWork($event.minutes, $event.reason)"
+            (skip)="onSkip()"
+            (endDay)="onEndDay()"
+          />
         }
 
         @case ('execution') {
-          @if (breakService.currentExercise(); as exercise) {
-            <div class="exec-header">
-              <button mat-icon-button (click)="onBackToPrompt()" aria-label="Назад">
-                <mat-icon>arrow_back</mat-icon>
-              </button>
-              <span class="exec-progress-text">
-                Вправа {{ breakService.currentExerciseIndex() + 1 }} з
-                {{ breakService.exerciseCount() }}
-              </span>
-            </div>
-
-            <mat-progress-bar mode="determinate" [value]="progressPercent()" />
-
-            <h2 class="exercise-name">{{ exercise.name }}</h2>
-            <p class="exercise-desc">{{ exercise.short_description }}</p>
-
-            <div class="exercise-params">
-              @if (exercise.exercise_type === 'reps' && exercise.default_reps) {
-                <div class="param">
-                  <mat-icon>repeat</mat-icon>
-                  {{ exercise.default_reps }} повторень
-                </div>
-              }
-              @if (exercise.default_duration_sec) {
-                <div class="param">
-                  <mat-icon>timer</mat-icon>
-                  {{ exercise.default_duration_sec }} сек
-                </div>
-              }
-              @if (exercise.is_bilateral) {
-                <div class="param">
-                  <mat-icon>swap_horiz</mat-icon>
-                  на кожну сторону
-                </div>
-              }
-            </div>
-
-            @if (exercise.is_bilateral) {
-              <div class="bilateral-indicator">↔ Виконай на обидві сторони</div>
-            }
-
-            <div class="technique">
-              <div class="technique-title">Техніка</div>
-              @for (step of exercise.technique; track step.order) {
-                <div class="technique-step">
-                  <span class="step-number">{{ step.order }}</span>
-                  <div>
-                    <div class="step-text">{{ step.text }}</div>
-                    @if (step.keyPoint) {
-                      <div class="key-point">☝ {{ step.keyPoint }}</div>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-
-            @if (exercise.warnings && exercise.warnings.length > 0) {
-              <div class="warnings">
-                <div class="warnings-title">⚠️ Увага</div>
-                <ul>
-                  @for (w of exercise.warnings; track w) {
-                    <li>{{ w }}</li>
-                  }
-                </ul>
-              </div>
-            }
-
-            <div class="exec-actions">
-              <button mat-flat-button (click)="onNextExercise()">
-                {{ breakService.isLastExercise() ? 'Завершити розминку' : 'Готово — наступна' }}
-              </button>
-            </div>
-          }
+          <app-break-execution
+            [exercise]="breakService.currentExercise()"
+            [currentIndex]="breakService.currentExerciseIndex()"
+            [totalCount]="breakService.exerciseCount()"
+            [progressPercent]="progressPercent()"
+            [isLast]="breakService.isLastExercise()"
+            (next)="onNextExercise()"
+            (back)="onBackToPrompt()"
+          />
         }
 
         @case ('mood') {
@@ -540,18 +87,7 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
             <div class="mood-title">Розминка завершена! 🎉</div>
             <div class="mood-subtitle">Як ти себе почуваєш?</div>
 
-            <div class="mood-options">
-              @for (m of moodOptions; track m.value) {
-                <button
-                  class="mood-btn"
-                  [class.selected]="selectedMood() === m.value"
-                  (click)="selectedMood.set(m.value)"
-                  [attr.aria-label]="m.label"
-                >
-                  {{ m.emoji }}
-                </button>
-              }
-            </div>
+            <app-mood-picker [(selected)]="selectedMood" [showLabel]="false" />
 
             <button mat-flat-button (click)="onFinish()">Повернутись до роботи</button>
           </div>
@@ -563,27 +99,12 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 export class BreakTimerComponent implements OnInit {
   protected breakService = inject(BreakTimerService);
   private workday = inject(WorkdayService);
+  private notifier = inject(BreakNotifierService);
   private router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   mode = signal<BreakMode>('prompt');
-  showOptions = signal(false);
-  showExtend = signal(false);
-  selectedExtendMin = signal<number | null>(null);
-  extendReason = signal('');
-  selectedMood = signal<string | null>(null);
-
-  readonly extendOptions = [
-    { min: 10, label: '10 хв' },
-    { min: 15, label: '15 хв' },
-    { min: 30, label: '30 хв' },
-  ];
-
-  readonly moodOptions = [
-    { value: 'great', emoji: '😊', label: 'Чудово' },
-    { value: 'good', emoji: '🙂', label: 'Добре' },
-    { value: 'okay', emoji: '😐', label: 'Нормально' },
-    { value: 'bad', emoji: '😫', label: 'Погано' },
-  ];
+  selectedMood = signal<MoodRating | null>(null);
 
   suggestedOption = computed(() => {
     return this.breakService.rotationOptions().find((o) => o.isSuggested) ?? null;
@@ -600,39 +121,53 @@ export class BreakTimerComponent implements OnInit {
   }
 
   async onStartSuggested(): Promise<void> {
-    this.workday.onBreakStarted();
-    const suggested = this.breakService.suggestedRotation();
-    await this.breakService.startBreak(suggested);
-    this.mode.set('execution');
+    try {
+      this.workday.onBreakStarted();
+      const suggested = this.breakService.suggestedRotation();
+      await this.breakService.startBreak(suggested);
+      this.mode.set('execution');
+    } catch {
+      this.snackBar.open('Не вдалося розпочати перерву.', 'OK', { duration: 5000 });
+    }
   }
 
   async onPickRotation(rotation: MicroBreakRotation): Promise<void> {
-    this.workday.onBreakStarted();
-    await this.breakService.startBreak(rotation);
-    this.mode.set('execution');
+    try {
+      this.workday.onBreakStarted();
+      await this.breakService.startBreak(rotation);
+      this.mode.set('execution');
+    } catch {
+      this.snackBar.open('Не вдалося розпочати перерву.', 'OK', { duration: 5000 });
+    }
   }
 
-  async onExtendWork(): Promise<void> {
-    const minutes = this.selectedExtendMin();
-    if (!minutes) return;
-    this.workday.onBreakStarted();
-    await this.breakService.extendWork(minutes, this.extendReason() || undefined);
-    this.router.navigate(['/dashboard']);
+  async onExtendWork(minutes: number, reason?: string): Promise<void> {
+    try {
+      this.notifier.cancel();
+      await this.breakService.extendWork(minutes, reason);
+      this.router.navigate(['/dashboard']);
+    } catch {
+      this.snackBar.open('Не вдалося продовжити роботу.', 'OK', { duration: 5000 });
+    }
   }
 
   async onSkip(): Promise<void> {
-    this.workday.onBreakStarted();
-    await this.breakService.skipBreak();
-    this.router.navigate(['/dashboard']);
+    try {
+      this.notifier.cancel();
+      await this.breakService.skipBreak();
+      this.router.navigate(['/dashboard']);
+    } catch {
+      this.snackBar.open('Не вдалося пропустити перерву.', 'OK', { duration: 5000 });
+    }
   }
 
   async onEndDay(): Promise<void> {
-    await this.workday.endWorkday();
-    this.router.navigate(['/dashboard']);
-  }
-
-  onReasonInput(event: Event): void {
-    this.extendReason.set((event.target as HTMLInputElement).value);
+    try {
+      await this.workday.endWorkday();
+      this.router.navigate(['/dashboard']);
+    } catch {
+      this.snackBar.open('Не вдалося завершити робочий день.', 'OK', { duration: 5000 });
+    }
   }
 
   onBackToPrompt(): void {
@@ -640,7 +175,7 @@ export class BreakTimerComponent implements OnInit {
     this.mode.set('prompt');
   }
 
-  async onNextExercise(): Promise<void> {
+  onNextExercise(): void {
     if (this.breakService.isLastExercise()) {
       this.mode.set('mood');
     } else {
@@ -649,7 +184,11 @@ export class BreakTimerComponent implements OnInit {
   }
 
   async onFinish(): Promise<void> {
-    await this.breakService.completeBreak((this.selectedMood() as MoodRating) ?? undefined);
-    this.router.navigate(['/dashboard']);
+    try {
+      await this.breakService.completeBreak(this.selectedMood() ?? undefined);
+      this.router.navigate(['/dashboard']);
+    } catch {
+      this.snackBar.open('Не вдалося зберегти результат перерви.', 'OK', { duration: 5000 });
+    }
   }
 }

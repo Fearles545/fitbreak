@@ -2,15 +2,16 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { SupabaseService } from './supabase.service';
 import { BreakNotifierService } from './break-notifier.service';
-import { DashboardService } from '../../dashboard/dashboard.service';
+import { SessionService } from './session.service';
 import type { PauseEntry, WorkSession } from '../models/fitbreak.models';
+import { asJson } from '../utils/supabase.utils';
 
 export type WorkdayActivity = 'idle' | 'working' | 'on-break' | 'paused' | 'stepper' | 'strength';
 
 @Injectable({ providedIn: 'root' })
 export class WorkdayService {
   private supabase = inject(SupabaseService);
-  private dashboard = inject(DashboardService);
+  private session = inject(SessionService);
   private notifier = inject(BreakNotifierService);
   private router = inject(Router);
 
@@ -23,7 +24,7 @@ export class WorkdayService {
   readonly now = this._now.asReadonly();
 
   readonly remainingSeconds = computed(() => {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     const activity = this._currentActivity();
 
     if (!session || !session.next_break_at) return 0;
@@ -47,7 +48,7 @@ export class WorkdayService {
   private breakTriggerEffect = effect(() => {
     const remaining = this.remainingSeconds();
     const activity = this._currentActivity();
-    const session = this.dashboard.session();
+    const session = this.session.session();
 
     if (activity === 'working' && remaining === 0 && session?.next_break_at && !this.breakTriggered) {
       this.breakTriggered = true;
@@ -64,7 +65,7 @@ export class WorkdayService {
     const remaining = this.remainingSeconds();
 
     // Break notifier manages its own title — don't override it
-    if (this.notifier.isActive) return;
+    if (this.notifier.isActive()) return;
 
     switch (activity) {
       case 'working': {
@@ -103,7 +104,7 @@ export class WorkdayService {
 
   /** Sync workday state with the loaded session. Call after refreshSession(). */
   async init(): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (session?.status === 'active') {
       if (!session.next_break_at) {
         await this.backfillNextBreakAt(session);
@@ -120,7 +121,7 @@ export class WorkdayService {
   }
 
   async startWorkday(): Promise<void> {
-    await this.dashboard.startWorkday();
+    await this.session.startWorkday();
     this._currentActivity.set('working');
     this.startTick();
   }
@@ -130,24 +131,24 @@ export class WorkdayService {
     this.stopTick();
 
     // If ending while paused, finalize the current pause entry
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (session?.paused_at) {
       const now = new Date().toISOString();
       const pauseEntry: PauseEntry = { pausedAt: session.paused_at, resumedAt: now };
       const pauses = [...session.pauses, pauseEntry];
       const { error: pauseError } = await this.supabase.supabase
         .from('work_sessions')
-        .update({ paused_at: null, pauses: pauses as any })
+        .update({ paused_at: null, pauses: asJson(pauses) })
         .eq('id', session.id);
       if (pauseError) throw pauseError;
     }
 
-    await this.dashboard.endWorkday();
+    await this.session.endWorkday();
     this._currentActivity.set('idle');
   }
 
   async pauseWorkday(): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (!session) return;
 
     this.notifier.cancel();
@@ -163,11 +164,11 @@ export class WorkdayService {
       .eq('id', session.id);
 
     if (error) throw error;
-    await this.dashboard.refreshSession();
+    await this.session.refreshSession();
   }
 
   async resumeWorkday(): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (!session || !session.paused_at) return;
 
     const now = new Date();
@@ -192,12 +193,12 @@ export class WorkdayService {
         status: 'active',
         paused_at: null,
         next_break_at: new Date(now.getTime() + remainingMs).toISOString(),
-        pauses: pauses as any,
+        pauses: asJson(pauses),
       })
       .eq('id', session.id);
 
     if (error) throw error;
-    await this.dashboard.refreshSession();
+    await this.session.refreshSession();
     this._currentActivity.set('working');
     this.startTick();
   }
@@ -210,20 +211,20 @@ export class WorkdayService {
 
   async onBreakCompleted(): Promise<void> {
     this.notifier.cancel();
-    await this.dashboard.refreshSession();
+    await this.session.refreshSession();
     this._currentActivity.set('working');
     this.startTick();
   }
 
   async onBreakSkipped(): Promise<void> {
     this.notifier.cancel();
-    await this.dashboard.refreshSession();
+    await this.session.refreshSession();
     this._currentActivity.set('working');
     this.startTick();
   }
 
   startActivity(type: 'stepper' | 'strength'): void {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (session) {
       this.notifier.cancel();
       this.stopTick();
@@ -235,7 +236,7 @@ export class WorkdayService {
     const activity = this._currentActivity();
     if (activity !== 'stepper' && activity !== 'strength') return;
 
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (session) {
       const intervalMs = session.break_interval_min * 60_000;
       const { error } = await this.supabase.supabase
@@ -245,7 +246,7 @@ export class WorkdayService {
         })
         .eq('id', session.id);
       if (error) throw error;
-      await this.dashboard.refreshSession();
+      await this.session.refreshSession();
       this._currentActivity.set('working');
       this.startTick();
     } else {
@@ -271,7 +272,7 @@ export class WorkdayService {
       .update({ next_break_at: new Date(nextBreakAtMs).toISOString() })
       .eq('id', session.id);
     if (error) throw error;
-    await this.dashboard.refreshSession();
+    await this.session.refreshSession();
   }
 
   private startTick(): void {

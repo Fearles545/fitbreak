@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { WorkdayService } from '@shared/services/workday.service';
 import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
-import { DashboardService } from '../dashboard/dashboard.service';
+import { SessionService } from '@shared/services/session.service';
 import type {
   BreakEntry,
   Exercise,
@@ -10,6 +10,7 @@ import type {
   MoodRating,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
+import { asJson } from '@shared/utils/supabase.utils';
 
 export interface RotationOption {
   key: MicroBreakRotation;
@@ -23,7 +24,7 @@ export interface RotationOption {
 @Injectable({ providedIn: 'root' })
 export class BreakTimerService {
   private supabase = inject(SupabaseService);
-  private dashboard = inject(DashboardService);
+  private session = inject(SessionService);
   private workday = inject(WorkdayService);
 
   private _exercises = signal<Exercise[]>([]);
@@ -48,7 +49,7 @@ export class BreakTimerService {
   );
 
   readonly suggestedRotation = computed((): MicroBreakRotation => {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     const idx = session?.current_rotation_index ?? 0;
     return ROTATION_ORDER[idx % ROTATION_ORDER.length];
   });
@@ -101,7 +102,7 @@ export class BreakTimerService {
   }
 
   async extendWork(minutes: number, reason?: string): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (!session) return;
 
     const now = new Date();
@@ -120,7 +121,7 @@ export class BreakTimerService {
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
-        breaks: breaks as any,
+        breaks: asJson(breaks),
         next_break_at: new Date(now.getTime() + minutes * 60_000).toISOString(),
       })
       .eq('id', session.id);
@@ -130,7 +131,7 @@ export class BreakTimerService {
   }
 
   async skipBreak(): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (!session) return;
 
     const now = new Date();
@@ -148,7 +149,7 @@ export class BreakTimerService {
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
-        breaks: breaks as any,
+        breaks: asJson(breaks),
         current_rotation_index: nextIdx,
         next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
       })
@@ -168,7 +169,7 @@ export class BreakTimerService {
   }
 
   async completeBreak(mood?: MoodRating): Promise<void> {
-    const session = this.dashboard.session();
+    const session = this.session.session();
     if (!session) return;
 
     const rotation = this._activeRotation();
@@ -192,7 +193,7 @@ export class BreakTimerService {
     const { error } = await this.supabase.supabase
       .from('work_sessions')
       .update({
-        breaks: breaks as any,
+        breaks: asJson(breaks),
         current_rotation_index: nextIdx,
         next_break_at: new Date(now.getTime() + intervalMs).toISOString(),
       })
@@ -211,12 +212,14 @@ export class BreakTimerService {
   }
 
   private rotationKeyFromTemplate(template: WorkoutTemplate): MicroBreakRotation | null {
+    // Primary: match by template name
     const nameMap: Record<string, MicroBreakRotation> = {
       'Шия + Очі': 'neck-eyes',
       'Грудний відділ + Плечі': 'thoracic-shoulders',
       'Стегна + Поперек': 'hips-lower-back',
       'Активна розминка': 'active',
     };
-    return nameMap[template.name] ?? null;
+    // Fallback: sort_order aligns with ROTATION_ORDER
+    return nameMap[template.name] ?? (template.sort_order ? ROTATION_ORDER[template.sort_order - 1] : null) ?? null;
   }
 }

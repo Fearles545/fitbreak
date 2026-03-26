@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
 import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
@@ -18,6 +19,7 @@ import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants
 import { toDisplayDate } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import { SettingsService } from '../settings/settings.service';
+import { SessionService } from '@shared/services/session.service';
 import { DashboardService } from './dashboard.service';
 
 @Component({
@@ -175,7 +177,7 @@ import { DashboardService } from './dashboard.service';
   `,
   template: `
     <div class="container">
-      @if (dashboard.loading()) {
+      @if (sessionService.loading()) {
         <div class="loading">
           <mat-spinner diameter="40" />
         </div>
@@ -200,7 +202,7 @@ import { DashboardService } from './dashboard.service';
 
         <app-week-calendar [activities]="dashboard.weekActivities()" />
 
-        @if (dashboard.session()) {
+        @if (sessionService.session()) {
           <!-- Active or paused session view -->
           <div class="timer-section" [class.paused]="isPaused()">
             <app-timer-ring
@@ -208,6 +210,7 @@ import { DashboardService } from './dashboard.service';
               [totalSeconds]="totalSeconds()">
               <app-animated-timer
                 [remainingSeconds]="remainingSeconds()"
+                [mode]="settings.timerAnimationStyle()"
                 size="big">
                 <span class="timer-label">до перерви</span>
               </app-animated-timer>
@@ -229,7 +232,7 @@ import { DashboardService } from './dashboard.service';
           }
 
           <div class="day-stats">
-            Перерв: {{ dashboard.completedBreaks() }} · {{ elapsedTime() }}
+            Перерв: {{ sessionService.completedBreaks() }} · {{ elapsedTime() }}
           </div>
 
           <div class="session-actions">
@@ -284,12 +287,14 @@ import { DashboardService } from './dashboard.service';
   `,
 })
 export class DashboardComponent implements OnInit {
+  protected sessionService = inject(SessionService);
   protected dashboard = inject(DashboardService);
   protected workday = inject(WorkdayService);
   private auth = inject(AuthService);
   private audio = inject(AudioService);
-  private settings = inject(SettingsService);
+  protected settings = inject(SettingsService);
   protected router = inject(Router);
+  private snackBar = inject(MatSnackBar);
 
   firstName = computed(() => {
     const user = this.auth.user();
@@ -301,7 +306,7 @@ export class DashboardComponent implements OnInit {
   formattedDate = computed(() => toDisplayDate());
 
   totalSeconds = computed(() => {
-    const session = this.dashboard.session();
+    const session = this.sessionService.session();
     return (session?.break_interval_min ?? this.settings.breakIntervalMin()) * 60;
   });
 
@@ -309,7 +314,7 @@ export class DashboardComponent implements OnInit {
   isPaused = computed(() => this.workday.currentActivity() === 'paused');
 
   nextRotation = computed(() => {
-    const session = this.dashboard.session();
+    const session = this.sessionService.session();
     if (!session) return null;
     const idx = session.current_rotation_index ?? 0;
     const key = ROTATION_ORDER[idx % ROTATION_ORDER.length];
@@ -318,7 +323,7 @@ export class DashboardComponent implements OnInit {
   });
 
   elapsedTime = computed(() => {
-    const session = this.dashboard.session();
+    const session = this.sessionService.session();
     if (!session) return '';
 
     const start = new Date(session.started_at).getTime();
@@ -342,38 +347,62 @@ export class DashboardComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([
-      this.settings.ensureLoaded(),
-      this.dashboard.cleanupStaleSessions(),
-    ]);
-    await this.dashboard.refreshSession();
-    await this.workday.init();
-    this.dashboard.loadWeekActivities();
+    try {
+      await Promise.all([
+        this.settings.ensureLoaded(),
+        this.sessionService.cleanupStaleSessions(),
+      ]);
+      await this.sessionService.refreshSession();
+      await this.workday.init();
+      this.dashboard.loadWeekActivities();
+    } catch {
+      this.snackBar.open('Не вдалося завантажити дані. Спробуйте оновити сторінку.', 'OK', { duration: 5000 });
+    }
   }
 
   async onStartWorkday(): Promise<void> {
-    this.audio.init();
-    await this.workday.startWorkday();
+    try {
+      this.audio.init();
+      await this.workday.startWorkday();
+    } catch {
+      this.snackBar.open('Не вдалося розпочати робочий день.', 'OK', { duration: 5000 });
+    }
   }
 
   async onPauseWorkday(): Promise<void> {
-    await this.workday.pauseWorkday();
+    try {
+      await this.workday.pauseWorkday();
+    } catch {
+      this.snackBar.open('Не вдалося поставити на паузу.', 'OK', { duration: 5000 });
+    }
   }
 
   async onResumeWorkday(): Promise<void> {
-    await this.workday.resumeWorkday();
+    try {
+      await this.workday.resumeWorkday();
+    } catch {
+      this.snackBar.open('Не вдалося відновити роботу.', 'OK', { duration: 5000 });
+    }
   }
 
   async onEndWorkday(): Promise<void> {
-    const sessionId = this.dashboard.session()?.id;
-    await this.workday.endWorkday();
-    if (sessionId) {
-      this.router.navigate(['/day-summary', sessionId]);
+    try {
+      const sessionId = this.sessionService.session()?.id;
+      await this.workday.endWorkday();
+      if (sessionId) {
+        this.router.navigate(['/day-summary', sessionId]);
+      }
+    } catch {
+      this.snackBar.open('Не вдалося завершити робочий день.', 'OK', { duration: 5000 });
     }
   }
 
   async onLogout(): Promise<void> {
-    await this.auth.signOut();
-    this.router.navigate(['/login']);
+    try {
+      await this.auth.signOut();
+      this.router.navigate(['/login']);
+    } catch {
+      this.snackBar.open('Не вдалося вийти з акаунту.', 'OK', { duration: 5000 });
+    }
   }
 }

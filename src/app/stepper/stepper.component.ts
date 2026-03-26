@@ -12,17 +12,19 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
+import { MoodPickerComponent } from '@shared/components/mood-picker/mood-picker.component';
 import { StepperService } from './stepper.service';
 import { WorkdayService } from '@shared/services/workday.service';
 import { SettingsService } from '../settings/settings.service';
 import type { MoodRating } from '@shared/models/fitbreak.models';
+
 
 type StepperView = 'setup' | 'running' | 'summary';
 
 @Component({
   selector: 'app-stepper',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, AnimatedTimerComponent],
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, AnimatedTimerComponent, MoodPickerComponent],
   styles: `
     :host {
       display: block;
@@ -172,11 +174,11 @@ type StepperView = 'setup' | 'running' | 'summary';
     }
 
     .control-btn.stop-btn {
-      border-color: rgba(244, 67, 54, 0.5);
+      border-color: color-mix(in srgb, var(--mat-sys-error) 50%, transparent);
     }
 
     .control-btn.stop-btn:hover {
-      border-color: rgba(244, 67, 54, 0.8);
+      border-color: color-mix(in srgb, var(--mat-sys-error) 80%, transparent);
     }
 
     .pause-indicator {
@@ -237,40 +239,6 @@ type StepperView = 'setup' | 'running' | 'summary';
       color: var(--mat-sys-on-surface);
     }
 
-    .mood-section {
-      margin-bottom: 32px;
-      text-align: center;
-    }
-
-    .mood-label {
-      font-size: 0.85rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-bottom: 12px;
-    }
-
-    .mood-options {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-
-    .mood-btn {
-      font-size: 1.8rem;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 2px solid var(--mat-sys-outline-variant);
-      background: var(--mat-sys-surface);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .mood-btn.selected {
-      border-color: var(--mat-sys-primary);
-      background: var(--mat-sys-primary-container);
-    }
   `,
   template: `
     @switch (view()) {
@@ -318,10 +286,11 @@ type StepperView = 'setup' | 'running' | 'summary';
       }
 
       @case ('running') {
-        <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (keydown.enter)="onTap()" (touchstart)="onTap()" tabindex="0" role="button" aria-label="Торкніться, щоб скинути таймер затемнення">
+        <div class="running" [class.dimmed]="isDimmed()" (click)="onTap()" (touchstart)="onTap()">
           <app-animated-timer
             class="stepper-timer"
             [remainingSeconds]="stepper.remainingSec()"
+            [mode]="settings.timerAnimationStyle()"
             size="big">
             <span class="stepper-timer-label">залишилось</span>
           </app-animated-timer>
@@ -385,21 +354,7 @@ type StepperView = 'setup' | 'running' | 'summary';
             </div>
           </div>
 
-          <div class="mood-section">
-            <div class="mood-label">Як ти себе почуваєш?</div>
-            <div class="mood-options">
-              @for (m of moodOptions; track m.value) {
-                <button
-                  class="mood-btn"
-                  [class.selected]="selectedMood() === m.value"
-                  (click)="selectedMood.set(m.value)"
-                  [attr.aria-label]="m.label"
-                >
-                  {{ m.emoji }}
-                </button>
-              }
-            </div>
-          </div>
+          <app-mood-picker [(selected)]="selectedMood" />
 
           <button mat-flat-button (click)="onFinish()">Зберегти і вийти</button>
         </div>
@@ -410,12 +365,12 @@ type StepperView = 'setup' | 'running' | 'summary';
 export class StepperComponent implements OnInit {
   protected stepper = inject(StepperService);
   private workday = inject(WorkdayService);
-  private settings = inject(SettingsService);
+  protected settings = inject(SettingsService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
   view = signal<StepperView>('setup');
-  selectedMood = signal<string | null>(null);
+  selectedMood = signal<MoodRating | null>(null);
   isDimmed = signal(false);
 
   // Auto-transition to summary when stepper finishes (timer reaches 0)
@@ -437,13 +392,6 @@ export class StepperComponent implements OnInit {
     if (defaults.includes(current)) return defaults;
     return [...defaults, current].sort((a, b) => a - b);
   }
-
-  readonly moodOptions = [
-    { value: 'great', emoji: '😊', label: 'Чудово' },
-    { value: 'good', emoji: '🙂', label: 'Добре' },
-    { value: 'okay', emoji: '😐', label: 'Нормально' },
-    { value: 'bad', emoji: '😫', label: 'Погано' },
-  ];
 
   private dimTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -491,7 +439,7 @@ export class StepperComponent implements OnInit {
   }
 
   async onFinish(): Promise<void> {
-    await this.stepper.saveWorkoutLog((this.selectedMood() as MoodRating) ?? undefined);
+    await this.stepper.saveWorkoutLog(this.selectedMood() ?? undefined);
     this.stepper.reset();
     await this.workday.endActivity();
     this.router.navigate(['/dashboard']);

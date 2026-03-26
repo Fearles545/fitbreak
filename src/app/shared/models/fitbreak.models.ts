@@ -158,3 +158,10 @@ export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_rot
   break_notification_sound: 'gentle' | 'energetic' | 'default' | null;
   timer_animation_style: 'roll' | 'fade' | 'scale' | 'blur' | 'slot';
 }
+
+export interface DayActivity {
+  date: string;
+  breakCount: number;
+  hasStrength: boolean;
+  hasStepper: boolean;
+}

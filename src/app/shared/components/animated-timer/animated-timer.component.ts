@@ -8,7 +8,6 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { SettingsService } from '../../../settings/settings.service';
 import type { AnimationMode, DigitState } from './digit-state';
 import { RollDigitComponent } from './strategies/roll-digit.component';
 import { FadeDigitComponent } from './strategies/fade-digit.component';
@@ -112,7 +111,6 @@ type TimerSize = 'big' | 'medium' | 'small';
   },
 })
 export class AnimatedTimerComponent {
-  private settings = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
 
   remainingSeconds = input.required<number>();
@@ -139,7 +137,7 @@ export class AnimatedTimerComponent {
   readonly digitStates = this._digitStates.asReadonly();
 
   readonly animationMode = computed((): AnimationMode =>
-    this.mode() ?? this.settings.timerAnimationStyle() ?? 'roll',
+    this.mode() ?? 'roll',
   );
 
   readonly formattedTime = computed(() => {

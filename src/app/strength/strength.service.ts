@@ -11,6 +11,7 @@ import type {
   SetLog,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
+import { asJson } from '@shared/utils/supabase.utils';
 
 export type StrengthState = 'idle' | 'exercising' | 'resting' | 'finished';
 export type WorkoutMode = 'classic' | 'circuit';
@@ -30,6 +31,9 @@ export class StrengthService {
   private audio = inject(AudioService);
   private auth = inject(AuthService);
   private settings = inject(SettingsService);
+
+  private _templates = signal<WorkoutTemplate[]>([]);
+  readonly templates = this._templates.asReadonly();
 
   private _state = signal<StrengthState>('idle');
   private _mode = signal<WorkoutMode>('classic');
@@ -80,6 +84,18 @@ export class StrengthService {
 
   readonly restRemainingSec = computed(() => Math.ceil(this._restRemainingMs() / 1000));
   readonly restTotalSec = computed(() => Math.ceil(this._restTotalMs() / 1000));
+
+  async loadStrengthTemplates(): Promise<void> {
+    const { data, error } = await this.supabase.supabase
+      .from('workout_templates')
+      .select('*')
+      .eq('workout_type', 'strength')
+      .eq('is_active', true)
+      .order('sort_order');
+
+    if (error) throw error;
+    this._templates.set((data ?? []) as unknown as WorkoutTemplate[]);
+  }
 
   async loadTemplate(templateId: string): Promise<void> {
     const { data: templateData, error: templateError } = await this.supabase.supabase
@@ -188,7 +204,7 @@ export class StrengthService {
         started_at: startedAt,
         completed_at: now,
         duration_min: durationMin,
-        exercises: exercises as any,
+        exercises: asJson(exercises),
         mood: mood || null,
         notes: notes || null,
       });

@@ -3,12 +3,7 @@ import { format } from 'date-fns';
 import { uk } from 'date-fns/locale';
 import { getLast7Days, isToday as checkIsToday, toDateKey } from '@shared/utils/date.utils';
 
-export interface DayActivity {
-  date: string;
-  breakCount: number;
-  hasStrength: boolean;
-  hasStepper: boolean;
-}
+import type { DayActivity } from '@shared/models/fitbreak.models';
 
 @Component({
   selector: 'app-week-calendar',
