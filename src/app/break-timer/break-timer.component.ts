@@ -15,7 +15,6 @@ import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { BreakTimerService } from './break-timer.service';
 import { BreakPromptComponent } from './break-prompt/break-prompt.component';
 import { BreakExecutionComponent } from './break-execution/break-execution.component';
-import { SettingsService } from '../settings/settings.service';
 import type { MicroBreakRotation, MoodRating } from '@shared/models/fitbreak.models';
 
 type BreakMode = 'prompt' | 'execution' | 'mood';
@@ -78,7 +77,6 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
             [totalCount]="breakService.exerciseCount()"
             [progressPercent]="progressPercent()"
             [isLast]="breakService.isLastExercise()"
-            [animationMode]="settings.timerAnimationStyle()"
             (next)="onNextExercise()"
             (back)="onBackToPrompt()"
           />
@@ -100,7 +98,6 @@ type BreakMode = 'prompt' | 'execution' | 'mood';
 })
 export class BreakTimerComponent implements OnInit {
   protected breakService = inject(BreakTimerService);
-  protected settings = inject(SettingsService);
   private workday = inject(WorkdayService);
   private notifier = inject(BreakNotifierService);
   private router = inject(Router);

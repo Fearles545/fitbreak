@@ -2,34 +2,24 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
-  effect,
   inject,
   input,
   output,
-  signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { AnimatedTimerComponent } from '@shared/components/animated-timer/animated-timer.component';
-import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.component';
-import { AudioService } from '@shared/services/audio.service';
-import type { AnimationMode } from '@shared/components/animated-timer/digit-state';
+import {
+  ExerciseTimerDialogComponent,
+  type ExerciseTimerDialogData,
+} from '@shared/components/exercise-timer-dialog/exercise-timer-dialog.component';
 import type { Exercise } from '@shared/models/fitbreak.models';
-
-type TimerState = 'ready' | 'lead-in' | 'counting' | 'switch-side' | 'done';
 
 @Component({
   selector: 'app-break-execution',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    MatButtonModule,
-    MatIconModule,
-    MatProgressBarModule,
-    AnimatedTimerComponent,
-    TimerRingComponent,
-  ],
+  imports: [MatButtonModule, MatIconModule, MatProgressBarModule],
   styles: `
     .exec-header {
       display: flex;
@@ -159,83 +149,11 @@ type TimerState = 'ready' | 'lead-in' | 'counting' | 'switch-side' | 'done';
       gap: 12px;
       margin-top: 24px;
     }
-
-    /* ── Lead-in ── */
-    .lead-in {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 200px;
-    }
-
-    .lead-in-number {
-      font-size: 5rem;
-      font-weight: 700;
-      color: var(--mat-sys-primary);
-      line-height: 1;
-    }
-
-    .lead-in-go {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--mat-sys-primary);
-    }
-
-    /* ── Countdown ── */
-    .countdown-section {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      margin: 12px 0;
-    }
-
-    .countdown-section app-timer-ring {
-      width: 180px;
-      height: 180px;
-    }
-
-    .side-label {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .skip-link {
-      font-size: 0.8rem;
-      color: var(--mat-sys-on-surface-variant);
-      background: none;
-      border: none;
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 8px;
-    }
-
-    /* ── Switch side ── */
-    .switch-side {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      height: 200px;
-    }
-
-    .switch-side-text {
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .switch-side-icon {
-      font-size: 2.5rem;
-      color: var(--mat-sys-tertiary);
-    }
   `,
   template: `
     @if (exercise(); as exercise) {
       <div class="exec-header">
-        <button mat-icon-button (click)="onBack()" aria-label="Назад">
+        <button mat-icon-button (click)="back.emit()" aria-label="Назад">
           <mat-icon>arrow_back</mat-icon>
         </button>
         <span class="exec-progress-text">
@@ -248,236 +166,101 @@ type TimerState = 'ready' | 'lead-in' | 'counting' | 'switch-side' | 'done';
       <h2 class="exercise-name">{{ exercise.name }}</h2>
       <p class="exercise-desc">{{ exercise.short_description }}</p>
 
-      @switch (timerState()) {
-        @case ('lead-in') {
-          <div class="lead-in" aria-live="assertive">
-            @if (leadInCount() > 0) {
-              <span class="lead-in-number">{{ leadInCount() }}</span>
-            } @else {
-              <span class="lead-in-go">Вперед!</span>
-            }
+      <div class="exercise-params">
+        @if (exercise.exercise_type === 'reps' && exercise.default_reps) {
+          <div class="param">
+            <mat-icon>repeat</mat-icon>
+            {{ exercise.default_reps }} повторень
           </div>
         }
-
-        @case ('counting') {
-          <div class="countdown-section">
-            @if (isBilateral()) {
-              <span class="side-label">{{ sideLabel() }}</span>
-            }
-            <app-timer-ring
-              [remainingSeconds]="remainingSeconds()"
-              [totalSeconds]="durationSec()">
-              <app-animated-timer
-                [remainingSeconds]="remainingSeconds()"
-                [mode]="animationMode()"
-                size="big" />
-            </app-timer-ring>
-            <button class="skip-link" (click)="skipTimer()">Пропустити</button>
+        @if (exercise.default_duration_sec) {
+          <div class="param">
+            <mat-icon>timer</mat-icon>
+            {{ exercise.default_duration_sec }} сек
           </div>
         }
-
-        @case ('switch-side') {
-          <div class="switch-side">
-            <span class="switch-side-icon">↔</span>
-            <span class="switch-side-text">Тепер інша сторона</span>
+        @if (exercise.is_bilateral) {
+          <div class="param">
+            <mat-icon>swap_horiz</mat-icon>
+            на кожну сторону
           </div>
         }
+      </div>
 
-        @default {
-          <!-- ready or done: show full exercise info -->
-          <div class="exercise-params">
-            @if (exercise.exercise_type === 'reps' && exercise.default_reps) {
-              <div class="param">
-                <mat-icon>repeat</mat-icon>
-                {{ exercise.default_reps }} повторень
-              </div>
-            }
-            @if (exercise.default_duration_sec) {
-              <div class="param">
-                <mat-icon>timer</mat-icon>
-                {{ exercise.default_duration_sec }} сек
-              </div>
-            }
-            @if (exercise.is_bilateral) {
-              <div class="param">
-                <mat-icon>swap_horiz</mat-icon>
-                на кожну сторону
-              </div>
-            }
-          </div>
+      @if (exercise.is_bilateral) {
+        <div class="bilateral-indicator">↔ Виконай на обидві сторони</div>
+      }
 
-          @if (exercise.is_bilateral && timerState() === 'ready') {
-            <div class="bilateral-indicator">↔ Виконай на обидві сторони</div>
-          }
-
-          @if (timerState() === 'ready') {
-            <div class="technique">
-              <div class="technique-title">Техніка</div>
-              @for (step of exercise.technique; track step.order) {
-                <div class="technique-step">
-                  <span class="step-number">{{ step.order }}</span>
-                  <div>
-                    <div class="step-text">{{ step.text }}</div>
-                    @if (step.keyPoint) {
-                      <div class="key-point">☝ {{ step.keyPoint }}</div>
-                    }
-                  </div>
-                </div>
+      <div class="technique">
+        <div class="technique-title">Техніка</div>
+        @for (step of exercise.technique; track step.order) {
+          <div class="technique-step">
+            <span class="step-number">{{ step.order }}</span>
+            <div>
+              <div class="step-text">{{ step.text }}</div>
+              @if (step.keyPoint) {
+                <div class="key-point">☝ {{ step.keyPoint }}</div>
               }
             </div>
-
-            @if (exercise.warnings && exercise.warnings.length > 0) {
-              <div class="warnings">
-                <div class="warnings-title">⚠️ Увага</div>
-                <ul>
-                  @for (w of exercise.warnings; track w) {
-                    <li>{{ w }}</li>
-                  }
-                </ul>
-              </div>
-            }
-          }
-
-          <div class="exec-actions">
-            @if (isTimed() && timerState() === 'ready') {
-              <button mat-flat-button (click)="startCountdown()">
-                <mat-icon>play_arrow</mat-icon>
-                Почати
-              </button>
-            } @else {
-              <button mat-flat-button (click)="next.emit()">
-                {{ isLast() ? 'Завершити розминку' : 'Готово — наступна' }}
-              </button>
-            }
           </div>
         }
+      </div>
+
+      @if (exercise.warnings && exercise.warnings.length > 0) {
+        <div class="warnings">
+          <div class="warnings-title">⚠️ Увага</div>
+          <ul>
+            @for (w of exercise.warnings; track w) {
+              <li>{{ w }}</li>
+            }
+          </ul>
+        </div>
       }
+
+      <div class="exec-actions">
+        <button mat-flat-button (click)="next.emit()">
+          {{ isLast() ? 'Завершити розминку' : 'Готово — наступна' }}
+        </button>
+        @if (hasTimer()) {
+          <button mat-stroked-button (click)="openTimer()">
+            <mat-icon>timer</mat-icon>
+            Таймер · {{ timerSec() }} сек
+          </button>
+        }
+      </div>
     }
   `,
 })
 export class BreakExecutionComponent {
-  private audio = inject(AudioService);
-  private destroyRef = inject(DestroyRef);
+  private dialog = inject(MatDialog);
 
   exercise = input.required<Exercise | null>();
   currentIndex = input.required<number>();
   totalCount = input.required<number>();
   progressPercent = input.required<number>();
   isLast = input.required<boolean>();
-  animationMode = input<AnimationMode>('roll');
 
   next = output();
   back = output();
 
-  timerState = signal<TimerState>('ready');
-  leadInCount = signal(3);
-  remainingSeconds = signal(0);
-  currentSide = signal<1 | 2>(1);
-
-  private intervalId: ReturnType<typeof setInterval> | null = null;
-  private switchTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  isTimed = computed(() => {
+  hasTimer = computed(() => {
     const ex = this.exercise();
-    if (!ex) return false;
-    return ex.exercise_type !== 'reps' && !!ex.default_duration_sec && ex.default_duration_sec > 0;
+    return !!ex?.timer_sec && ex.timer_sec > 0;
   });
 
-  durationSec = computed(() => this.exercise()?.default_duration_sec ?? 0);
-  isBilateral = computed(() => this.exercise()?.is_bilateral ?? false);
+  timerSec = computed(() => this.exercise()?.timer_sec ?? 0);
 
-  sideLabel = computed(() =>
-    this.currentSide() === 1 ? 'Ліва сторона' : 'Права сторона',
-  );
+  openTimer(): void {
+    const ex = this.exercise();
+    if (!ex?.timer_sec) return;
 
-  constructor() {
-    effect(() => {
-      this.exercise(); // track changes
-      this.resetTimer();
+    this.dialog.open(ExerciseTimerDialogComponent, {
+      data: {
+        seconds: ex.timer_sec,
+        exerciseName: ex.name,
+      } satisfies ExerciseTimerDialogData,
+      disableClose: true,
+      autoFocus: false,
     });
-
-    this.destroyRef.onDestroy(() => this.cleanup());
-  }
-
-  startCountdown(): void {
-    this.leadInCount.set(3);
-    this.timerState.set('lead-in');
-    this.audio.playCountdownTick();
-
-    this.intervalId = setInterval(() => {
-      const count = this.leadInCount() - 1;
-      this.leadInCount.set(count);
-
-      if (count > 0) {
-        this.audio.playCountdownTick();
-      } else if (count === 0) {
-        this.audio.playCountdownGo();
-      } else {
-        this.clearInterval();
-        this.startMainCountdown();
-      }
-    }, 1000);
-  }
-
-  skipTimer(): void {
-    this.clearInterval();
-    this.onCountdownComplete();
-  }
-
-  protected onBack(): void {
-    this.cleanup();
-    this.back.emit();
-  }
-
-  private startMainCountdown(): void {
-    this.remainingSeconds.set(this.durationSec());
-    this.timerState.set('counting');
-
-    this.intervalId = setInterval(() => {
-      const remaining = this.remainingSeconds() - 1;
-      this.remainingSeconds.set(remaining);
-
-      if (remaining <= 0) {
-        this.clearInterval();
-        this.onCountdownComplete();
-      }
-    }, 1000);
-  }
-
-  private onCountdownComplete(): void {
-    this.audio.playRestTimerEnd();
-
-    if (this.isBilateral() && this.currentSide() === 1) {
-      this.timerState.set('switch-side');
-      this.switchTimeoutId = setTimeout(() => {
-        this.currentSide.set(2);
-        this.startCountdown();
-      }, 2000);
-    } else {
-      this.timerState.set('done');
-    }
-  }
-
-  private resetTimer(): void {
-    this.cleanup();
-    this.timerState.set('ready');
-    this.currentSide.set(1);
-    this.remainingSeconds.set(0);
-    this.leadInCount.set(3);
-  }
-
-  private clearInterval(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
-  }
-
-  private cleanup(): void {
-    this.clearInterval();
-    if (this.switchTimeoutId) {
-      clearTimeout(this.switchTimeoutId);
-      this.switchTimeoutId = null;
-    }
   }
 }

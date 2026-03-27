@@ -35,6 +35,7 @@ export type Database = {
           short_description: string
           sort_order: number | null
           technique: Json
+          timer_sec: number | null
           tips: string[] | null
           updated_at: string | null
           user_id: string
@@ -61,6 +62,7 @@ export type Database = {
           short_description: string
           sort_order?: number | null
           technique?: Json
+          timer_sec?: number | null
           tips?: string[] | null
           updated_at?: string | null
           user_id: string
@@ -87,6 +89,7 @@ export type Database = {
           short_description?: string
           sort_order?: number | null
           technique?: Json
+          timer_sec?: number | null
           tips?: string[] | null
           updated_at?: string | null
           user_id?: string

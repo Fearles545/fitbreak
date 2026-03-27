@@ -38,6 +38,9 @@ create table public.exercises (
   default_rest_sec int default 60,
   is_bilateral boolean default false,
 
+  -- Таймер (опційний, null = без таймера)
+  timer_sec int,                             -- тривалість таймера в секундах
+
   -- Візуальний контент
   visuals jsonb default '[]',                -- ExerciseVisual[]
 
