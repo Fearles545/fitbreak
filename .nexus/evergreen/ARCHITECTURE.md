@@ -89,7 +89,12 @@ No NgRx, no BehaviorSubjects for state. RxJS only for Supabase promise wrapping.
 - `workout_logs` — completed workout logs (JSONB)
 - `user_settings` — preferences (CHECK constraints on integer ranges)
 
-SQL functions: `weekly_break_stats()`, `weekly_workout_stats()`, `streak_stats()`, `cleanup_stale_sessions()`
+SQL functions: `weekly_break_stats()`, `weekly_workout_stats()`, `streak_stats()`, `cleanup_stale_sessions()`, `daily_activity_stats()`, `rotation_stats()`, `all_time_totals()`
+
+Notable columns:
+- `exercises.timer_sec` — optional countdown timer duration (null = no timer). Defined per exercise, independent from `default_duration_sec`.
+- `workout_templates.target_muscle_groups` — JSONB `[{group, intensity}]`. Snapshotted into `BreakEntry.muscleGroups` on break completion.
+- Templates are **immutable** — create new instead of editing. Guarantees historical data accuracy.
 
 Source of truth: `docs/fitbreak-supabase-schema.sql`
 
@@ -101,6 +106,7 @@ Source of truth: `docs/fitbreak-supabase-schema.sql`
 - `ChipSelectorComponent` — reusable numeric chip selector with optional custom input
 - `SkeletonComponent` — inline shimmer element (width/height/variant inputs), CSS-only animation. Available for future use.
 - `ConfirmDialogComponent` — lightweight reusable confirm dialog (message + confirm/cancel labels). Used by dashboard for pause/early-break.
+- `ExerciseTimerDialogComponent` — countdown timer dialog with 3-2-1 lead-in. Opens from break-execution when exercise has `timer_sec`. Self-contained, no bilateral handling.
 - Adding new animation: create strategy component + add `@case` + add DB value
 
 ### WorkdayService: Activity State Machine
@@ -123,14 +129,12 @@ idle → working → break-due → on-break → back-to-work → working → ...
 - Replaces scattered `as any` casts. Centralizes the intentional type assertion.
 - Read casts (`as unknown as WorkSession`) remain — these are inherent to Supabase's generic JSONB→typed conversion
 
-## Known Gaps (from FE arch review + QA, 2026-03-26)
+## Known Gaps
 
-- **Settings not loaded on direct URL navigation** to `/stepper` or `/strength` — `ensureLoaded()` only called from Dashboard/Settings. Animation mode falls back to `'roll'`. Consider route-level resolver.
-- **Custom chip input saves on every keypress** in Settings — no debounce. Pre-existing, not a regression.
 - **`formattedDate` in DashboardComponent** — computed with no signal dependency, won't update past midnight. Minor UX issue.
 
-## Current State (2026-03-26)
+## Current State (2026-03-27)
 
-- **Working:** Auth, dashboard, break rotation, strength, stepper, settings, day summary, progress, animated timers, route transitions, tab timer, timer flow redesign (break-due/back-to-work states)
+- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking
 - **Tests:** None written (Vitest configured)
-- **Sprint 2 complete** — all 5 tasks done, ready for Sprint 3 planning
+- **Sprint 3 complete** — all 4 tasks done

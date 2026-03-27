@@ -50,6 +50,18 @@ Lessons learned from sprints and incidents.
 **What we learned:** Periodic architecture reviews catch debt that accumulates invisibly. The two bugs (`'flip'` fallback that could render nothing, plain boolean that breaks signal tracking) were real — not theoretical. The shared→feature import violations would have compounded with every new feature.
 **Action:** Consider running FE architect review after every 3-5 features, not just when debt "feels" bad. The 8-phase plan (bugs → error handling → shared components → architecture → decomposition → polish) worked well as a prioritized sequence.
 
+### RETRO-008: Build simple first, iterate from user feedback
+**Date:** 2026-03-27
+**What happened:** Built exercise countdown timer as a full-page takeover with lead-in, bilateral side switching, and complex state machine. CEO tested it and said it was inconvenient — timer should be optional (not replacing the "Done" button), simpler (just a popup), and without bilateral auto-switching.
+**What we learned:** First implementation was over-engineered. CEO's feedback simplified it dramatically: optional timer button alongside "Done", simple dialog popup, no side handling. The simpler version is better UX. Also, `timer_sec` as a per-exercise field (defining both availability and duration) is cleaner than deriving from exercise_type.
+**Action:** For UX features, build the minimal version first and iterate. Don't assume the spec's complexity is right — test with real usage before adding features like bilateral handling.
+
+### RETRO-009: SQL functions over client-side computation for analytics
+**Date:** 2026-03-27
+**What happened:** Initially proposed fetching raw data and computing everything client-side. CEO pushed back — "single user is not an excuse." Settled on SQL functions for aggregation, thin service for display transforms.
+**What we learned:** CEO values clean architecture regardless of scale. SQL functions (`daily_activity_stats`, `rotation_stats`, `all_time_totals`) keep the service under 150 LOC with no JSONB parsing in TypeScript. The right separation: DB aggregates, FE formats.
+**Action:** Default to SQL functions for analytics queries. Client-side computation only for display transforms (formatting, trend arrows, percentages from pre-aggregated data).
+
 ### RETRO-007: Component decomposition reduces LOC but watch for data flow
 **Date:** 2026-03-26
 **What happened:** Split BreakTimerComponent (655→170 LOC) and StrengthComponent (644→~300 LOC) into parent+sub-components. QA review found zero bugs in the extraction — all input/output types matched correctly.
