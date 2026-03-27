@@ -30,7 +30,8 @@
             "styles": [
               "src/material-theme.scss",
               "src/styles.css"
-            ]
+            ],
+            "serviceWorker": "ngsw-config.json"
           },
           "configurations": {
             "production": {
