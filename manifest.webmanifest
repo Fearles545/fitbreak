@@ -1,0 +1,22 @@
+{
+  "name": "FitBreak",
+  "short_name": "FitBreak",
+  "description": "Перерви та вправи протягом робочого дня",
+  "start_url": "/fitbreak/",
+  "scope": "/fitbreak/",
+  "display": "standalone",
+  "theme_color": "#5E35B1",
+  "background_color": "#5E35B1",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

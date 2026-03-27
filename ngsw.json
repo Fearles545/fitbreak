@@ -1,0 +1,112 @@
+{
+  "configVersion": 1,
+  "timestamp": 1774616322228,
+  "index": "/fitbreak/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/fitbreak/chunk-3OCENHEN.js",
+        "/fitbreak/chunk-5TUQWFHV.js",
+        "/fitbreak/chunk-6OPWSHQU.js",
+        "/fitbreak/chunk-72SNI5DF.js",
+        "/fitbreak/chunk-AHPZITA6.js",
+        "/fitbreak/chunk-AXMRU2FP.js",
+        "/fitbreak/chunk-F2GIQVTJ.js",
+        "/fitbreak/chunk-FQBKYZUP.js",
+        "/fitbreak/chunk-JSMXQGT4.js",
+        "/fitbreak/chunk-KFATFSEZ.js",
+        "/fitbreak/chunk-KXMDG44J.js",
+        "/fitbreak/chunk-LVYEKDQ2.js",
+        "/fitbreak/chunk-OY5O63FO.js",
+        "/fitbreak/chunk-OZHTJJ23.js",
+        "/fitbreak/chunk-P6N6VHV4.js",
+        "/fitbreak/chunk-PEMFIDSL.js",
+        "/fitbreak/chunk-QDD7HSYN.js",
+        "/fitbreak/chunk-RUQKWFHZ.js",
+        "/fitbreak/chunk-VJC7M7R5.js",
+        "/fitbreak/chunk-XQF4PXXA.js",
+        "/fitbreak/chunk-YIIS3GHH.js",
+        "/fitbreak/chunk-YSZXBJ5Z.js",
+        "/fitbreak/index.html",
+        "/fitbreak/main-VMAQ7M2F.js",
+        "/fitbreak/styles-6JFHS46B.css"
+      ],
+      "patterns": []
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/fitbreak/favicon.ico",
+        "/fitbreak/icons/icon-192x192.png",
+        "/fitbreak/icons/icon-512x512.png",
+        "/fitbreak/logo.svg"
+      ],
+      "patterns": [
+        "https:\\/\\/fonts\\.googleapis\\.com\\/.*",
+        "https:\\/\\/fonts\\.gstatic\\.com\\/.*"
+      ]
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/fitbreak/chunk-3OCENHEN.js": "932936a789619ba2b684cbd58aa90293c1ab1cc2",
+    "/fitbreak/chunk-5TUQWFHV.js": "0adc4e5d6a917056cd41b32d97cd4070a52c4feb",
+    "/fitbreak/chunk-6OPWSHQU.js": "f2b99ebfbed2b761ebea5d2bc46d24c90f901693",
+    "/fitbreak/chunk-72SNI5DF.js": "7dbe9c8e202fa109301788935b94c932e245e7fc",
+    "/fitbreak/chunk-AHPZITA6.js": "1f83b5fc74ed349bc27cdaa35e538376263d2ac9",
+    "/fitbreak/chunk-AXMRU2FP.js": "53e6a9bdd001d5ff173500aaef38a1c17a2878a7",
+    "/fitbreak/chunk-F2GIQVTJ.js": "03333f0eaea5c698a5df4f64fc68bc3afd6386f7",
+    "/fitbreak/chunk-FQBKYZUP.js": "56010d5520f534a328f64b45ac7ceac5deb793b4",
+    "/fitbreak/chunk-JSMXQGT4.js": "c6de87ceb1ff3dc6e04521204dbdde8b1c57da4e",
+    "/fitbreak/chunk-KFATFSEZ.js": "574169ac4dec444896aa18d0f6143e29a1e24a62",
+    "/fitbreak/chunk-KXMDG44J.js": "eb8cc48add57b69c3fa32210e5c57767532c3d04",
+    "/fitbreak/chunk-LVYEKDQ2.js": "c7cc73afc2dd377af04b4da08a96ec737a0bec78",
+    "/fitbreak/chunk-OY5O63FO.js": "721bd8674269be751e55ec3eca08610d34b5ae50",
+    "/fitbreak/chunk-OZHTJJ23.js": "f7b3046d4d4cc37af9acfa44601c7bd3c3bf63a7",
+    "/fitbreak/chunk-P6N6VHV4.js": "1ee991239095f646da25fa0dedfae2b1e974d317",
+    "/fitbreak/chunk-PEMFIDSL.js": "01deb86bbf2159e4e6abf37ca7328337523f19d3",
+    "/fitbreak/chunk-QDD7HSYN.js": "7ae38766d389742a38c0eaeaf75ab381e1e3827d",
+    "/fitbreak/chunk-RUQKWFHZ.js": "64a891374d93083d7b56555dead38729ebf8299e",
+    "/fitbreak/chunk-VJC7M7R5.js": "f5ee235bca9f78631728d573c8b3d4694aa6818f",
+    "/fitbreak/chunk-XQF4PXXA.js": "3d8205922665b90bc8bd563485c1040ef28b5da0",
+    "/fitbreak/chunk-YIIS3GHH.js": "c5916ca17221a759b5ae4ac99dd5ba10b6a3701c",
+    "/fitbreak/chunk-YSZXBJ5Z.js": "dc08ea3bdfbb3de6538f2bbcffca9695ee906bc8",
+    "/fitbreak/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
+    "/fitbreak/icons/icon-192x192.png": "5ba1d688c47a8777905aaf9a1e9420ba92d566ad",
+    "/fitbreak/icons/icon-512x512.png": "3c350ceb2a2191ba6d9abc25e7acedb7c6092a6f",
+    "/fitbreak/index.html": "e39ddc99191bbe1f35c8eb3ea43e51c67f637c91",
+    "/fitbreak/logo.svg": "ae6dc94232b65f593ca0e85be7f9648be5a25d33",
+    "/fitbreak/main-VMAQ7M2F.js": "db211a34fa517adf252028b03f697928fb0f2049",
+    "/fitbreak/styles-6JFHS46B.css": "cff0604b9bf6ea61da0ac737a85e08b16d412d7c"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*__[^/]*\\/.*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}
