@@ -9,7 +9,7 @@
 | # | Task | Level | Status | Spec |
 |---|------|-------|--------|------|
 | 1 | Known gaps — settings direct nav resolver + chip debounce | 0 | done | — |
-| 2 | Muscle group metadata — add target_muscle_groups (group + intensity) to templates, snapshot into BreakEntry on completion | 1 | todo | feature-muscle-group-metadata.md |
+| 2 | Muscle group metadata — add target_muscle_groups (group + intensity) to templates, snapshot into BreakEntry on completion | 1 | done | feature-muscle-group-metadata.md |
 | 3 | Exercise countdown — lead-in 3-2-1, timed countdown, bilateral support | 1 | todo | feature-exercise-countdown.md |
 | 4 | Progress V2 — period selector, break/workout volume, rotation balance, all-time totals, dashboard summary | 2 | todo | feature-progress-v2.md |
 

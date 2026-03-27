@@ -39,6 +39,16 @@ export class AudioService {
     this.playTone(440, 0.6, 1.0, 'sawtooth', 0.6);
   }
 
+  /** Countdown lead-in tick: short high beep */
+  playCountdownTick(): void {
+    this.playTone(800, 0.1, 0, 'sine', 0.3);
+  }
+
+  /** Countdown "go" sound: higher pitch, slightly longer */
+  playCountdownGo(): void {
+    this.playTone(1200, 0.15, 0, 'sine', 0.4);
+  }
+
   /** Rest timer end: single xylophone hit */
   playRestTimerEnd(): void {
     this.init();
