@@ -585,18 +585,16 @@ import { DashboardService } from './dashboard.service';
             Перерв: {{ sessionService.completedBreaks() }} · {{ elapsedTime() }}
           </div>
 
-          @if (!isBackToWork()) {
-            <div class="quick-launch">
-              <button class="quick-launch-card" (click)="onNavigate('/strength')" aria-label="Силове тренування">
-                <mat-icon aria-hidden="true">fitness_center</mat-icon>
-                <span class="quick-launch-label">Силове</span>
-              </button>
-              <button class="quick-launch-card" (click)="onNavigate('/stepper')" aria-label="Степер">
-                <mat-icon aria-hidden="true">directions_walk</mat-icon>
-                <span class="quick-launch-label">Степер</span>
-              </button>
-            </div>
-          }
+          <div class="quick-launch">
+            <button class="quick-launch-card" (click)="onNavigate('/strength')" aria-label="Силове тренування">
+              <mat-icon aria-hidden="true">fitness_center</mat-icon>
+              <span class="quick-launch-label">Силове</span>
+            </button>
+            <button class="quick-launch-card" (click)="onNavigate('/stepper')" aria-label="Степер">
+              <mat-icon aria-hidden="true">directions_walk</mat-icon>
+              <span class="quick-launch-label">Степер</span>
+            </button>
+          </div>
 
           <div class="end-day">
             <button matButton="text" (click)="onEndWorkday()">Завершити робочий день</button>
