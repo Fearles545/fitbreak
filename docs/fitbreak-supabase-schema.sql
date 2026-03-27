@@ -341,6 +341,67 @@ $$;
 -- ANALYTICS FUNCTIONS
 -- ────────────────────────────────────────────────────────────
 
+-- Щоденна активність за період
+create or replace function public.daily_activity_stats(p_start date, p_end date)
+returns table (
+  date date,
+  completed_breaks bigint,
+  total_breaks bigint,
+  skipped_breaks bigint,
+  strength_count bigint,
+  stepper_count bigint,
+  work_duration_min int
+)
+language sql security definer
+set search_path = ''
+as $$
+  with break_stats as (
+    select
+      s.date,
+      count(*) filter (where (b->>'skipped')::boolean = false and b->>'completedAt' is not null) as completed,
+      count(*) as total,
+      count(*) filter (where (b->>'skipped')::boolean = true) as skipped,
+      case when s.ended_at is not null then extract(epoch from (s.ended_at - s.started_at))::int / 60 else null end as work_min
+    from public.work_sessions s
+    left join lateral jsonb_array_elements(s.breaks) b on true
+    where s.user_id = (select auth.uid()) and s.date between p_start and p_end
+    group by s.date, s.started_at, s.ended_at
+  ),
+  workout_stats as (
+    select w.date, count(*) filter (where w.workout_type = 'strength') as strength, count(*) filter (where w.workout_type = 'stepper') as stepper
+    from public.workout_logs w
+    where w.user_id = (select auth.uid()) and w.date between p_start and p_end
+    group by w.date
+  )
+  select coalesce(b.date, w.date) as date, coalesce(b.completed, 0), coalesce(b.total, 0), coalesce(b.skipped, 0), coalesce(w.strength, 0), coalesce(w.stepper, 0), b.work_min
+  from break_stats b full outer join workout_stats w on b.date = w.date
+  order by date;
+$$;
+
+-- Статистика ротацій за період
+create or replace function public.rotation_stats(p_start date, p_end date)
+returns table (rotation_type text, completed bigint, skipped bigint, total bigint)
+language sql security definer
+set search_path = ''
+as $$
+  select b->>'rotationType', count(*) filter (where (b->>'skipped')::boolean = false and b->>'completedAt' is not null), count(*) filter (where (b->>'skipped')::boolean = true), count(*)
+  from public.work_sessions s, jsonb_array_elements(s.breaks) b
+  where s.user_id = (select auth.uid()) and s.date between p_start and p_end
+  group by b->>'rotationType' order by total desc;
+$$;
+
+-- Загальні підсумки за весь час
+create or replace function public.all_time_totals()
+returns table (total_breaks_completed bigint, total_workouts bigint, total_stepper_sessions bigint, total_workout_minutes bigint, first_active_date date)
+language sql security definer
+set search_path = ''
+as $$
+  with bt as (select count(*) as c from public.work_sessions s, jsonb_array_elements(s.breaks) b where s.user_id = (select auth.uid()) and (b->>'skipped')::boolean = false and b->>'completedAt' is not null),
+  wt as (select count(*) as t, count(*) filter (where workout_type = 'stepper') as st, coalesce(sum(duration_min), 0) as m from public.workout_logs where user_id = (select auth.uid())),
+  fd as (select min(date) as d from public.work_sessions where user_id = (select auth.uid()))
+  select bt.c, wt.t, wt.st, wt.m, fd.d from bt, wt, fd;
+$$;
+
 -- Статистика мікроперерв по тижнях
 create or replace function public.weekly_break_stats(weeks_back int default 4)
 returns table (

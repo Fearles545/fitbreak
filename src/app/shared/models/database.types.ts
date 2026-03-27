@@ -327,7 +327,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      all_time_totals: {
+        Args: never
+        Returns: {
+          total_breaks_completed: number
+          total_workouts: number
+          total_stepper_sessions: number
+          total_workout_minutes: number
+          first_active_date: string | null
+        }[]
+      }
       cleanup_stale_sessions: { Args: never; Returns: undefined }
+      daily_activity_stats: {
+        Args: { p_start: string; p_end: string }
+        Returns: {
+          date: string
+          completed_breaks: number
+          total_breaks: number
+          skipped_breaks: number
+          strength_count: number
+          stepper_count: number
+          work_duration_min: number | null
+        }[]
+      }
+      rotation_stats: {
+        Args: { p_start: string; p_end: string }
+        Returns: {
+          rotation_type: string
+          completed: number
+          skipped: number
+          total: number
+        }[]
+      }
       streak_stats: {
         Args: never
         Returns: {

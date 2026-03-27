@@ -156,6 +156,14 @@ import { DashboardService } from './dashboard.service';
       opacity: 0.8;
     }
 
+    /* ── Week summary ── */
+    .week-summary {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface-variant);
+      margin-top: 12px;
+    }
+
     /* ── Start CTA ── */
     .start-section {
       margin-top: 28px;
@@ -607,6 +615,11 @@ import { DashboardService } from './dashboard.service';
             </div>
           }
 
+          <!-- Week summary -->
+          @if (weekSummary()) {
+            <div class="week-summary">{{ weekSummary() }}</div>
+          }
+
           <!-- Start CTA -->
           <div class="start-section">
             <button mat-flat-button class="start-button" (click)="onStartWorkday()">
@@ -684,6 +697,18 @@ export class DashboardComponent implements OnInit {
     const key = ROTATION_ORDER[idx % ROTATION_ORDER.length];
     const info = ROTATION_INFO[key];
     return info ? { name: info.name, icon: info.icon, duration: info.defaultDurationMin } : null;
+  });
+
+  weekSummary = computed(() => {
+    const activities = this.dashboard.weekActivities();
+    if (activities.length === 0) return null;
+    const breaks = activities.reduce((sum, a) => sum + a.breakCount, 0);
+    const workouts = activities.filter(a => a.hasStrength || a.hasStepper).length;
+    const parts: string[] = [];
+    if (breaks > 0) parts.push(`${breaks} перерв`);
+    if (workouts > 0) parts.push(`${workouts} тренувань`);
+    if (parts.length === 0) return null;
+    return `Цей тиждень: ${parts.join(' · ')}`;
   });
 
   streakDaysLabel = computed(() => {
