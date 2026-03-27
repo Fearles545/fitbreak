@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1774616322228,
+  "timestamp": 1774616933933,
   "index": "/fitbreak/index.html",
   "assetGroups": [
     {
@@ -14,7 +14,6 @@
         "/fitbreak/chunk-3OCENHEN.js",
         "/fitbreak/chunk-5TUQWFHV.js",
         "/fitbreak/chunk-6OPWSHQU.js",
-        "/fitbreak/chunk-72SNI5DF.js",
         "/fitbreak/chunk-AHPZITA6.js",
         "/fitbreak/chunk-AXMRU2FP.js",
         "/fitbreak/chunk-F2GIQVTJ.js",
@@ -29,12 +28,13 @@
         "/fitbreak/chunk-PEMFIDSL.js",
         "/fitbreak/chunk-QDD7HSYN.js",
         "/fitbreak/chunk-RUQKWFHZ.js",
+        "/fitbreak/chunk-TVIPPUYV.js",
         "/fitbreak/chunk-VJC7M7R5.js",
         "/fitbreak/chunk-XQF4PXXA.js",
         "/fitbreak/chunk-YIIS3GHH.js",
         "/fitbreak/chunk-YSZXBJ5Z.js",
         "/fitbreak/index.html",
-        "/fitbreak/main-VMAQ7M2F.js",
+        "/fitbreak/main-5XD4JKGU.js",
         "/fitbreak/styles-6JFHS46B.css"
       ],
       "patterns": []
@@ -63,7 +63,6 @@
     "/fitbreak/chunk-3OCENHEN.js": "932936a789619ba2b684cbd58aa90293c1ab1cc2",
     "/fitbreak/chunk-5TUQWFHV.js": "0adc4e5d6a917056cd41b32d97cd4070a52c4feb",
     "/fitbreak/chunk-6OPWSHQU.js": "f2b99ebfbed2b761ebea5d2bc46d24c90f901693",
-    "/fitbreak/chunk-72SNI5DF.js": "7dbe9c8e202fa109301788935b94c932e245e7fc",
     "/fitbreak/chunk-AHPZITA6.js": "1f83b5fc74ed349bc27cdaa35e538376263d2ac9",
     "/fitbreak/chunk-AXMRU2FP.js": "53e6a9bdd001d5ff173500aaef38a1c17a2878a7",
     "/fitbreak/chunk-F2GIQVTJ.js": "03333f0eaea5c698a5df4f64fc68bc3afd6386f7",
@@ -78,6 +77,7 @@
     "/fitbreak/chunk-PEMFIDSL.js": "01deb86bbf2159e4e6abf37ca7328337523f19d3",
     "/fitbreak/chunk-QDD7HSYN.js": "7ae38766d389742a38c0eaeaf75ab381e1e3827d",
     "/fitbreak/chunk-RUQKWFHZ.js": "64a891374d93083d7b56555dead38729ebf8299e",
+    "/fitbreak/chunk-TVIPPUYV.js": "43e9ee025beed20b797de10a7d9c05b74bb068f6",
     "/fitbreak/chunk-VJC7M7R5.js": "f5ee235bca9f78631728d573c8b3d4694aa6818f",
     "/fitbreak/chunk-XQF4PXXA.js": "3d8205922665b90bc8bd563485c1040ef28b5da0",
     "/fitbreak/chunk-YIIS3GHH.js": "c5916ca17221a759b5ae4ac99dd5ba10b6a3701c",
@@ -85,9 +85,9 @@
     "/fitbreak/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/fitbreak/icons/icon-192x192.png": "5ba1d688c47a8777905aaf9a1e9420ba92d566ad",
     "/fitbreak/icons/icon-512x512.png": "3c350ceb2a2191ba6d9abc25e7acedb7c6092a6f",
-    "/fitbreak/index.html": "e39ddc99191bbe1f35c8eb3ea43e51c67f637c91",
+    "/fitbreak/index.html": "aff248e190669a04f49f6e12e1ac5c83d1dc5dd9",
     "/fitbreak/logo.svg": "ae6dc94232b65f593ca0e85be7f9648be5a25d33",
-    "/fitbreak/main-VMAQ7M2F.js": "db211a34fa517adf252028b03f697928fb0f2049",
+    "/fitbreak/main-5XD4JKGU.js": "8fbd219e6e399034e756a1bcc3b1fdd4ff083e2f",
     "/fitbreak/styles-6JFHS46B.css": "cff0604b9bf6ea61da0ac737a85e08b16d412d7c"
   },
   "navigationUrls": [
