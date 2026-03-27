@@ -52,6 +52,12 @@ export interface Progression {
   advanceCriteria?: string;
 }
 
+/** workout_templates.target_muscle_groups — JSONB array */
+export interface TargetMuscleGroup {
+  group: MuscleGroup;
+  intensity: 1 | 2 | 3; // 1 = light stretch, 2 = moderate, 3 = intense
+}
+
 /** workout_templates.exercises — JSONB array */
 export interface WorkoutExerciseSlot {
   exerciseId: string;
@@ -90,6 +96,7 @@ export interface BreakEntry {
   extendedByMin?: number;
   reason?: string;
   actualWorkSeconds?: number;
+  muscleGroups?: TargetMuscleGroup[];
 }
 
 /** workout_logs.exercises — JSONB array (strength workouts) */
@@ -131,10 +138,11 @@ export interface Exercise extends Omit<Tables<'exercises'>, 'technique' | 'visua
   progression: Progression | null;
 }
 
-export interface WorkoutTemplate extends Omit<Tables<'workout_templates'>, 'exercises' | 'stepper_config' | 'workout_type'> {
+export interface WorkoutTemplate extends Omit<Tables<'workout_templates'>, 'exercises' | 'stepper_config' | 'workout_type' | 'target_muscle_groups'> {
   workout_type: WorkoutType;
   exercises: WorkoutExerciseSlot[];
   stepper_config: StepperConfig | null;
+  target_muscle_groups: TargetMuscleGroup[];
 }
 
 export interface WorkSession extends Omit<Tables<'work_sessions'>, 'breaks' | 'status' | 'pauses'> {

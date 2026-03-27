@@ -72,6 +72,9 @@ create table public.workout_templates (
   -- Степер
   stepper_config jsonb,                       -- StepperConfig
 
+  -- Цільові м'язові групи
+  target_muscle_groups jsonb default '[]',    -- TargetMuscleGroup[] [{group, intensity}]
+
   -- UI
   color text,
   icon text,

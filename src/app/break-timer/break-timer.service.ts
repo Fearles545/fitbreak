@@ -8,6 +8,7 @@ import type {
   Exercise,
   MicroBreakRotation,
   MoodRating,
+  TargetMuscleGroup,
   WorkSession,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
@@ -185,6 +186,8 @@ export class BreakTimerService {
       (new Date(breakStartedAt).getTime() - new Date(lastAnchor).getTime()) / 1000,
     );
 
+    const muscleGroups = this.getMuscleGroupsForRotation(rotation);
+
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
       rotationType: rotation,
@@ -194,6 +197,7 @@ export class BreakTimerService {
       skipped: false,
       mood,
       actualWorkSeconds: Math.max(0, actualWorkSeconds),
+      muscleGroups,
     };
 
     const breaks = [...session.breaks, entry];
@@ -226,6 +230,12 @@ export class BreakTimerService {
     this._currentExerciseIndex.set(0);
     this._activeRotation.set(null);
     this._startedAt.set(null);
+  }
+
+  private getMuscleGroupsForRotation(rotation: MicroBreakRotation): TargetMuscleGroup[] | undefined {
+    const template = this._templates().find(t => this.rotationKeyFromTemplate(t) === rotation);
+    const groups = template?.target_muscle_groups;
+    return groups && groups.length > 0 ? groups : undefined;
   }
 
   private rotationKeyFromTemplate(template: WorkoutTemplate): MicroBreakRotation | null {

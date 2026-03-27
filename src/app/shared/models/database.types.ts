@@ -276,6 +276,7 @@ export type Database = {
           name: string
           sort_order: number | null
           stepper_config: Json | null
+          target_muscle_groups: Json | null
           updated_at: string | null
           user_id: string
           workout_type: string
@@ -293,6 +294,7 @@ export type Database = {
           name: string
           sort_order?: number | null
           stepper_config?: Json | null
+          target_muscle_groups?: Json | null
           updated_at?: string | null
           user_id: string
           workout_type: string
@@ -310,6 +312,7 @@ export type Database = {
           name?: string
           sort_order?: number | null
           stepper_config?: Json | null
+          target_muscle_groups?: Json | null
           updated_at?: string | null
           user_id?: string
           workout_type?: string
@@ -321,12 +324,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_stale_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_stale_sessions: { Args: never; Returns: undefined }
       streak_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           current_streak: number
           longest_streak: number
