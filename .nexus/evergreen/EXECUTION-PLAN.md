@@ -21,9 +21,9 @@
 
 - [ ] **Manual add/edit of fitbreaks** — deferred from Sprint 1. Revisit when CEO feels the need weekly.
 - [ ] **Settings V2** — theme, language, notification sounds, rotation order customization
-- [ ] **Proper logo** — replace placeholder with professional design, generate all PWA sizes
+- [x] **Proper logo** — new design (monitor + stretching person), SVG cleaned, PWA icons generated
 - [ ] **Canvas timer upgrade** — upgrade timer-ring from SVG to Canvas for richer animations
-- [ ] **Mobile experience** — explore options for real mobile usage (PWA install flow, touch UX, viewport handling, notifications)
+- [x] **Mobile experience (PWA)** — manifest, service worker, install prompt, update snackbar, Android-only
 - [ ] **Stepper reload protection** — prevent accidental page reload from losing stepper progress; back up in-progress data to localStorage
 
 ## Completed Sprints

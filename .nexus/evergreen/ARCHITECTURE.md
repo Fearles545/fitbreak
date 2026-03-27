@@ -124,6 +124,14 @@ idle → working → break-due → on-break → back-to-work → working → ...
 - `SessionService` has similar pattern: `refreshSession()` only sets loading if no session exists yet.
 - Pattern: show previous data instantly, refresh in background. Spinner only on truly empty state.
 
+### PWA
+- `manifest.webmanifest` in `public/` — standalone display, Deep Purple theme
+- `ngsw-config.json` — Angular service worker config (prefetch app shell, lazy cache fonts/icons)
+- `provideServiceWorker()` in `app.config.ts` — registers in production only
+- `InstallPromptComponent` — listens for `beforeinstallprompt`, shows one-time install banner (Android Chrome)
+- `SwUpdate.versionUpdates` in `App` component — snackbar on new version
+- Icons: `public/icons/icon-192x192.png`, `icon-512x512.png`
+
 ### Supabase Type Safety
 - `asJson<T>(value: T): Json` helper in `shared/utils/supabase.utils.ts` for JSONB writes
 - Replaces scattered `as any` casts. Centralizes the intentional type assertion.
@@ -135,6 +143,8 @@ idle → working → break-due → on-break → back-to-work → working → ...
 
 ## Current State (2026-03-27)
 
-- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking
+- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking, **PWA (installable, service worker, update prompt)**
 - **Tests:** None written (Vitest configured)
 - **Sprint 3 complete** — all 4 tasks done
+- **PWA implemented** — manifest, ngsw service worker, install prompt, SwUpdate snackbar
+- **Logo updated** — new design (monitor + stretching person), SVG cleaned, PWA icons generated

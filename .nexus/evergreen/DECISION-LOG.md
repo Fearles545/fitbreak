@@ -99,6 +99,13 @@ Record of key architectural and product decisions.
 **Alternatives considered:** (A) Plain `text[]` of muscle group names, (B) Derive from exercises table via joins, (C) Structured JSONB with intensity
 **Rationale:** Intensity enables meaningful load balancing ("you've been doing light neck work but no intense full-body"). Marginal schema complexity over `text[]` but significantly more analytical value. Snapshotting avoids runtime joins.
 
+### DECISION-014: PWA-only for mobile, Android focus
+**Date:** 2026-03-27
+**Context:** CEO wants FitBreak usable on mobile. Explored all options: PWA, Capacitor, NativeScript, Tauri, TWA, native. CEO has no iOS mobile devices — only Android phone and tablet.
+**Decision:** Implement as a standard PWA (manifest + service worker + install prompt). No Capacitor, no app store distribution. Android-only focus.
+**Alternatives considered:** (A) PWA only, (B) PWA + TWA for Play Store, (C) PWA + Capacitor for native features, (D) NativeScript/Tauri/native — rejected as impractical for solo dev
+**Rationale:** PWA covers all actual needs: installable home screen icon, standalone fullscreen mode, cached app shell, update detection. No features require native APIs (vibration, background sync not critical). Zero maintenance cost. Capacitor/TWA can be added later if needed (Phase 2/3 path documented in spec). iOS 26 improved PWA support but irrelevant since CEO has no iOS mobile devices.
+
 ### DECISION-011: Confirm dialog for pause and early break
 **Date:** 2026-03-26
 **Context:** Pause and early-break buttons moved to icon-only buttons flanking the timer ring. Small touch targets near the timer increase risk of accidental taps.

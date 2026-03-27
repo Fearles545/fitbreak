@@ -1,10 +1,11 @@
 # Workflow Status — FitBreak
 
 **Last updated:** 2026-03-27
+**Last session:** PWA implementation + logo update (between sprints)
 
 ## Current State
 
-🟢 **Sprint 3 complete — all 4 tasks done. Ready for Sprint 4 planning.**
+🟡 **Between sprints. Sprint 3 complete, PWA shipped (pending deploy test), Sprint 4 not planned.**
 
 ## Sprint 3
 
@@ -17,7 +18,7 @@
 
 ## Active Work
 
-_None — sprint complete._
+_None — between sprints. PWA committed, awaiting deploy + phone test._
 
 ## Blockers
 
@@ -25,17 +26,15 @@ _None._
 
 ## Next Steps
 
-1. Run `/nexus-plan` for Sprint 4
-2. Parking lot: Settings V2, manual add/edit fitbreaks, proper logo, canvas timer
-3. Consider FE architect review — 3 new features since last review
+1. Deploy to GitHub Pages, test PWA on Android phone
+2. Run `/nexus-plan` for Sprint 4
+3. Parking lot: stepper reload protection, Settings V2, manual add/edit, canvas timer
 
 ## Recent Decisions
 
-- DECISION-012: Immutable templates
-- DECISION-013: Structured muscle groups with intensity
-- Timer availability via per-exercise `timer_sec` field
-- SQL functions for analytics, thin FE service
+- DECISION-014: PWA-only for mobile, Android focus
+- Logo updated: new design, SVG cleaned, PWA icons generated
 
 ## Session Notes
 
-Sprint 3 completed in one session. Timer feature iterated from complex full-page to simple dialog popup after CEO testing. Data audit done with BEE agent before sprint.
+Session was between sprints — picked up parking lot items organically. CEO confirmed Android-only (no iOS mobile devices). Logo provided mid-session from AI generation tool, cleaned SVG and generated icon sizes. PWA build succeeds, service worker + manifest verified in dist output. Bundle budget warning pre-existing (598kB vs 500kB).
