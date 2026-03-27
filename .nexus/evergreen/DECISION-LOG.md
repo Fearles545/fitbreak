@@ -85,6 +85,20 @@ Record of key architectural and product decisions.
 **Alternatives considered:** (A) Escalating beep intervals (backoff), (B) Single beep + visual only, (C) Two beeps then snooze chip
 **Rationale:** CEO has established break habit — minimal notification is enough. Option B chosen for beeps. User-controlled flow tracks actual work time accurately (`actualWorkSeconds` in BreakEntry). The app becomes a supportive companion, not a demanding boss.
 
+### DECISION-012: Immutable workout templates
+**Date:** 2026-03-27
+**Context:** Muscle group metadata will be stored on workout templates and snapshotted into break logs on completion. If templates could be edited, historical break data would reference stale muscle group definitions.
+**Decision:** Treat workout templates as immutable. If a rotation needs adjustment, create a new template instead of editing the existing one.
+**Alternatives considered:** (A) Version templates with effective dates, (B) Always derive from live template data, (C) Immutable templates
+**Rationale:** Simplest approach. No versioning logic, no complex joins. Historical data is always accurate because the snapshot in BreakEntry was correct at the time of logging. Single-user app doesn't need the overhead of template versioning.
+
+### DECISION-013: Structured muscle group metadata with intensity
+**Date:** 2026-03-27
+**Context:** Need to track which muscle groups each rotation trains for progress analytics and balancing. Simple `text[]` was proposed but doesn't capture intensity differences.
+**Decision:** Use structured JSONB: `[{group: MuscleGroup, intensity: 1|2|3}]` on workout_templates. Snapshot into BreakEntry on completion.
+**Alternatives considered:** (A) Plain `text[]` of muscle group names, (B) Derive from exercises table via joins, (C) Structured JSONB with intensity
+**Rationale:** Intensity enables meaningful load balancing ("you've been doing light neck work but no intense full-body"). Marginal schema complexity over `text[]` but significantly more analytical value. Snapshotting avoids runtime joins.
+
 ### DECISION-011: Confirm dialog for pause and early break
 **Date:** 2026-03-26
 **Context:** Pause and early-break buttons moved to icon-only buttons flanking the timer ring. Small touch targets near the timer increase risk of accidental taps.

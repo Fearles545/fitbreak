@@ -1,10 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { SettingsService } from '../settings/settings.service';
 
 export const authGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const settings = inject(SettingsService);
 
   await auth.waitForInitialAuth();
 
@@ -13,6 +15,7 @@ export const authGuard: CanActivateFn = async () => {
     return false;
   }
 
+  await settings.ensureLoaded();
   return true;
 };
 

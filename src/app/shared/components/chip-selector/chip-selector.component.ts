@@ -2,6 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
+  inject,
   input,
   model,
   output,
@@ -85,6 +87,8 @@ import { MatInputModule } from '@angular/material/input';
   `,
 })
 export class ChipSelectorComponent {
+  private destroyRef = inject(DestroyRef);
+
   options = input.required<number[]>();
   selected = model.required<number>();
   ariaLabel = input('');
@@ -96,6 +100,13 @@ export class ChipSelectorComponent {
   change = output<number>();
 
   customActive = signal(false);
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    });
+  }
 
   /** Called by parent after loading saved value to set initial custom state */
   syncCustomState(): void {
@@ -103,6 +114,7 @@ export class ChipSelectorComponent {
   }
 
   onSelect(value: number): void {
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.selected.set(value);
     this.customActive.set(false);
     this.change.emit(value);
@@ -117,6 +129,8 @@ export class ChipSelectorComponent {
     const max = this.customMax();
     if (value < min || value > max) return;
     this.selected.set(value);
-    this.change.emit(value);
+
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => this.change.emit(value), 500);
   }
 }

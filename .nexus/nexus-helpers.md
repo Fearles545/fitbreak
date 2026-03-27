@@ -177,6 +177,13 @@ After completing meaningful work:
 
 ---
 
+## Agent-Memory-Location
+
+Agent-specific persistent memory lives in `.claude/agent-memory/{agent-name}/`.
+Each agent has its own `MEMORY.md` index and individual memory files.
+Use the same format as CC auto-memory (frontmatter with name, description, type + content).
+Always check your memory directory at session start and update it before session end.
+
 ## Agent-Memory-Reminder
 
 At end of session, remind agents to update their persistent memory:
