@@ -26,9 +26,8 @@ _None._
 
 ## Next Steps
 
-1. Populate `difficulty_overrides` on Yulia's exercises (toggle is inert without data)
-2. Deploy and test with both users
-3. Run `/nexus-plan` for Sprint 5
+1. Run `/nexus-plan` for Sprint 5
+2. Test deployed app with both users (Yulia + test account)
 
 ## Recent Decisions
 
@@ -37,4 +36,4 @@ _None._
 
 ## Session Notes
 
-Full Sprint 4 delivered in one session. Yulia onboarded with custom exercises earlier in the session. Data-driven rotation migration: DB (1 migration with 8 steps) + FE (7 files, deleted rotation.constants.ts, rewrote BreakTimerService). Code review caught 4 issues (1 critical: onBreakStarted before null check, 1 warning: .sort() mutation, 1 warning: lost progress icons, 1 info: redundant template loading) — all fixed. Difficulty toggle: DB schema + FE (2 files, reused chip pattern from mode toggle). Feature spec created and approved before implementation.
+Full Sprint 4 delivered in one session. Yulia onboarded with custom exercises earlier in the session. Data-driven rotation migration: DB (1 migration with 8 steps) + FE (7 files, deleted rotation.constants.ts, rewrote BreakTimerService). Code review caught 4 issues (1 critical: onBreakStarted before null check, 1 warning: .sort() mutation, 1 warning: lost progress icons, 1 info: redundant template loading) — all fixed. Difficulty toggle: DB schema + FE (2 files, reused chip pattern from mode toggle). Feature spec created and approved before implementation. Post-save: seeded difficulty_overrides for all 10 Yulia strength exercises, fixed toggle to hide when no overrides exist, cloned test user to match Yulia's setup. Deployed.

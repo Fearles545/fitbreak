@@ -25,7 +25,7 @@
 - [ ] **Stepper reload protection** — prevent accidental page reload from losing stepper progress; back up in-progress data to localStorage
 - [ ] **Rotation marketplace (draft idea)** — system-owned templates browseable by all users, adopt as copy with `source_template_id` link. `is_marketplace` flag + RLS policy for read access. Not needed now (2 users, Leo-curated), but architecture supports it.
 - [ ] **Admin UI for user management** — assign rotations/templates to users via UI instead of SQL. Low priority until user count grows.
-- [ ] **Populate difficulty_overrides** — Yulia's exercises need easy/medium/hard parameter data seeded. Toggle exists but is inert without data.
+- [x] **Populate difficulty_overrides** — Yulia's 10 strength exercises seeded with easy/medium/hard overrides. Test user cloned to match.
 
 ## Completed Sprints
 
