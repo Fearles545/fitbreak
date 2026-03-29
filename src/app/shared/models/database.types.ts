@@ -22,6 +22,7 @@ export type Database = {
           default_reps: number | null
           default_rest_sec: number | null
           default_sets: number | null
+          difficulty_overrides: Json | null
           exercise_type: string
           id: string
           is_active: boolean | null
@@ -48,6 +49,7 @@ export type Database = {
           default_reps?: number | null
           default_rest_sec?: number | null
           default_sets?: number | null
+          difficulty_overrides?: Json | null
           exercise_type: string
           id?: string
           is_active?: boolean | null
@@ -74,6 +76,7 @@ export type Database = {
           default_reps?: number | null
           default_rest_sec?: number | null
           default_sets?: number | null
+          difficulty_overrides?: Json | null
           exercise_type?: string
           id?: string
           is_active?: boolean | null
@@ -274,6 +277,7 @@ export type Database = {
           is_active: boolean | null
           is_default: boolean | null
           is_marketplace: boolean | null
+          last_difficulty: string | null
           name: string
           rotation_key: string | null
           sort_order: number | null
@@ -295,6 +299,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           is_marketplace?: boolean | null
+          last_difficulty?: string | null
           name: string
           rotation_key?: string | null
           sort_order?: number | null
@@ -316,6 +321,7 @@ export type Database = {
           is_active?: boolean | null
           is_default?: boolean | null
           is_marketplace?: boolean | null
+          last_difficulty?: string | null
           name?: string
           rotation_key?: string | null
           sort_order?: number | null

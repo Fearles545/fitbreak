@@ -43,6 +43,17 @@ export interface ExerciseVisual {
   youtubeEndSec?: number;
 }
 
+/** exercises.difficulty_overrides — JSONB object */
+export type DifficultyLevel = 'easy' | 'medium' | 'hard';
+
+export interface DifficultyParams {
+  reps?: number | null;
+  durationSec?: number | null;
+  note?: string;
+}
+
+export type DifficultyOverrides = Partial<Record<DifficultyLevel, DifficultyParams>>;
+
 /** exercises.progression — JSONB object */
 export interface Progression {
   nextExerciseId?: string;
@@ -128,20 +139,22 @@ export interface StepperLog {
 // Row types with typed JSONB (extend generated DB rows)
 // ────────────────────────────────────────────────────────────
 
-export interface Exercise extends Omit<Tables<'exercises'>, 'technique' | 'visuals' | 'progression' | 'category' | 'exercise_type' | 'muscle_groups'> {
+export interface Exercise extends Omit<Tables<'exercises'>, 'technique' | 'visuals' | 'progression' | 'difficulty_overrides' | 'category' | 'exercise_type' | 'muscle_groups'> {
   category: ExerciseCategory;
   exercise_type: ExerciseType;
   muscle_groups: MuscleGroup[];
   technique: TechniqueStep[];
   visuals: ExerciseVisual[] | null;
   progression: Progression | null;
+  difficulty_overrides: DifficultyOverrides | null;
 }
 
-export interface WorkoutTemplate extends Omit<Tables<'workout_templates'>, 'exercises' | 'stepper_config' | 'workout_type' | 'target_muscle_groups'> {
+export interface WorkoutTemplate extends Omit<Tables<'workout_templates'>, 'exercises' | 'stepper_config' | 'workout_type' | 'target_muscle_groups' | 'last_difficulty'> {
   workout_type: WorkoutType;
   exercises: WorkoutExerciseSlot[];
   stepper_config: StepperConfig | null;
   target_muscle_groups: TargetMuscleGroup[];
+  last_difficulty: DifficultyLevel | null;
 }
 
 export interface WorkSession extends Omit<Tables<'work_sessions'>, 'breaks' | 'status' | 'pauses'> {

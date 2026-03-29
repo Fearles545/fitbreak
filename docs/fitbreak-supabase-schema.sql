@@ -45,6 +45,9 @@ create table public.exercises (
   -- Прогресія
   progression jsonb,                          -- Progression
 
+  -- Складність (easy / medium / hard)
+  difficulty_overrides jsonb,                 -- DifficultyOverrides { easy: {reps?, durationSec?, note?}, ... }
+
   -- Мета
   is_custom boolean default false,
   sort_order int default 0,
@@ -75,6 +78,10 @@ create table public.workout_templates (
 
   -- Цільові м'язові групи
   target_muscle_groups jsonb default '[]',    -- TargetMuscleGroup[] [{group, intensity}]
+
+  -- Складність
+  last_difficulty text default 'medium'
+    check (last_difficulty in ('easy', 'medium', 'hard')),
 
   -- Ротація (для micro-break шаблонів)
   rotation_key text,                         -- slug: 'neck-eyes', 'knee-activation', etc.
