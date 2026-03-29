@@ -18,7 +18,7 @@ import { TimerRingComponent } from '@shared/components/timer-ring/timer-ring.com
 import { WeekCalendarComponent } from '@shared/components/week-calendar/week-calendar.component';
 import { AudioService } from '@shared/services/audio.service';
 import { WorkdayService } from '@shared/services/workday.service';
-import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
+import { BreakTimerService } from '../break-timer/break-timer.service';
 import { toDisplayDate } from '@shared/utils/date.utils';
 import { getTodayTip } from '@shared/constants/health-tips';
 import { AuthService } from '../auth/auth.service';
@@ -650,6 +650,7 @@ import { DashboardService } from './dashboard.service';
   `,
 })
 export class DashboardComponent implements OnInit {
+  private breakTimer = inject(BreakTimerService);
   protected sessionService = inject(SessionService);
   protected dashboard = inject(DashboardService);
   protected workday = inject(WorkdayService);
@@ -689,12 +690,9 @@ export class DashboardComponent implements OnInit {
   overtimeMinutes = computed(() => Math.floor(this.workday.overtimeSeconds() / 60));
 
   nextRotation = computed(() => {
-    const session = this.sessionService.session();
-    if (!session) return null;
-    const idx = session.current_rotation_index ?? 0;
-    const key = ROTATION_ORDER[idx % ROTATION_ORDER.length];
-    const info = ROTATION_INFO[key];
-    return info ? { name: info.name, icon: info.icon, duration: info.defaultDurationMin } : null;
+    const template = this.breakTimer.suggestedTemplate();
+    if (!template) return null;
+    return { name: template.name, icon: template.icon ?? '', duration: template.estimated_duration_min };
   });
 
   weekSummary = computed(() => {
@@ -773,6 +771,7 @@ export class DashboardComponent implements OnInit {
       await Promise.all([
         this.workday.init(),
         this.dashboard.loadAll(),
+        this.breakTimer.loadTemplates(),
       ]);
     } catch {
       this.loadError.set(true);

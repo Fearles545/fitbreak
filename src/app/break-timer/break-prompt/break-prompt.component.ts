@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import type { MicroBreakRotation } from '@shared/models/fitbreak.models';
 import type { RotationOption } from '../break-timer.service';
 
 @Component({
@@ -224,9 +223,9 @@ import type { RotationOption } from '../break-timer.service';
 
     @if (showOptions()) {
       <div class="rotation-options">
-        @for (option of rotationOptions(); track option.key) {
+        @for (option of rotationOptions(); track option.templateId) {
           @if (!option.isSuggested) {
-            <button class="rotation-option" (click)="pickRotation.emit(option.key)">
+            <button class="rotation-option" (click)="pickRotation.emit(option.templateId)">
               <span class="rotation-option-icon">{{ option.icon }}</span>
               <div class="rotation-option-info">
                 <div class="rotation-option-name">{{ option.name }}</div>
@@ -246,7 +245,7 @@ export class BreakPromptComponent {
   rotationOptions = input.required<RotationOption[]>();
 
   startSuggested = output();
-  pickRotation = output<MicroBreakRotation>();
+  pickRotation = output<string>();
   extendWork = output<{ minutes: number; reason?: string }>();
   skip = output();
   endDay = output();

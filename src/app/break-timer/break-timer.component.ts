@@ -15,7 +15,7 @@ import { BreakNotifierService } from '@shared/services/break-notifier.service';
 import { BreakTimerService } from './break-timer.service';
 import { BreakPromptComponent } from './break-prompt/break-prompt.component';
 import { BreakExecutionComponent } from './break-execution/break-execution.component';
-import type { MicroBreakRotation, MoodRating } from '@shared/models/fitbreak.models';
+import type { MoodRating } from '@shared/models/fitbreak.models';
 
 type BreakMode = 'prompt' | 'execution' | 'mood';
 
@@ -122,19 +122,20 @@ export class BreakTimerComponent implements OnInit {
 
   async onStartSuggested(): Promise<void> {
     try {
+      const suggested = this.breakService.suggestedTemplate();
+      if (!suggested) return;
       this.workday.onBreakStarted();
-      const suggested = this.breakService.suggestedRotation();
-      await this.breakService.startBreak(suggested);
+      await this.breakService.startBreak(suggested.id);
       this.mode.set('execution');
     } catch {
       this.snackBar.open('Не вдалося розпочати перерву.', 'OK', { duration: 5000 });
     }
   }
 
-  async onPickRotation(rotation: MicroBreakRotation): Promise<void> {
+  async onPickRotation(templateId: string): Promise<void> {
     try {
       this.workday.onBreakStarted();
-      await this.breakService.startBreak(rotation);
+      await this.breakService.startBreak(templateId);
       this.mode.set('execution');
     } catch {
       this.snackBar.open('Не вдалося розпочати перерву.', 'OK', { duration: 5000 });

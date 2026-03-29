@@ -12,7 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { AuthService } from '../auth/auth.service';
-import { ROTATION_INFO } from '@shared/models/rotation.constants';
 import { toDisplayDate } from '@shared/utils/date.utils';
 import type { WorkSession, WorkoutLog, BreakEntry, MoodRating } from '@shared/models/fitbreak.models';
 
@@ -442,14 +441,13 @@ function formatTime(date: Date): string {
 }
 
 function formatBreakEntry(b: BreakEntry) {
-  const rotation = ROTATION_INFO[b.replacedWith ?? b.rotationType];
   const time = b.startedAt
     ? formatTime(new Date(b.startedAt))
     : formatTime(new Date(b.scheduledAt));
 
   return {
-    icon: rotation?.icon ?? '⏰',
-    name: rotation?.name ?? 'Перерва',
+    icon: b.templateIcon || '⏰',
+    name: b.templateName || 'Перерва',
     time,
     status: b.skipped ? '⊘' : b.completedAt ? '✅' : '—',
     mood: b.mood ? MOOD_EMOJI[b.mood] : null,

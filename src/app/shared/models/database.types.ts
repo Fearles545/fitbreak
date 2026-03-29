@@ -27,7 +27,6 @@ export type Database = {
           is_active: boolean | null
           is_bilateral: boolean | null
           is_custom: boolean | null
-          micro_break_rotation: string | null
           muscle_groups: string[]
           name: string
           name_en: string | null
@@ -54,7 +53,6 @@ export type Database = {
           is_active?: boolean | null
           is_bilateral?: boolean | null
           is_custom?: boolean | null
-          micro_break_rotation?: string | null
           muscle_groups?: string[]
           name: string
           name_en?: string | null
@@ -81,7 +79,6 @@ export type Database = {
           is_active?: boolean | null
           is_bilateral?: boolean | null
           is_custom?: boolean | null
-          micro_break_rotation?: string | null
           muscle_groups?: string[]
           name?: string
           name_en?: string | null
@@ -107,11 +104,11 @@ export type Database = {
           default_stepper_duration_min: number | null
           default_stepper_interval_min: number | null
           enable_break_tab_flash: boolean | null
-          enabled_rotations: string[] | null
+          enabled_template_ids: string[] | null
           id: string
           language: string | null
-          rotation_order: string[] | null
           stepper_signal_type: string | null
+          template_order: string[] | null
           theme: string | null
           timer_animation_style: string
           updated_at: string | null
@@ -125,11 +122,11 @@ export type Database = {
           default_stepper_duration_min?: number | null
           default_stepper_interval_min?: number | null
           enable_break_tab_flash?: boolean | null
-          enabled_rotations?: string[] | null
+          enabled_template_ids?: string[] | null
           id?: string
           language?: string | null
-          rotation_order?: string[] | null
           stepper_signal_type?: string | null
+          template_order?: string[] | null
           theme?: string | null
           timer_animation_style?: string
           updated_at?: string | null
@@ -143,11 +140,11 @@ export type Database = {
           default_stepper_duration_min?: number | null
           default_stepper_interval_min?: number | null
           enable_break_tab_flash?: boolean | null
-          enabled_rotations?: string[] | null
+          enabled_template_ids?: string[] | null
           id?: string
           language?: string | null
-          rotation_order?: string[] | null
           stepper_signal_type?: string | null
+          template_order?: string[] | null
           theme?: string | null
           timer_animation_style?: string
           updated_at?: string | null
@@ -276,8 +273,11 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_default: boolean | null
+          is_marketplace: boolean | null
           name: string
+          rotation_key: string | null
           sort_order: number | null
+          source_template_id: string | null
           stepper_config: Json | null
           target_muscle_groups: Json | null
           updated_at: string | null
@@ -294,8 +294,11 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          is_marketplace?: boolean | null
           name: string
+          rotation_key?: string | null
           sort_order?: number | null
+          source_template_id?: string | null
           stepper_config?: Json | null
           target_muscle_groups?: Json | null
           updated_at?: string | null
@@ -312,15 +315,26 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_default?: boolean | null
+          is_marketplace?: boolean | null
           name?: string
+          rotation_key?: string | null
           sort_order?: number | null
+          source_template_id?: string | null
           stepper_config?: Json | null
           target_muscle_groups?: Json | null
           updated_at?: string | null
           user_id?: string
           workout_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workout_templates_source_template_id_fkey"
+            columns: ["source_template_id"]
+            isOneToOne: false
+            referencedRelation: "workout_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -330,31 +344,31 @@ export type Database = {
       all_time_totals: {
         Args: never
         Returns: {
+          first_active_date: string
           total_breaks_completed: number
-          total_workouts: number
           total_stepper_sessions: number
           total_workout_minutes: number
-          first_active_date: string | null
+          total_workouts: number
         }[]
       }
       cleanup_stale_sessions: { Args: never; Returns: undefined }
       daily_activity_stats: {
-        Args: { p_start: string; p_end: string }
+        Args: { p_end: string; p_start: string }
         Returns: {
-          date: string
           completed_breaks: number
-          total_breaks: number
+          date: string
           skipped_breaks: number
-          strength_count: number
           stepper_count: number
-          work_duration_min: number | null
+          strength_count: number
+          total_breaks: number
+          work_duration_min: number
         }[]
       }
       rotation_stats: {
-        Args: { p_start: string; p_end: string }
+        Args: { p_end: string; p_start: string }
         Returns: {
-          rotation_type: string
           completed: number
+          rotation_type: string
           skipped: number
           total: number
         }[]

@@ -1,21 +1,19 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { WorkdayService } from '@shared/services/workday.service';
-import { ROTATION_INFO, ROTATION_ORDER } from '@shared/models/rotation.constants';
 import { SessionService } from '@shared/services/session.service';
+import { SettingsService } from '../settings/settings.service';
 import type {
   BreakEntry,
   Exercise,
-  MicroBreakRotation,
   MoodRating,
-  TargetMuscleGroup,
   WorkSession,
   WorkoutTemplate,
 } from '@shared/models/fitbreak.models';
 import { asJson } from '@shared/utils/supabase.utils';
 
 export interface RotationOption {
-  key: MicroBreakRotation;
+  templateId: string;
   name: string;
   icon: string;
   exerciseCount: number;
@@ -28,16 +26,16 @@ export class BreakTimerService {
   private supabase = inject(SupabaseService);
   private session = inject(SessionService);
   private workday = inject(WorkdayService);
+  private settingsService = inject(SettingsService);
 
   private _exercises = signal<Exercise[]>([]);
   private _currentExerciseIndex = signal(0);
-  private _activeRotation = signal<MicroBreakRotation | null>(null);
+  private _activeTemplate = signal<WorkoutTemplate | null>(null);
   private _startedAt = signal<string | null>(null);
   private _templates = signal<WorkoutTemplate[]>([]);
 
   readonly exercises = this._exercises.asReadonly();
   readonly currentExerciseIndex = this._currentExerciseIndex.asReadonly();
-  readonly activeRotation = this._activeRotation.asReadonly();
 
   readonly currentExercise = computed(() => {
     const exercises = this._exercises();
@@ -50,31 +48,47 @@ export class BreakTimerService {
     this._currentExerciseIndex() >= this._exercises().length - 1,
   );
 
-  readonly suggestedRotation = computed((): MicroBreakRotation => {
+  /** Get the ordered list of enabled templates based on user settings */
+  private readonly orderedTemplates = computed((): WorkoutTemplate[] => {
+    const templates = this._templates();
+    const order = this.settingsService.settings()?.template_order ?? [];
+
+    if (order.length > 0) {
+      // Return templates in the order specified by user settings
+      return order
+        .map(id => templates.find(t => t.id === id))
+        .filter((t): t is WorkoutTemplate => t != null);
+    }
+
+    // Fallback: all templates by sort_order
+    return templates;
+  });
+
+  readonly suggestedTemplate = computed((): WorkoutTemplate | null => {
+    const ordered = this.orderedTemplates();
+    if (ordered.length === 0) return null;
     const session = this.session.session();
     const idx = session?.current_rotation_index ?? 0;
-    return ROTATION_ORDER[idx % ROTATION_ORDER.length];
+    return ordered[idx % ordered.length];
   });
 
   readonly rotationOptions = computed((): RotationOption[] => {
-    const suggested = this.suggestedRotation();
-    const templates = this._templates();
+    const suggested = this.suggestedTemplate();
+    const ordered = this.orderedTemplates();
 
-    return ROTATION_ORDER.map(key => {
-      const info = ROTATION_INFO[key];
-      const template = templates.find(t => this.rotationKeyFromTemplate(t) === key);
-      return {
-        key,
-        name: info.name,
-        icon: info.icon,
-        exerciseCount: template?.exercises.length ?? 0,
-        durationMin: template?.estimated_duration_min ?? info.defaultDurationMin,
-        isSuggested: key === suggested,
-      };
-    });
+    return ordered.map(template => ({
+      templateId: template.id,
+      name: template.name,
+      icon: template.icon ?? '',
+      exerciseCount: template.exercises.length,
+      durationMin: template.estimated_duration_min,
+      isSuggested: template.id === suggested?.id,
+    }));
   });
 
   async loadTemplates(): Promise<void> {
+    if (this._templates().length > 0) return;
+
     const { data, error } = await this.supabase.supabase
       .from('workout_templates')
       .select('*')
@@ -85,22 +99,34 @@ export class BreakTimerService {
     this._templates.set((data ?? []) as unknown as WorkoutTemplate[]);
   }
 
-  async startBreak(rotation: MicroBreakRotation): Promise<void> {
-    this._activeRotation.set(rotation);
+  async startBreak(templateId: string): Promise<void> {
+    const template = this._templates().find(t => t.id === templateId);
+    if (!template) return;
+
+    this._activeTemplate.set(template);
     this._currentExerciseIndex.set(0);
     this._startedAt.set(new Date().toISOString());
 
-    // Load exercises for this rotation
+    // Load exercises by IDs from the template
+    const exerciseIds = template.exercises.map(e => e.exerciseId);
+    if (exerciseIds.length === 0) return;
+
     const { data, error } = await this.supabase.supabase
       .from('exercises')
       .select('*')
-      .eq('category', 'micro-break')
-      .eq('micro_break_rotation', rotation)
-      .eq('is_active', true)
-      .order('sort_order');
+      .in('id', exerciseIds)
+      .eq('is_active', true);
 
     if (error) throw error;
-    this._exercises.set((data ?? []) as unknown as Exercise[]);
+
+    // Sort by template's sortOrder
+    const exerciseMap = new Map((data ?? []).map(e => [e.id, e]));
+    const sorted = [...template.exercises]
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map(slot => exerciseMap.get(slot.exerciseId))
+      .filter(Boolean) as unknown as Exercise[];
+
+    this._exercises.set(sorted);
   }
 
   async extendWork(minutes: number, reason?: string): Promise<void> {
@@ -108,9 +134,13 @@ export class BreakTimerService {
     if (!session) return;
 
     const now = new Date();
+    const suggested = this.suggestedTemplate();
+
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
-      rotationType: this.suggestedRotation(),
+      templateId: suggested?.id ?? '',
+      templateName: suggested?.name ?? '',
+      templateIcon: suggested?.icon ?? '',
       scheduledAt: now.toISOString(),
       skipped: true,
       extended: true,
@@ -137,15 +167,22 @@ export class BreakTimerService {
     if (!session) return;
 
     const now = new Date();
+    const suggested = this.suggestedTemplate();
+    const templateCount = this.orderedTemplates().length;
+
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
-      rotationType: this.suggestedRotation(),
+      templateId: suggested?.id ?? '',
+      templateName: suggested?.name ?? '',
+      templateIcon: suggested?.icon ?? '',
       scheduledAt: now.toISOString(),
       skipped: true,
     };
 
     const breaks = [...session.breaks, entry];
-    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
+    const nextIdx = templateCount > 0
+      ? ((session.current_rotation_index ?? 0) + 1) % templateCount
+      : 0;
     const intervalMs = session.break_interval_min * 60 * 1000;
 
     const { error } = await this.supabase.supabase
@@ -174,10 +211,11 @@ export class BreakTimerService {
     const session = this.session.session();
     if (!session) return;
 
-    const rotation = this._activeRotation();
-    if (!rotation) return;
+    const template = this._activeTemplate();
+    if (!template) return;
 
     const now = new Date();
+    const templateCount = this.orderedTemplates().length;
 
     // Calculate actual work seconds: from last break/session start to break start
     const breakStartedAt = this._startedAt() ?? now.toISOString();
@@ -186,22 +224,26 @@ export class BreakTimerService {
       (new Date(breakStartedAt).getTime() - new Date(lastAnchor).getTime()) / 1000,
     );
 
-    const muscleGroups = this.getMuscleGroupsForRotation(rotation);
+    const muscleGroups = template.target_muscle_groups;
 
     const entry: BreakEntry = {
       rotationIndex: session.current_rotation_index ?? 0,
-      rotationType: rotation,
+      templateId: template.id,
+      templateName: template.name,
+      templateIcon: template.icon ?? '',
       scheduledAt: this._startedAt() ?? now.toISOString(),
       startedAt: breakStartedAt,
       completedAt: now.toISOString(),
       skipped: false,
       mood,
       actualWorkSeconds: Math.max(0, actualWorkSeconds),
-      muscleGroups,
+      muscleGroups: muscleGroups && muscleGroups.length > 0 ? muscleGroups : undefined,
     };
 
     const breaks = [...session.breaks, entry];
-    const nextIdx = ((session.current_rotation_index ?? 0) + 1) % ROTATION_ORDER.length;
+    const nextIdx = templateCount > 0
+      ? ((session.current_rotation_index ?? 0) + 1) % templateCount
+      : 0;
 
     // Set next_break_at to null — signals "back to work" state
     const { error } = await this.supabase.supabase
@@ -228,25 +270,7 @@ export class BreakTimerService {
   reset(): void {
     this._exercises.set([]);
     this._currentExerciseIndex.set(0);
-    this._activeRotation.set(null);
+    this._activeTemplate.set(null);
     this._startedAt.set(null);
-  }
-
-  private getMuscleGroupsForRotation(rotation: MicroBreakRotation): TargetMuscleGroup[] | undefined {
-    const template = this._templates().find(t => this.rotationKeyFromTemplate(t) === rotation);
-    const groups = template?.target_muscle_groups;
-    return groups && groups.length > 0 ? groups : undefined;
-  }
-
-  private rotationKeyFromTemplate(template: WorkoutTemplate): MicroBreakRotation | null {
-    // Primary: match by template name
-    const nameMap: Record<string, MicroBreakRotation> = {
-      'Шия + Очі': 'neck-eyes',
-      'Грудний відділ + Плечі': 'thoracic-shoulders',
-      'Стегна + Поперек': 'hips-lower-back',
-      'Активна розминка': 'active',
-    };
-    // Fallback: sort_order aligns with ROTATION_ORDER
-    return nameMap[template.name] ?? (template.sort_order ? ROTATION_ORDER[template.sort_order - 1] : null) ?? null;
   }
 }

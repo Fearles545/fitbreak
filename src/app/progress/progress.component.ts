@@ -9,8 +9,8 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ROTATION_INFO } from '@shared/models/rotation.constants';
 import { toDateKey } from '@shared/utils/date.utils';
+import { BreakTimerService } from '../break-timer/break-timer.service';
 import { ProgressService, type Period } from './progress.service';
 
 @Component({
@@ -467,6 +467,7 @@ import { ProgressService, type Period } from './progress.service';
   `,
 })
 export class ProgressComponent implements OnInit {
+  private breakTimer = inject(BreakTimerService);
   protected progress = inject(ProgressService);
   protected router = inject(Router);
 
@@ -559,12 +560,13 @@ export class ProgressComponent implements OnInit {
 
     const maxCompleted = Math.max(...stats.map(s => s.completed), 1);
 
+    const templates = this.breakTimer.rotationOptions();
     return stats.map(s => {
-      const info = ROTATION_INFO[s.rotation_type as keyof typeof ROTATION_INFO];
+      const tmpl = templates.find(t => t.name === s.rotation_type);
       return {
         key: s.rotation_type,
-        icon: info?.icon ?? '⏰',
-        name: info?.name ?? s.rotation_type,
+        icon: tmpl?.icon || '⏰',
+        name: s.rotation_type,
         completed: s.completed,
         percent: (s.completed / maxCompleted) * 100,
       };

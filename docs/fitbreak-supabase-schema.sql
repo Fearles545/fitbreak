@@ -19,8 +19,6 @@ create table public.exercises (
   name_en text,
   category text not null
     check (category in ('micro-break', 'strength', 'cardio', 'stretching')),
-  micro_break_rotation text
-    check (micro_break_rotation in ('neck-eyes', 'thoracic-shoulders', 'hips-lower-back', 'active')),
   muscle_groups text[] not null default '{}',
 
   -- Техніка
@@ -77,6 +75,13 @@ create table public.workout_templates (
 
   -- Цільові м'язові групи
   target_muscle_groups jsonb default '[]',    -- TargetMuscleGroup[] [{group, intensity}]
+
+  -- Ротація (для micro-break шаблонів)
+  rotation_key text,                         -- slug: 'neck-eyes', 'knee-activation', etc.
+
+  -- Маркетплейс
+  is_marketplace boolean default false,
+  source_template_id uuid references public.workout_templates(id),
 
   -- UI
   color text,
@@ -160,8 +165,8 @@ create table public.user_settings (
   -- Робочий день
   default_break_interval_min int default 45
     check (default_break_interval_min is null or default_break_interval_min between 5 and 120),
-  enabled_rotations text[] default '{neck-eyes,thoracic-shoulders,hips-lower-back,active}',
-  rotation_order text[] default '{neck-eyes,thoracic-shoulders,hips-lower-back,active}',
+  enabled_template_ids uuid[] default '{}',  -- which micro-break templates are active
+  template_order uuid[] default '{}',        -- rotation cycle order (template UUIDs)
 
   -- Степер
   default_stepper_duration_min int default 60
@@ -260,9 +265,9 @@ create policy "settings_update" on public.user_settings
 create index idx_exercises_user_category
   on public.exercises(user_id, category);
 
-create index idx_exercises_user_rotation
-  on public.exercises(user_id, micro_break_rotation)
-  where micro_break_rotation is not null;
+create index idx_templates_marketplace
+  on public.workout_templates(is_marketplace)
+  where is_marketplace = true;
 
 create index idx_templates_user_type
   on public.workout_templates(user_id, workout_type);
@@ -384,10 +389,15 @@ returns table (rotation_type text, completed bigint, skipped bigint, total bigin
 language sql security definer
 set search_path = ''
 as $$
-  select b->>'rotationType', count(*) filter (where (b->>'skipped')::boolean = false and b->>'completedAt' is not null), count(*) filter (where (b->>'skipped')::boolean = true), count(*)
+  select
+    coalesce(b->>'templateName', b->>'rotationType'),
+    count(*) filter (where (b->>'skipped')::boolean = false and b->>'completedAt' is not null),
+    count(*) filter (where (b->>'skipped')::boolean = true),
+    count(*)
   from public.work_sessions s, jsonb_array_elements(s.breaks) b
   where s.user_id = (select auth.uid()) and s.date between p_start and p_end
-  group by b->>'rotationType' order by total desc;
+  group by coalesce(b->>'templateName', b->>'rotationType')
+  order by 4 desc;
 $$;
 
 -- Загальні підсумки за весь час

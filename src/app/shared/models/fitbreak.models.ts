@@ -6,8 +6,6 @@ import type { Tables } from './database.types';
 
 export type ExerciseCategory = 'micro-break' | 'strength' | 'cardio' | 'stretching';
 
-export type MicroBreakRotation = 'neck-eyes' | 'thoracic-shoulders' | 'hips-lower-back' | 'active';
-
 export type ExerciseType = 'reps' | 'timed' | 'timed-hold' | 'bilateral';
 
 export type MuscleGroup =
@@ -85,12 +83,14 @@ export interface PauseEntry {
 /** work_sessions.breaks — JSONB array */
 export interface BreakEntry {
   rotationIndex: number;
-  rotationType: MicroBreakRotation;
+  templateId: string;
+  templateName: string;
+  templateIcon: string;
   scheduledAt: string;
   startedAt?: string;
   completedAt?: string;
   skipped: boolean;
-  replacedWith?: MicroBreakRotation;
+  replacedWith?: string;
   mood?: MoodRating;
   extended?: boolean;
   extendedByMin?: number;
@@ -128,10 +128,9 @@ export interface StepperLog {
 // Row types with typed JSONB (extend generated DB rows)
 // ────────────────────────────────────────────────────────────
 
-export interface Exercise extends Omit<Tables<'exercises'>, 'technique' | 'visuals' | 'progression' | 'category' | 'exercise_type' | 'micro_break_rotation' | 'muscle_groups'> {
+export interface Exercise extends Omit<Tables<'exercises'>, 'technique' | 'visuals' | 'progression' | 'category' | 'exercise_type' | 'muscle_groups'> {
   category: ExerciseCategory;
   exercise_type: ExerciseType;
-  micro_break_rotation: MicroBreakRotation | null;
   muscle_groups: MuscleGroup[];
   technique: TechniqueStep[];
   visuals: ExerciseVisual[] | null;
@@ -158,9 +157,9 @@ export interface WorkoutLog extends Omit<Tables<'workout_logs'>, 'exercises' | '
   mood: MoodRating | null;
 }
 
-export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_rotations' | 'rotation_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound' | 'timer_animation_style'> {
-  enabled_rotations: MicroBreakRotation[] | null;
-  rotation_order: MicroBreakRotation[] | null;
+export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_template_ids' | 'template_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound' | 'timer_animation_style'> {
+  enabled_template_ids: string[] | null;
+  template_order: string[] | null;
   stepper_signal_type: SignalType | null;
   theme: 'light' | 'dark' | 'system' | null;
   language: 'uk' | 'en' | null;
