@@ -106,6 +106,20 @@ Record of key architectural and product decisions.
 **Alternatives considered:** (A) PWA only, (B) PWA + TWA for Play Store, (C) PWA + Capacitor for native features, (D) NativeScript/Tauri/native — rejected as impractical for solo dev
 **Rationale:** PWA covers all actual needs: installable home screen icon, standalone fullscreen mode, cached app shell, update detection. No features require native APIs (vibration, background sync not critical). Zero maintenance cost. Capacitor/TWA can be added later if needed (Phase 2/3 path documented in spec). iOS 26 improved PWA support but irrelevant since CEO has no iOS mobile devices.
 
+### DECISION-015: Data-driven rotations — remove hardcoded constants
+**Date:** 2026-03-29
+**Context:** Added custom knee rehabilitation rotations for a second user (Yulia). Exposed that `ROTATION_ORDER`, `ROTATION_INFO`, and `MicroBreakRotation` type are hardcoded — adding a rotation requires code changes + DB migration + redeployment. The `rotationKeyFromTemplate()` method reverse-engineers rotation keys from Ukrainian template names via a hardcoded map.
+**Decision:** Make rotations fully data-driven. `workout_templates` becomes the single source of truth for rotation metadata (name, icon, duration). Delete `ROTATION_ORDER`, `ROTATION_INFO`, `MicroBreakRotation` type. `user_settings` stores template UUIDs instead of string keys. `exercises.micro_break_rotation` column dropped — exercises linked via template JSONB. Historical `BreakEntry` records migrated to use `templateId` + denormalized `templateName`/`templateIcon`.
+**Alternatives considered:** (A) Keep constants, grow them per user — fragile, requires redeployment per rotation. (B) Derive from templates but keep string keys as identifiers — half-measure, still needs CHECK constraint updates. (C) Full template-driven — clean, zero code changes to add rotations.
+**Rationale:** The database already models per-user rotations correctly. The frontend constants are redundant and create a maintenance burden. Strength workouts are already fully data-driven — micro-breaks should converge to the same pattern. Migration is straightforward (few sessions in DB, additive schema changes first).
+
+### DECISION-016: Workout difficulty toggle (easy / medium / hard)
+**Date:** 2026-03-29
+**Context:** Yulia's knee rehabilitation exercises have a progression plan: week 1-2 fewer reps without weights, week 3-4 full reps with weights, week 5+ increased volume. Duplicating templates per phase is wrong — the exercises are the same, only parameters change.
+**Decision:** Add `difficulty_overrides` JSONB on each exercise defining what easy/medium/hard means for that exercise (reps, duration, descriptive note). Toggle is per-template — `workout_templates.last_difficulty` stores the last choice. User can change difficulty mid-workout; remaining exercises adjust, already-completed exercises stay logged as-is. `ExerciseLog` already records actual `repsCompleted`/`durationSec`, so logging is naturally accurate.
+**Alternatives considered:** (A) Separate templates per phase — wrong, duplicates exercises. (B) Global difficulty in user_settings — not flexible enough, different templates may be at different progression levels. (C) Per-template difficulty with per-exercise overrides — best of both.
+**Rationale:** Per-template toggle lets users progress independently per workout (Strength A at hard, Strength B at easy). Per-exercise overrides let each exercise define its own scaling (squats scale by reps, plank scales by duration, leg raises scale by adding weight). Saves last choice for convenience, changeable on the go for bad days.
+
 ### DECISION-011: Confirm dialog for pause and early break
 **Date:** 2026-03-26
 **Context:** Pause and early-break buttons moved to icon-only buttons flanking the timer ring. Small touch targets near the timer increase risk of accidental taps.

@@ -4,11 +4,13 @@ description: Complete audit of what data FitBreak stores in Supabase vs what the
 type: project
 ---
 
-## Current State (2026-03-27)
+## Current State (2026-03-29)
 
 ### 5 tables: exercises, workout_templates, work_sessions, workout_logs, user_settings
 ### 3 RPC functions: streak_stats(), weekly_break_stats(), weekly_workout_stats()
 ### 1 maintenance function: cleanup_stale_sessions()
+### 2 active users: Leo + Yulia (knee rehab exercises)
+### Migration applied: add_knee_rotation_keys (CHECK constraint update)
 
 ## What UI currently surfaces
 

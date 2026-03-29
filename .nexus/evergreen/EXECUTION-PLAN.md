@@ -17,6 +17,23 @@
 
 **Decision:** Templates are immutable. If adjustments needed, create new template. Guarantees historical data accuracy.
 
+## Next Sprint (planned)
+
+### Sprint 4 — Per-User Data Architecture
+
+**Goals:** Make rotations and exercises fully data-driven. Remove hardcoded constants. Support per-user customization without code changes.
+
+| # | Task | Level | Dependencies | Description |
+|---|------|-------|-------------|-------------|
+| 1 | Data-driven rotations — DB migration | 1 | — | Add `rotation_key`, `is_marketplace`, `source_template_id` to templates. Add `enabled_template_ids`, `template_order` to user_settings. Backfill data. Drop `exercises.micro_break_rotation`. Migrate historical BreakEntry JSONB. |
+| 2 | Data-driven rotations — FE migration | 2 | #1 | Delete `ROTATION_ORDER`, `ROTATION_INFO`, `MicroBreakRotation` type. BreakTimerService, dashboard, day-summary, progress derive rotation data from loaded templates. |
+| 3 | Workout difficulty toggle — DB + model | 1 | — | Add `difficulty_overrides` JSONB to exercises, `last_difficulty` to templates. Update TypeScript interfaces. |
+| 4 | Workout difficulty toggle — FE | 2 | #2, #3 | Difficulty selector in workout execution UI. Per-exercise parameter adjustment based on selected level. Persist last choice. |
+
+**Sequence:** #1 and #3 (DB work) can run in parallel. #2 depends on #1. #4 depends on #2 and #3.
+
+**Decisions:** DECISION-015 (data-driven rotations), DECISION-016 (difficulty toggle).
+
 ## Parking Lot
 
 - [ ] **Manual add/edit of fitbreaks** — deferred from Sprint 1. Revisit when CEO feels the need weekly.
@@ -25,6 +42,8 @@
 - [ ] **Canvas timer upgrade** — upgrade timer-ring from SVG to Canvas for richer animations
 - [x] **Mobile experience (PWA)** — manifest, service worker, install prompt, update snackbar, Android-only
 - [ ] **Stepper reload protection** — prevent accidental page reload from losing stepper progress; back up in-progress data to localStorage
+- [ ] **Rotation marketplace (draft idea)** — system-owned templates browseable by all users, adopt as copy with `source_template_id` link. `is_marketplace` flag + RLS policy for read access. Not needed now (2 users, Leo-curated), but architecture supports it.
+- [ ] **Admin UI for user management** — assign rotations/templates to users via UI instead of SQL. Low priority until user count grows.
 
 ## Completed Sprints
 

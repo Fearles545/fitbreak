@@ -141,10 +141,18 @@ idle → working → break-due → on-break → back-to-work → working → ...
 
 - **`formattedDate` in DashboardComponent** — computed with no signal dependency, won't update past midnight. Minor UX issue.
 
-## Current State (2026-03-27)
+## Multi-User Notes
 
-- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking, **PWA (installable, service worker, update prompt)**
+- Second user (Yulia) added 2026-03-29 with custom knee rehabilitation exercises
+- Rotation constants (`ROTATION_ORDER`, `ROTATION_INFO`) are currently hardcoded — Sprint 4 will make them data-driven from `workout_templates`
+- Each user has their own `exercises`, `workout_templates`, `user_settings` rows (RLS-scoped)
+- New rotation keys added to DB CHECK constraint require a migration until Sprint 4 removes the constraint
+
+## Current State (2026-03-29)
+
+- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking, PWA (installable, service worker, update prompt)
 - **Tests:** None written (Vitest configured)
 - **Sprint 3 complete** — all 4 tasks done
-- **PWA implemented** — manifest, ngsw service worker, install prompt, SwUpdate snackbar
-- **Logo updated** — new design (monitor + stretching person), SVG cleaned, PWA icons generated
+- **Sprint 4 planned** — data-driven rotations + difficulty toggle
+- **Second user** — Yulia seeded with custom exercises (2 rotations + 2 strength workouts)
+- **Docs added** — `docs/adding-rotation.md`, `docs/adding-strength-workout.md` for exercise data entry
