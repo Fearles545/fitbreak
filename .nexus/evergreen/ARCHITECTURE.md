@@ -35,7 +35,8 @@ src/app/
 ├── shared/
 │   ├── components/ — timer-ring, week-calendar, animated-timer (with strategies/),
 │   │                 mood-picker, chip-selector, confirm-dialog
-│   ├── services/   — supabase, audio, wake-lock, break-notifier, workday, session
+│   ├── services/   — supabase, audio, wake-lock, break-notifier, workday, session,
+│   │                 device-context, push
 │   ├── models/     — database.types, fitbreak.models (incl. DayActivity), rotation.constants
 │   ├── constants/  — health-tips (static data, future DB candidates)
 │   └── utils/      — date.utils, supabase.utils (asJson helper)
@@ -82,14 +83,24 @@ No NgRx, no BehaviorSubjects for state. RxJS only for Supabase promise wrapping.
 
 ## Database
 
-5 tables with RLS (`(select auth.uid()) = user_id`):
+6 tables with RLS (`(select auth.uid()) = user_id`):
 - `exercises` — exercise library
 - `workout_templates` — workout programs
-- `work_sessions` — daily sessions with breaks/pauses (JSONB)
+- `work_sessions` — daily sessions with breaks/pauses (JSONB), `push_notified` idempotency flag
 - `workout_logs` — completed workout logs (JSONB)
-- `user_settings` — preferences (CHECK constraints on integer ranges)
+- `user_settings` — preferences (CHECK constraints on integer ranges), notification settings
+- `push_subscriptions` — Web Push subscription endpoints (per user, per device)
 
-SQL functions: `weekly_break_stats()`, `weekly_workout_stats()`, `streak_stats()`, `cleanup_stale_sessions()`, `daily_activity_stats()`, `rotation_stats()`, `all_time_totals()`
+SQL functions: `weekly_break_stats()`, `weekly_workout_stats()`, `streak_stats()`, `cleanup_stale_sessions()`, `daily_activity_stats()`, `rotation_stats()`, `all_time_totals()`, `get_vapid_keys()` (service_role only), `unschedule_break_push(uuid)` (service_role only)
+
+Extensions: `pg_cron` (job scheduling), `pg_net` (async HTTP from Postgres)
+
+### Web Push Infrastructure
+- **Trigger:** `trg_schedule_break_push` on `work_sessions` — schedules pg_cron job at exact `next_break_at` minute
+- **Edge Function:** `break-push` — sends Web Push via `web-push` library, reads VAPID keys from Vault
+- **Cleanup:** Daily cron job `cleanup-break-push-jobs` at 4 AM UTC removes orphaned jobs
+- **Vault secrets:** `project_url`, `anon_key`, `vapid_public_key`, `vapid_private_key`
+- **Client:** `SwPush` (Angular built-in) handles subscription + notification display + click actions
 
 Notable columns:
 - `exercises.timer_sec` — optional countdown timer duration (null = no timer). Defined per exercise, independent from `default_duration_sec`.
@@ -144,15 +155,14 @@ idle → working → break-due → on-break → back-to-work → working → ...
 ## Multi-User Notes
 
 - Second user (Yulia) added 2026-03-29 with custom knee rehabilitation exercises
-- Rotation constants (`ROTATION_ORDER`, `ROTATION_INFO`) are currently hardcoded — Sprint 4 will make them data-driven from `workout_templates`
-- Each user has their own `exercises`, `workout_templates`, `user_settings` rows (RLS-scoped)
-- New rotation keys added to DB CHECK constraint require a migration until Sprint 4 removes the constraint
+- Rotations are fully data-driven from `workout_templates` (Sprint 4 complete)
+- Each user has their own `exercises`, `workout_templates`, `user_settings`, `push_subscriptions` rows (RLS-scoped)
 
 ## Current State (2026-03-29)
 
-- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking, PWA (installable, service worker, update prompt)
+- **Working:** Auth, dashboard, break rotation (with optional countdown timer), strength, stepper, settings, day summary, progress (V2 with period selector), animated timers, route transitions, tab timer, timer flow redesign, muscle group tracking, PWA (installable, service worker, update prompt, SW cache recovery, API data caching), break notifications (sound variants, vibration, repeat, Web Push via pg_cron + Edge Function)
 - **Tests:** None written (Vitest configured)
-- **Sprint 3 complete** — all 4 tasks done
-- **Sprint 4 planned** — data-driven rotations + difficulty toggle
-- **Second user** — Yulia seeded with custom exercises (2 rotations + 2 strength workouts)
-- **Docs added** — `docs/adding-rotation.md`, `docs/adding-strength-workout.md` for exercise data entry
+- **Sprint 4 complete** — all 4 tasks done
+- **Sprint 5 in progress** — break notification improvements (Phase 1 + Phase 2 done, needs deploy + testing)
+- **Second user** — Yulia seeded with custom exercises (8 rotations + 2 strength workouts)
+- **Docs added** — `docs/adding-rotation.md`, `docs/adding-strength-workout.md`, `docs/research-angular-sw-push.md`, `docs/research-supabase-web-push.md`, `docs/research-angular-sw-capabilities.md`

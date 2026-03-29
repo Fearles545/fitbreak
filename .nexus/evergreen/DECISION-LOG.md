@@ -120,6 +120,20 @@ Record of key architectural and product decisions.
 **Alternatives considered:** (A) Separate templates per phase — wrong, duplicates exercises. (B) Global difficulty in user_settings — not flexible enough, different templates may be at different progression levels. (C) Per-template difficulty with per-exercise overrides — best of both.
 **Rationale:** Per-template toggle lets users progress independently per workout (Strength A at hard, Strength B at easy). Per-exercise overrides let each exercise define its own scaling (squats scale by reps, plank scales by duration, leg raises scale by adding weight). Saves last choice for convenience, changeable on the go for bad days.
 
+### DECISION-017: Trigger-scheduled push over polling
+**Date:** 2026-03-29
+**Context:** Need to send Web Push notifications when break is due on Android PWA (JS suspended when backgrounded). Two approaches: (A) pg_cron polls every minute, Edge Function checks for due breaks, or (B) database trigger schedules a one-shot pg_cron job at the exact `next_break_at` minute.
+**Decision:** Trigger-based scheduling. `trg_schedule_break_push` fires on `work_sessions` INSERT/UPDATE of `next_break_at` or `status`. Creates a pg_cron job with exact cron expression (minute/hour/day/month). `cron.schedule()` upserts by name — extending/rescheduling naturally replaces the previous job.
+**Alternatives considered:** (A) Poll every minute — 1440 wasted Edge Function calls/day, up to 59s late. (B) Trigger + exact pg_cron job — fires only when needed, exact timing.
+**Rationale:** CEO correctly identified that polling is wasteful when the exact time is known. Trigger approach means zero wasted calls. pg_cron job persists in the database, surviving app crashes — the push arrives even if the user closed every browser tab.
+
+### DECISION-018: Use Angular ngsw for push (no custom service worker)
+**Date:** 2026-03-29
+**Context:** Need Web Push handling in the service worker. Options: (A) custom service worker wrapper that imports ngsw-worker.js, or (B) use ngsw's built-in push handling.
+**Decision:** Use ngsw's built-in push. Confirmed by reading ngsw-worker.js source: it already handles `push`, `notificationclick`, `notificationclose`, and `pushsubscriptionchange` events. `SwPush` service provides `requestSubscription()`, `messages`, `notificationClicks` observables. The notification payload's `data.onActionClick` object controls click behavior server-side.
+**Alternatives considered:** (A) Custom SW wrapper — adds maintenance burden, risk of breaking ngsw's internal state. (B) Built-in ngsw — zero custom SW code, full push support.
+**Rationale:** Research revealed ngsw is far more capable than documented. It supports 4 click operations (`openWindow`, `focusLastFocusedOrOpen`, `navigateLastFocusedOrOpen`, `sendRequest`) configurable via push payload. No reason to write custom SW code.
+
 ### DECISION-011: Confirm dialog for pause and early break
 **Date:** 2026-03-26
 **Context:** Pause and early-break buttons moved to icon-only buttons flanking the timer ring. Small touch targets near the timer increase risk of accidental taps.

@@ -2,23 +2,24 @@
 
 ## Current Sprint
 
-### Sprint 4 (started 2026-03-29) — COMPLETE
+### Sprint 5 (started 2026-03-29) — IN PROGRESS
 
-**Goals:** Make rotations and exercises fully data-driven. Remove hardcoded constants. Support per-user customization without code changes.
+**Goals:** Reliable break notifications across all devices. Web Push for Android PWA background notifications.
 
 | # | Task | Level | Status |
 |---|------|-------|--------|
-| 1 | Data-driven rotations — DB migration | 1 | done |
-| 2 | Data-driven rotations — FE migration | 2 | done |
-| 3 | Workout difficulty toggle — DB + model | 1 | done |
-| 4 | Workout difficulty toggle — FE | 2 | done |
+| 1 | SW quick wins — cache recovery + API data groups | 0 | done |
+| 2 | Phase 1 — sound variants, vibration, repeat, settings UI | 2 | done |
+| 3 | Phase 2 — Web Push backend (pg_cron + Edge Function + SwPush) | 3 | done |
+| 4 | Deploy + end-to-end testing on Android | 1 | pending |
 
-**Decisions:** DECISION-015 (data-driven rotations), DECISION-016 (difficulty toggle).
+**Decisions:** DECISION-017 (trigger-scheduled push), DECISION-018 (ngsw built-in push).
+**Research:** `docs/research-angular-sw-push.md`, `docs/research-supabase-web-push.md`, `docs/research-angular-sw-capabilities.md`
 
 ## Parking Lot
 
 - [ ] **Manual add/edit of fitbreaks** — deferred from Sprint 1. Revisit when CEO feels the need weekly.
-- [ ] **Settings V2** — theme, language, notification sounds, rotation order customization
+- [ ] **Settings V2** — theme, language, rotation order customization (notification sounds done in Sprint 5)
 - [x] **Proper logo** — new design (monitor + stretching person), SVG cleaned, PWA icons generated
 - [ ] **Canvas timer upgrade** — upgrade timer-ring from SVG to Canvas for richer animations
 - [x] **Mobile experience (PWA)** — manifest, service worker, install prompt, update snackbar, Android-only
@@ -28,6 +29,17 @@
 - [x] **Populate difficulty_overrides** — Yulia's 10 strength exercises seeded with easy/medium/hard overrides. Test user cloned to match.
 
 ## Completed Sprints
+
+### Sprint 4 (2026-03-29)
+
+**Goals:** Make rotations and exercises fully data-driven. Remove hardcoded constants.
+
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Data-driven rotations — DB migration | 1 | done |
+| 2 | Data-driven rotations — FE migration | 2 | done |
+| 3 | Workout difficulty toggle — DB + model | 1 | done |
+| 4 | Workout difficulty toggle — FE | 2 | done |
 
 ### Sprint 3 (2026-03-27)
 
