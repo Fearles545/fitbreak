@@ -330,20 +330,22 @@ import type { DifficultyLevel, MoodRating, WorkoutTemplate } from '@shared/model
 
             <mat-progress-bar mode="determinate" [value]="exerciseProgress()" />
 
-            <div class="difficulty-toggle" role="radiogroup" aria-label="Складність">
-              @for (d of difficultyOptions; track d.value) {
-                <button
-                  class="diff-chip"
-                  [class.selected]="strength.selectedDifficulty() === d.value"
-                  [attr.aria-checked]="strength.selectedDifficulty() === d.value"
-                  role="radio"
-                  (click)="strength.setDifficulty(d.value)"
-                >{{ d.label }}</button>
-              }
-            </div>
+            @if (strength.hasDifficultyOverrides()) {
+              <div class="difficulty-toggle" role="radiogroup" aria-label="Складність">
+                @for (d of difficultyOptions; track d.value) {
+                  <button
+                    class="diff-chip"
+                    [class.selected]="strength.selectedDifficulty() === d.value"
+                    [attr.aria-checked]="strength.selectedDifficulty() === d.value"
+                    role="radio"
+                    (click)="strength.setDifficulty(d.value)"
+                  >{{ d.label }}</button>
+                }
+              </div>
 
-            @if (effectiveNote()) {
-              <div class="difficulty-note">{{ effectiveNote() }}</div>
+              @if (effectiveNote()) {
+                <div class="difficulty-note">{{ effectiveNote() }}</div>
+              }
             }
 
             <h2 class="exercise-name">{{ es.exercise.name }}</h2>

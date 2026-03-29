@@ -85,6 +85,9 @@ export class StrengthService {
   );
 
   readonly selectedDifficulty = this._selectedDifficulty.asReadonly();
+  readonly hasDifficultyOverrides = computed(() =>
+    this._exerciseStates().some(s => s.exercise.difficulty_overrides != null),
+  );
 
   readonly restRemainingSec = computed(() => Math.ceil(this._restRemainingMs() / 1000));
   readonly restTotalSec = computed(() => Math.ceil(this._restTotalMs() / 1000));
