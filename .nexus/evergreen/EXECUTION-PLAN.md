@@ -2,35 +2,16 @@
 
 ## Current Sprint
 
-### Sprint 3 (started 2026-03-27)
-
-**Goals:** Better data utilization — surface existing data meaningfully. Improve break execution UX.
-
-| # | Task | Level | Status | Spec |
-|---|------|-------|--------|------|
-| 1 | Known gaps — settings direct nav resolver + chip debounce | 0 | done | — |
-| 2 | Muscle group metadata — add target_muscle_groups (group + intensity) to templates, snapshot into BreakEntry on completion | 1 | done | feature-muscle-group-metadata.md |
-| 3 | Exercise countdown — lead-in 3-2-1, timed countdown, bilateral support | 1 | done | feature-exercise-countdown.md |
-| 4 | Progress V2 — period selector, break/workout volume, rotation balance, all-time totals, dashboard summary | 2 | done | feature-progress-v2.md |
-
-**Sequence:** Quick fixes (1), then data foundation (2), then parallel — countdown (3) and progress (4). #2 before #4 (dependency: rotation balance needs muscle group data).
-
-**Decision:** Templates are immutable. If adjustments needed, create new template. Guarantees historical data accuracy.
-
-## Next Sprint (planned)
-
-### Sprint 4 — Per-User Data Architecture
+### Sprint 4 (started 2026-03-29) — COMPLETE
 
 **Goals:** Make rotations and exercises fully data-driven. Remove hardcoded constants. Support per-user customization without code changes.
 
-| # | Task | Level | Dependencies | Description |
-|---|------|-------|-------------|-------------|
-| 1 | Data-driven rotations — DB migration | 1 | — | Add `rotation_key`, `is_marketplace`, `source_template_id` to templates. Add `enabled_template_ids`, `template_order` to user_settings. Backfill data. Drop `exercises.micro_break_rotation`. Migrate historical BreakEntry JSONB. |
-| 2 | Data-driven rotations — FE migration | 2 | #1 | Delete `ROTATION_ORDER`, `ROTATION_INFO`, `MicroBreakRotation` type. BreakTimerService, dashboard, day-summary, progress derive rotation data from loaded templates. |
-| 3 | Workout difficulty toggle — DB + model | 1 | — | Add `difficulty_overrides` JSONB to exercises, `last_difficulty` to templates. Update TypeScript interfaces. |
-| 4 | Workout difficulty toggle — FE | 2 | #2, #3 | Difficulty selector in workout execution UI. Per-exercise parameter adjustment based on selected level. Persist last choice. |
-
-**Sequence:** #1 and #3 (DB work) can run in parallel. #2 depends on #1. #4 depends on #2 and #3.
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Data-driven rotations — DB migration | 1 | done |
+| 2 | Data-driven rotations — FE migration | 2 | done |
+| 3 | Workout difficulty toggle — DB + model | 1 | done |
+| 4 | Workout difficulty toggle — FE | 2 | done |
 
 **Decisions:** DECISION-015 (data-driven rotations), DECISION-016 (difficulty toggle).
 
@@ -44,8 +25,20 @@
 - [ ] **Stepper reload protection** — prevent accidental page reload from losing stepper progress; back up in-progress data to localStorage
 - [ ] **Rotation marketplace (draft idea)** — system-owned templates browseable by all users, adopt as copy with `source_template_id` link. `is_marketplace` flag + RLS policy for read access. Not needed now (2 users, Leo-curated), but architecture supports it.
 - [ ] **Admin UI for user management** — assign rotations/templates to users via UI instead of SQL. Low priority until user count grows.
+- [ ] **Populate difficulty_overrides** — Yulia's exercises need easy/medium/hard parameter data seeded. Toggle exists but is inert without data.
 
 ## Completed Sprints
+
+### Sprint 3 (2026-03-27)
+
+**Goals:** Better data utilization — surface existing data meaningfully. Improve break execution UX.
+
+| # | Task | Level | Status |
+|---|------|-------|--------|
+| 1 | Known gaps — settings direct nav resolver + chip debounce | 0 | done |
+| 2 | Muscle group metadata | 1 | done |
+| 3 | Exercise countdown (timer dialog) | 1 | done |
+| 4 | Progress V2 (volume tracking) | 2 | done |
 
 ### Sprint 2 (2026-03-26)
 
