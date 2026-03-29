@@ -17,7 +17,7 @@ import { StrengthRestComponent } from './strength-rest/strength-rest.component';
 import { StrengthFinishComponent } from './strength-finish/strength-finish.component';
 import { WorkdayService } from '@shared/services/workday.service';
 import { SettingsService } from '../settings/settings.service';
-import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
+import type { DifficultyLevel, MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models';
 
 @Component({
   selector: 'app-strength',
@@ -108,6 +108,41 @@ import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models
 
     .mode-chip-label { font-size: 0.9rem; font-weight: 500; }
     .mode-chip-desc { font-size: 0.7rem; opacity: 0.8; margin-top: 2px; }
+
+    .difficulty-toggle {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .diff-chip {
+      padding: 6px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--mat-sys-outline-variant);
+      background: var(--mat-sys-surface);
+      color: var(--mat-sys-on-surface);
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+
+    .diff-chip.selected {
+      background: var(--mat-sys-tertiary-container);
+      color: var(--mat-sys-on-tertiary-container);
+      border-color: var(--mat-sys-tertiary);
+      font-weight: 500;
+    }
+
+    .difficulty-note {
+      text-align: center;
+      font-size: 0.8rem;
+      font-style: italic;
+      color: var(--mat-sys-on-tertiary-container);
+      background: var(--mat-sys-tertiary-container);
+      padding: 6px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
 
     .round-indicator {
       text-align: center;
@@ -295,6 +330,22 @@ import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models
 
             <mat-progress-bar mode="determinate" [value]="exerciseProgress()" />
 
+            <div class="difficulty-toggle" role="radiogroup" aria-label="Складність">
+              @for (d of difficultyOptions; track d.value) {
+                <button
+                  class="diff-chip"
+                  [class.selected]="strength.selectedDifficulty() === d.value"
+                  [attr.aria-checked]="strength.selectedDifficulty() === d.value"
+                  role="radio"
+                  (click)="strength.setDifficulty(d.value)"
+                >{{ d.label }}</button>
+              }
+            </div>
+
+            @if (effectiveNote()) {
+              <div class="difficulty-note">{{ effectiveNote() }}</div>
+            }
+
             <h2 class="exercise-name">{{ es.exercise.name }}</h2>
             <p class="exercise-desc">{{ es.exercise.short_description }}</p>
 
@@ -307,16 +358,16 @@ import type { MoodRating, WorkoutTemplate } from '@shared/models/fitbreak.models
             }
 
             <div class="exercise-params">
-              @if (es.targetReps) {
+              @if (effectiveReps()) {
                 <div class="param">
                   <mat-icon>repeat</mat-icon>
-                  {{ es.targetReps }} повторень
+                  {{ effectiveReps() }} повторень
                 </div>
               }
-              @if (es.targetDurationSec) {
+              @if (effectiveDuration()) {
                 <div class="param">
                   <mat-icon>timer</mat-icon>
-                  {{ es.targetDurationSec }} сек
+                  {{ effectiveDuration() }} сек
                 </div>
               }
             </div>
@@ -383,6 +434,22 @@ export class StrengthComponent implements OnInit {
 
   selectedMode = signal<WorkoutMode>('circuit');
   showTechnique = signal(false);
+
+  readonly difficultyOptions: { value: DifficultyLevel; label: string }[] = [
+    { value: 'easy', label: 'Легко' },
+    { value: 'medium', label: 'Середньо' },
+    { value: 'hard', label: 'Важко' },
+  ];
+
+  private effectiveParams = computed(() => {
+    const es = this.strength.currentExerciseState();
+    if (!es) return { reps: null, durationSec: null, note: undefined };
+    return this.strength.getEffectiveParams(es.exercise);
+  });
+
+  effectiveReps = computed(() => this.effectiveParams().reps);
+  effectiveDuration = computed(() => this.effectiveParams().durationSec);
+  effectiveNote = computed(() => this.effectiveParams().note);
 
   exerciseProgress = computed(() => {
     const total = this.strength.exerciseCount();

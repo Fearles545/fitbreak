@@ -5,6 +5,7 @@ import { toDateKey } from '@shared/utils/date.utils';
 import { AuthService } from '../auth/auth.service';
 import { SettingsService } from '../settings/settings.service';
 import type {
+  DifficultyLevel,
   Exercise,
   ExerciseLog,
   MoodRating,
@@ -43,6 +44,7 @@ export class StrengthService {
   private _currentRound = signal(1);
   private _totalRounds = signal(3);
   private _startedAt = signal<string | null>(null);
+  private _selectedDifficulty = signal<DifficultyLevel>('medium');
 
   // Rest timer
   private _restRemainingMs = signal(0);
@@ -81,6 +83,8 @@ export class StrengthService {
   readonly isLastExercise = computed(() =>
     this._currentExerciseIndex() >= this._exerciseStates().length - 1,
   );
+
+  readonly selectedDifficulty = this._selectedDifficulty.asReadonly();
 
   readonly restRemainingSec = computed(() => Math.ceil(this._restRemainingMs() / 1000));
   readonly restTotalSec = computed(() => Math.ceil(this._restTotalMs() / 1000));
@@ -132,6 +136,20 @@ export class StrengthService {
     }
 
     this._exerciseStates.set(states);
+    this._selectedDifficulty.set(template.last_difficulty ?? 'medium');
+  }
+
+  setDifficulty(level: DifficultyLevel): void {
+    this._selectedDifficulty.set(level);
+  }
+
+  getEffectiveParams(exercise: Exercise): { reps: number | null; durationSec: number | null; note?: string } {
+    const overrides = exercise.difficulty_overrides?.[this._selectedDifficulty()];
+    return {
+      reps: overrides?.reps ?? exercise.default_reps,
+      durationSec: overrides?.durationSec ?? exercise.default_duration_sec,
+      note: overrides?.note,
+    };
   }
 
   start(mode: WorkoutMode): void {
@@ -210,6 +228,12 @@ export class StrengthService {
       });
 
     if (error) throw error;
+
+    // Persist last selected difficulty
+    await this.supabase.supabase
+      .from('workout_templates')
+      .update({ last_difficulty: this._selectedDifficulty() })
+      .eq('id', template.id);
   }
 
   reset(): void {
@@ -221,6 +245,7 @@ export class StrengthService {
     this._currentExerciseIndex.set(0);
     this._currentRound.set(1);
     this._startedAt.set(null);
+    this._selectedDifficulty.set('medium');
   }
 
   // ── Classic mode: all sets of one exercise, then next ──
