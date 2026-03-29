@@ -199,6 +199,13 @@ create table public.user_settings (
   break_notification_sound text default 'default'
     check (break_notification_sound in ('gentle', 'energetic', 'default')),
   enable_break_tab_flash boolean default true,
+  break_reminder_count int default 1
+    check (break_reminder_count between 0 and 10),
+  break_reminder_interval_sec int default 60
+    check (break_reminder_interval_sec between 10 and 300),
+  break_vibration_pattern text default 'double'
+    check (break_vibration_pattern in ('short', 'long', 'double', 'off')),
+  enable_break_system_notification boolean default true,
 
   created_at timestamptz default now(),
   updated_at timestamptz default now()

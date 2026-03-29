@@ -101,11 +101,15 @@ export type Database = {
       user_settings: {
         Row: {
           break_notification_sound: string | null
+          break_reminder_count: number | null
+          break_reminder_interval_sec: number | null
+          break_vibration_pattern: string | null
           created_at: string | null
           default_break_interval_min: number | null
           default_rest_between_sets_sec: number | null
           default_stepper_duration_min: number | null
           default_stepper_interval_min: number | null
+          enable_break_system_notification: boolean | null
           enable_break_tab_flash: boolean | null
           enabled_template_ids: string[] | null
           id: string
@@ -119,11 +123,15 @@ export type Database = {
         }
         Insert: {
           break_notification_sound?: string | null
+          break_reminder_count?: number | null
+          break_reminder_interval_sec?: number | null
+          break_vibration_pattern?: string | null
           created_at?: string | null
           default_break_interval_min?: number | null
           default_rest_between_sets_sec?: number | null
           default_stepper_duration_min?: number | null
           default_stepper_interval_min?: number | null
+          enable_break_system_notification?: boolean | null
           enable_break_tab_flash?: boolean | null
           enabled_template_ids?: string[] | null
           id?: string
@@ -137,11 +145,15 @@ export type Database = {
         }
         Update: {
           break_notification_sound?: string | null
+          break_reminder_count?: number | null
+          break_reminder_interval_sec?: number | null
+          break_vibration_pattern?: string | null
           created_at?: string | null
           default_break_interval_min?: number | null
           default_rest_between_sets_sec?: number | null
           default_stepper_duration_min?: number | null
           default_stepper_interval_min?: number | null
+          enable_break_system_notification?: boolean | null
           enable_break_tab_flash?: boolean | null
           enabled_template_ids?: string[] | null
           id?: string

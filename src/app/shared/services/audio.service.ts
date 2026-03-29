@@ -14,7 +14,16 @@ export class AudioService {
     }
   }
 
-  /** Break reminder: xylophone double hit with harmonics */
+  /** Break reminder: dispatch by variant */
+  playBreakSound(variant: 'default' | 'gentle' | 'energetic' = 'default'): void {
+    switch (variant) {
+      case 'gentle': this.playGentleReminder(); break;
+      case 'energetic': this.playEnergeticReminder(); break;
+      default: this.playBreakReminder(); break;
+    }
+  }
+
+  /** Default break reminder: xylophone double hit with harmonics */
   playBreakReminder(): void {
     this.init();
     const ctx = this.context;
@@ -24,6 +33,26 @@ export class AudioService {
     setTimeout(() => {
       this.playBellHit(ctx, 1500, ctx.currentTime);
     }, 300);
+  }
+
+  /** Gentle reminder: soft low tone, longer decay */
+  playGentleReminder(): void {
+    this.init();
+    const ctx = this.context;
+    if (!ctx) return;
+
+    this.playBellHit(ctx, 800, ctx.currentTime);
+  }
+
+  /** Energetic reminder: triple ascending hit */
+  playEnergeticReminder(): void {
+    this.init();
+    const ctx = this.context;
+    if (!ctx) return;
+
+    this.playBellHit(ctx, 1000, ctx.currentTime);
+    setTimeout(() => this.playBellHit(ctx, 1300, ctx.currentTime), 200);
+    setTimeout(() => this.playBellHit(ctx, 1600, ctx.currentTime), 400);
   }
 
   /** Stepper interval signal: sawtooth double buzz */

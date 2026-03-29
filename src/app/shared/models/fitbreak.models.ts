@@ -170,14 +170,18 @@ export interface WorkoutLog extends Omit<Tables<'workout_logs'>, 'exercises' | '
   mood: MoodRating | null;
 }
 
-export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_template_ids' | 'template_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound' | 'timer_animation_style'> {
+export type BreakNotificationSound = 'gentle' | 'energetic' | 'default';
+export type VibrationPattern = 'short' | 'long' | 'double' | 'off';
+
+export interface UserSettings extends Omit<Tables<'user_settings'>, 'enabled_template_ids' | 'template_order' | 'stepper_signal_type' | 'theme' | 'language' | 'break_notification_sound' | 'timer_animation_style' | 'break_vibration_pattern'> {
   enabled_template_ids: string[] | null;
   template_order: string[] | null;
   stepper_signal_type: SignalType | null;
   theme: 'light' | 'dark' | 'system' | null;
   language: 'uk' | 'en' | null;
-  break_notification_sound: 'gentle' | 'energetic' | 'default' | null;
+  break_notification_sound: BreakNotificationSound | null;
   timer_animation_style: 'roll' | 'fade' | 'scale' | 'blur' | 'slot';
+  break_vibration_pattern: VibrationPattern | null;
 }
 
 export interface DayActivity {

@@ -1,7 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { SupabaseService } from '@shared/services/supabase.service';
 import { AuthService } from '../auth/auth.service';
-import type { UserSettings } from '@shared/models/fitbreak.models';
+import type { BreakNotificationSound, UserSettings, VibrationPattern } from '@shared/models/fitbreak.models';
 import type { TablesUpdate } from '@shared/models/database.types';
 
 @Injectable({ providedIn: 'root' })
@@ -22,6 +22,16 @@ export class SettingsService {
     this._settings()?.default_rest_between_sets_sec ?? 60);
   readonly timerAnimationStyle = computed(() =>
     this._settings()?.timer_animation_style ?? 'roll');
+  readonly breakNotificationSound = computed<BreakNotificationSound>(() =>
+    this._settings()?.break_notification_sound ?? 'default');
+  readonly breakReminderCount = computed(() =>
+    this._settings()?.break_reminder_count ?? 1);
+  readonly breakReminderIntervalSec = computed(() =>
+    this._settings()?.break_reminder_interval_sec ?? 60);
+  readonly breakVibrationPattern = computed<VibrationPattern>(() =>
+    this._settings()?.break_vibration_pattern ?? 'double');
+  readonly enableBreakSystemNotification = computed(() =>
+    this._settings()?.enable_break_system_notification ?? true);
 
   private loadPromise: Promise<void> | null = null;
 

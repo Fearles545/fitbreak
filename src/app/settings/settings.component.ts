@@ -10,16 +10,20 @@ import {
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ChipSelectorComponent } from '@shared/components/chip-selector/chip-selector.component';
 import { SettingsService } from './settings.service';
 import { SessionService } from '@shared/services/session.service';
+import { DeviceContextService } from '@shared/services/device-context.service';
+import { AudioService } from '@shared/services/audio.service';
+import type { BreakNotificationSound, VibrationPattern } from '@shared/models/fitbreak.models';
 import type { TablesUpdate } from '@shared/models/database.types';
 
 @Component({
   selector: 'app-settings',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatButtonModule, MatIconModule, ChipSelectorComponent],
+  imports: [MatButtonModule, MatIconModule, MatSlideToggleModule, ChipSelectorComponent],
   styles: `
     :host {
       display: block;
@@ -109,6 +113,24 @@ import type { TablesUpdate } from '@shared/models/database.types';
       background: var(--mat-sys-primary);
       color: var(--mat-sys-on-primary);
       border-color: var(--mat-sys-primary);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .toggle-label {
+      font-size: 0.85rem;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .permission-hint {
+      font-size: 0.75rem;
+      color: var(--mat-sys-error);
+      margin-top: 4px;
     }
   `,
   template: `
@@ -213,15 +235,112 @@ import type { TablesUpdate } from '@shared/models/database.types';
           />
         </div>
       </div>
+
+      <!-- Сповіщення -->
+      <div class="section">
+        <div class="section-title">Сповіщення</div>
+
+        <div class="setting-group">
+          <div class="setting-label">Звук перерви</div>
+          <div class="anim-chips" role="radiogroup" aria-label="Звук перерви">
+            @for (opt of soundOptions; track opt.value) {
+              <button
+                class="anim-chip"
+                [class.selected]="notificationSound() === opt.value"
+                (click)="setNotificationSound(opt.value)"
+                role="radio"
+                [attr.aria-checked]="notificationSound() === opt.value"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <div class="setting-label">Повторення</div>
+          <div class="anim-chips" role="radiogroup" aria-label="Повторення нагадування">
+            @for (opt of reminderCountOptions; track opt.value) {
+              <button
+                class="anim-chip"
+                [class.selected]="reminderCount() === opt.value"
+                (click)="setReminderCount(opt.value)"
+                role="radio"
+                [attr.aria-checked]="reminderCount() === opt.value"
+              >
+                {{ opt.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (reminderCount() > 1) {
+          <div class="setting-group">
+            <div class="setting-label">Інтервал повторення</div>
+            <div class="anim-chips" role="radiogroup" aria-label="Інтервал повторення">
+              @for (opt of reminderIntervalOptions; track opt.value) {
+                <button
+                  class="anim-chip"
+                  [class.selected]="reminderInterval() === opt.value"
+                  (click)="setReminderInterval(opt.value)"
+                  role="radio"
+                  [attr.aria-checked]="reminderInterval() === opt.value"
+                >
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (device.hasVibration()) {
+          <div class="setting-group">
+            <div class="setting-label">Вібрація</div>
+            <div class="anim-chips" role="radiogroup" aria-label="Вібрація">
+              @for (opt of vibrationOptions; track opt.value) {
+                <button
+                  class="anim-chip"
+                  [class.selected]="vibrationPattern() === opt.value"
+                  (click)="setVibrationPattern(opt.value)"
+                  role="radio"
+                  [attr.aria-checked]="vibrationPattern() === opt.value"
+                >
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        @if (device.hasNotificationApi()) {
+          <div class="setting-group">
+            <div class="toggle-row">
+              <span class="toggle-label">Сповіщення на екрані</span>
+              <mat-slide-toggle
+                [checked]="systemNotification()"
+                [disabled]="device.notificationPermission() === 'denied'"
+                (change)="toggleSystemNotification($event.checked)"
+              />
+            </div>
+            @if (device.notificationPermission() === 'denied') {
+              <div class="permission-hint">
+                Дозвіл заблоковано в налаштуваннях браузера
+              </div>
+            }
+          </div>
+        }
+      </div>
     </div>
   `,
 })
 export class SettingsComponent implements OnInit {
   private settingsService = inject(SettingsService);
   private sessionService = inject(SessionService);
+  private audioService = inject(AudioService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private chipSelectors = viewChildren(ChipSelectorComponent);
+  readonly device = inject(DeviceContextService);
 
   readonly breakIntervalOptions = [30, 45, 60];
   readonly stepperDurationOptions = [20, 30, 45, 60, 90];
@@ -234,12 +353,45 @@ export class SettingsComponent implements OnInit {
   restBetweenSets = signal(60);
   timerAnimation = signal<string>('roll');
 
+  // Notification settings
+  notificationSound = signal<BreakNotificationSound>('default');
+  reminderCount = signal(1);
+  reminderInterval = signal(60);
+  vibrationPattern = signal<VibrationPattern>('double');
+  systemNotification = signal(true);
+
   readonly timerAnimationOptions = [
     { value: 'roll', label: 'Прокрутка' },
     { value: 'fade', label: 'Згасання' },
     { value: 'scale', label: 'Пульс' },
     { value: 'blur', label: 'Розмиття' },
     { value: 'slot', label: 'Барабан' },
+  ];
+
+  readonly soundOptions: { value: BreakNotificationSound; label: string }[] = [
+    { value: 'default', label: 'Стандартний' },
+    { value: 'gentle', label: "М'який" },
+    { value: 'energetic', label: 'Енергійний' },
+  ];
+
+  readonly reminderCountOptions = [
+    { value: 1, label: '1 раз' },
+    { value: 3, label: '3 рази' },
+    { value: 5, label: '5 разів' },
+    { value: 0, label: 'Вимкнено' },
+  ];
+
+  readonly reminderIntervalOptions = [
+    { value: 30, label: '30 сек' },
+    { value: 60, label: '1 хв' },
+    { value: 120, label: '2 хв' },
+  ];
+
+  readonly vibrationOptions: { value: VibrationPattern; label: string }[] = [
+    { value: 'short', label: 'Коротка' },
+    { value: 'long', label: 'Довга' },
+    { value: 'double', label: 'Подвійна' },
+    { value: 'off', label: 'Вимк.' },
   ];
 
   hasActiveSession = computed(() => !!this.sessionService.session());
@@ -253,6 +405,11 @@ export class SettingsComponent implements OnInit {
       this.stepperInterval.set(s.default_stepper_interval_min ?? 5);
       this.restBetweenSets.set(s.default_rest_between_sets_sec ?? 60);
       this.timerAnimation.set(s.timer_animation_style ?? 'roll');
+      this.notificationSound.set(s.break_notification_sound ?? 'default');
+      this.reminderCount.set(s.break_reminder_count ?? 1);
+      this.reminderInterval.set(s.break_reminder_interval_sec ?? 60);
+      this.vibrationPattern.set(s.break_vibration_pattern ?? 'double');
+      this.systemNotification.set(s.enable_break_system_notification ?? true);
 
       // Sync custom state after values are loaded
       setTimeout(() => {
@@ -266,6 +423,47 @@ export class SettingsComponent implements OnInit {
   setTimerAnimation(value: string): void {
     this.timerAnimation.set(value);
     this.save({ timer_animation_style: value });
+  }
+
+  setNotificationSound(value: BreakNotificationSound): void {
+    this.notificationSound.set(value);
+    this.audioService.playBreakSound(value);
+    this.save({ break_notification_sound: value });
+  }
+
+  setReminderCount(value: number): void {
+    this.reminderCount.set(value);
+    this.save({ break_reminder_count: value });
+  }
+
+  setReminderInterval(value: number): void {
+    this.reminderInterval.set(value);
+    this.save({ break_reminder_interval_sec: value });
+  }
+
+  setVibrationPattern(value: VibrationPattern): void {
+    this.vibrationPattern.set(value);
+    if (value !== 'off' && this.device.hasVibration()) {
+      const patterns: Record<string, number[]> = {
+        short: [200],
+        long: [500],
+        double: [200, 100, 200],
+      };
+      navigator.vibrate(patterns[value]);
+    }
+    this.save({ break_vibration_pattern: value });
+  }
+
+  async toggleSystemNotification(checked: boolean): Promise<void> {
+    if (checked && this.device.notificationPermission() === 'default') {
+      const result = await this.device.requestNotificationPermission();
+      if (result !== 'granted') {
+        this.systemNotification.set(false);
+        return;
+      }
+    }
+    this.systemNotification.set(checked);
+    this.save({ enable_break_system_notification: checked });
   }
 
   onBack(): void {
