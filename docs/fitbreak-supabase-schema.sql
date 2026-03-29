@@ -126,9 +126,26 @@ create table public.work_sessions (
   paused_at timestamptz,
   pauses jsonb not null default '[]',          -- PauseEntry[]
   next_break_at timestamptz,
+  push_notified boolean default false,
 
   created_at timestamptz default now(),
   updated_at timestamptz default now()
+);
+
+
+-- ────────────────────────────────────────────────────────────
+-- 3b. PUSH SUBSCRIPTIONS
+-- ────────────────────────────────────────────────────────────
+
+create table public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  endpoint text not null,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, endpoint)
 );
 
 
@@ -222,6 +239,7 @@ alter table public.workout_templates enable row level security;
 alter table public.work_sessions enable row level security;
 alter table public.workout_logs enable row level security;
 alter table public.user_settings enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 -- Exercises
 create policy "exercises_select" on public.exercises
@@ -270,6 +288,16 @@ create policy "settings_insert" on public.user_settings
   for insert with check ((select auth.uid()) = user_id);
 create policy "settings_update" on public.user_settings
   for update using ((select auth.uid()) = user_id);
+
+-- Push Subscriptions
+create policy "push_subscriptions_select" on public.push_subscriptions
+  for select using ((select auth.uid()) = user_id);
+create policy "push_subscriptions_insert" on public.push_subscriptions
+  for insert with check ((select auth.uid()) = user_id);
+create policy "push_subscriptions_update" on public.push_subscriptions
+  for update using ((select auth.uid()) = user_id);
+create policy "push_subscriptions_delete" on public.push_subscriptions
+  for delete using ((select auth.uid()) = user_id);
 
 
 -- ────────────────────────────────────────────────────────────

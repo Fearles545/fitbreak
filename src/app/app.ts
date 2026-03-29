@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { InstallPromptComponent } from '@shared/components/install-prompt/install-prompt.component';
+import { PushService } from '@shared/services/push.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ import { InstallPromptComponent } from '@shared/components/install-prompt/instal
 })
 export class App implements OnInit {
   private swUpdate = inject(SwUpdate);
+  private pushService = inject(PushService);
   private snackBar = inject(MatSnackBar);
 
   ngOnInit(): void {
@@ -31,5 +33,7 @@ export class App implements OnInit {
       const ref = this.snackBar.open('Помилка кешу, потрібне перезавантаження', 'Оновити');
       ref.onAction().subscribe(() => document.location.reload());
     });
+
+    this.pushService.init();
   }
 }

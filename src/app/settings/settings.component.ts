@@ -17,6 +17,7 @@ import { SettingsService } from './settings.service';
 import { SessionService } from '@shared/services/session.service';
 import { DeviceContextService } from '@shared/services/device-context.service';
 import { AudioService } from '@shared/services/audio.service';
+import { PushService } from '@shared/services/push.service';
 import type { BreakNotificationSound, VibrationPattern } from '@shared/models/fitbreak.models';
 import type { TablesUpdate } from '@shared/models/database.types';
 
@@ -337,6 +338,7 @@ export class SettingsComponent implements OnInit {
   private settingsService = inject(SettingsService);
   private sessionService = inject(SessionService);
   private audioService = inject(AudioService);
+  private pushService = inject(PushService);
   private router = inject(Router);
   private snackBar = inject(MatSnackBar);
   private chipSelectors = viewChildren(ChipSelectorComponent);
@@ -455,13 +457,17 @@ export class SettingsComponent implements OnInit {
   }
 
   async toggleSystemNotification(checked: boolean): Promise<void> {
-    if (checked && this.device.notificationPermission() === 'default') {
-      const result = await this.device.requestNotificationPermission();
-      if (result !== 'granted') {
+    if (checked) {
+      // Subscribe if not already subscribed (first time or after revoke)
+      const subscribed = await this.pushService.subscribe();
+      if (!subscribed) {
         this.systemNotification.set(false);
         return;
       }
     }
+    // Don't unsubscribe on disable — just save the preference.
+    // Edge Function checks this flag before sending.
+    // Keeps subscription alive so re-enabling doesn't need a new permission prompt.
     this.systemNotification.set(checked);
     this.save({ enable_break_system_notification: checked });
   }

@@ -98,6 +98,36 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           break_notification_sound: string | null
@@ -179,6 +209,7 @@ export type Database = {
           next_break_at: string | null
           paused_at: string | null
           pauses: Json
+          push_notified: boolean | null
           started_at: string
           status: string
           updated_at: string | null
@@ -195,6 +226,7 @@ export type Database = {
           next_break_at?: string | null
           paused_at?: string | null
           pauses?: Json
+          push_notified?: boolean | null
           started_at: string
           status?: string
           updated_at?: string | null
@@ -211,6 +243,7 @@ export type Database = {
           next_break_at?: string | null
           paused_at?: string | null
           pauses?: Json
+          push_notified?: boolean | null
           started_at?: string
           status?: string
           updated_at?: string | null
