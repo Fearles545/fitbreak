@@ -29,5 +29,41 @@
         ]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "supabase-exercises",
+      "urls": [
+        "https://nogxsowxwfalbgkrrmyv.supabase.co/rest/v1/exercises**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 100,
+        "maxAge": "7d"
+      }
+    },
+    {
+      "name": "supabase-templates",
+      "urls": [
+        "https://nogxsowxwfalbgkrrmyv.supabase.co/rest/v1/workout_templates**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 50,
+        "maxAge": "7d"
+      }
+    },
+    {
+      "name": "supabase-settings",
+      "urls": [
+        "https://nogxsowxwfalbgkrrmyv.supabase.co/rest/v1/user_settings**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 5,
+        "maxAge": "1d",
+        "timeout": "3s"
+      }
+    }
   ]
 }

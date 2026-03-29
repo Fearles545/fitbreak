@@ -26,5 +26,10 @@ export class App implements OnInit {
         ref.onAction().subscribe(() => document.location.reload());
       }
     });
+
+    this.swUpdate.unrecoverable.subscribe(() => {
+      const ref = this.snackBar.open('Помилка кешу, потрібне перезавантаження', 'Оновити');
+      ref.onAction().subscribe(() => document.location.reload());
+    });
   }
 }
