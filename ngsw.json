@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1774776349978,
+  "timestamp": 1774788589207,
   "index": "/fitbreak/index.html",
   "assetGroups": [
     {
@@ -11,29 +11,30 @@
         "ignoreVary": true
       },
       "urls": [
-        "/fitbreak/chunk-232LNSAA.js",
-        "/fitbreak/chunk-2WAZVS5V.js",
-        "/fitbreak/chunk-3FHGQ5UZ.js",
-        "/fitbreak/chunk-6ZWISD6I.js",
-        "/fitbreak/chunk-7GETPDFO.js",
-        "/fitbreak/chunk-BBBHP7TD.js",
-        "/fitbreak/chunk-DM2FPXYM.js",
-        "/fitbreak/chunk-ERT4KIYC.js",
-        "/fitbreak/chunk-EU6F2JVX.js",
-        "/fitbreak/chunk-GEGQY4F5.js",
-        "/fitbreak/chunk-HYWFDG7O.js",
-        "/fitbreak/chunk-IVO5FJPB.js",
-        "/fitbreak/chunk-LAE5TFNL.js",
-        "/fitbreak/chunk-MQQ6UO2G.js",
-        "/fitbreak/chunk-NONKECO4.js",
-        "/fitbreak/chunk-NZBJ4IUN.js",
-        "/fitbreak/chunk-QZVOR5GW.js",
-        "/fitbreak/chunk-S26FEQNA.js",
-        "/fitbreak/chunk-S6KBWART.js",
-        "/fitbreak/chunk-XHLYVC6X.js",
-        "/fitbreak/chunk-ZFFXOOVA.js",
+        "/fitbreak/chunk-35HC7CHN.js",
+        "/fitbreak/chunk-67I6VYR6.js",
+        "/fitbreak/chunk-7TDOX57D.js",
+        "/fitbreak/chunk-BUV57D4C.js",
+        "/fitbreak/chunk-DKT3G74Q.js",
+        "/fitbreak/chunk-EVYWPRSA.js",
+        "/fitbreak/chunk-HZOAD2A7.js",
+        "/fitbreak/chunk-IASKFMHX.js",
+        "/fitbreak/chunk-IQRTV5SV.js",
+        "/fitbreak/chunk-JEWCXETT.js",
+        "/fitbreak/chunk-JWUUGEM2.js",
+        "/fitbreak/chunk-L3ZEXCMD.js",
+        "/fitbreak/chunk-LBORWTC6.js",
+        "/fitbreak/chunk-NWZZE2KS.js",
+        "/fitbreak/chunk-OM4MWUFU.js",
+        "/fitbreak/chunk-PW2CEVGH.js",
+        "/fitbreak/chunk-RNPSX6UT.js",
+        "/fitbreak/chunk-UR7SIDZO.js",
+        "/fitbreak/chunk-V5V3JBL7.js",
+        "/fitbreak/chunk-VPN4HEOU.js",
+        "/fitbreak/chunk-W446I6VN.js",
+        "/fitbreak/chunk-XQ5BXXBK.js",
         "/fitbreak/index.html",
-        "/fitbreak/main-EZTO4ZE4.js",
+        "/fitbreak/main-WWRS6F3G.js",
         "/fitbreak/styles-6JFHS46B.css"
       ],
       "patterns": []
@@ -57,35 +58,77 @@
       ]
     }
   ],
-  "dataGroups": [],
+  "dataGroups": [
+    {
+      "name": "supabase-exercises",
+      "patterns": [
+        "https:\\/\\/nogxsowxwfalbgkrrmyv\\.supabase\\.co\\/rest\\/v1\\/exercises[^/]*[^/]*"
+      ],
+      "strategy": "performance",
+      "maxSize": 100,
+      "maxAge": 604800000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    },
+    {
+      "name": "supabase-templates",
+      "patterns": [
+        "https:\\/\\/nogxsowxwfalbgkrrmyv\\.supabase\\.co\\/rest\\/v1\\/workout_templates[^/]*[^/]*"
+      ],
+      "strategy": "performance",
+      "maxSize": 50,
+      "maxAge": 604800000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    },
+    {
+      "name": "supabase-settings",
+      "patterns": [
+        "https:\\/\\/nogxsowxwfalbgkrrmyv\\.supabase\\.co\\/rest\\/v1\\/user_settings[^/]*[^/]*"
+      ],
+      "strategy": "freshness",
+      "maxSize": 5,
+      "maxAge": 86400000,
+      "timeoutMs": 3000,
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "version": 1
+    }
+  ],
   "hashTable": {
-    "/fitbreak/chunk-232LNSAA.js": "9d6dc98a27b24e57defaa09ad457a7b7e10b9913",
-    "/fitbreak/chunk-2WAZVS5V.js": "f6cac1ce02d179c8926f0e33113d6aefb051b329",
-    "/fitbreak/chunk-3FHGQ5UZ.js": "870174d73b4f1fae154fa99872dfdebe088b2203",
-    "/fitbreak/chunk-6ZWISD6I.js": "77b40d1361876543a80dd8221f68fb8226d5df6f",
-    "/fitbreak/chunk-7GETPDFO.js": "455f5f6f371f09d628a305b37ffbefa18b7f23de",
-    "/fitbreak/chunk-BBBHP7TD.js": "34342593e62db32456f944367ffdcc46c22171a0",
-    "/fitbreak/chunk-DM2FPXYM.js": "7a94f2e01dfb59a7437f5103a6e33595ffc91498",
-    "/fitbreak/chunk-ERT4KIYC.js": "a43024e52857edd30198bf28a7fb2fc986c757e3",
-    "/fitbreak/chunk-EU6F2JVX.js": "17f42f849c1bee5598db3fc3e6deb66e7b4b9ada",
-    "/fitbreak/chunk-GEGQY4F5.js": "b026e80dd174fcf893ffe0ff97ecf72613911aac",
-    "/fitbreak/chunk-HYWFDG7O.js": "75927ca3393c6026450ee0ba508ea2ca9c2fb7b2",
-    "/fitbreak/chunk-IVO5FJPB.js": "8fe5d6a1ca4e62689d3a4d9cadb9b68a4bda693b",
-    "/fitbreak/chunk-LAE5TFNL.js": "2353bc245bb52963edfe61c7467880469148b838",
-    "/fitbreak/chunk-MQQ6UO2G.js": "c6234a376854e9966544dd0dd3547ba557ce60ec",
-    "/fitbreak/chunk-NONKECO4.js": "a94ec11aafa83fe74ecf7a6d5f8c51f0c8566b14",
-    "/fitbreak/chunk-NZBJ4IUN.js": "2d6037471abc510a7885afd4f2d7d176e4e36b51",
-    "/fitbreak/chunk-QZVOR5GW.js": "1e9649e74f9f66b900d75c4cec1f292d2b83aa9c",
-    "/fitbreak/chunk-S26FEQNA.js": "7ff2d6559bf7ecac850e2e61fe3968e3f1cf5b6b",
-    "/fitbreak/chunk-S6KBWART.js": "ce20da08cd0e0218dfc6d9e509cd45751035815f",
-    "/fitbreak/chunk-XHLYVC6X.js": "702096614eeaa4678eed8fe6ff5f2fb2d8f79b0b",
-    "/fitbreak/chunk-ZFFXOOVA.js": "71f9ed0097a3c5623f4b3403640b2f159a4cac44",
+    "/fitbreak/chunk-35HC7CHN.js": "736bf952ca3a4a5b98999600404f77787409413b",
+    "/fitbreak/chunk-67I6VYR6.js": "c74c79443f1ca32aa474f9120eb763a9fcbd1ee2",
+    "/fitbreak/chunk-7TDOX57D.js": "52282567a74e35a22f419000ce9806905c175173",
+    "/fitbreak/chunk-BUV57D4C.js": "21184bf9843eb09a9a0f8416bc909777088f4654",
+    "/fitbreak/chunk-DKT3G74Q.js": "f431c92e041ee2f54cb93c8a93efddbc6589e28e",
+    "/fitbreak/chunk-EVYWPRSA.js": "84f2bb4e82112995434e741a49f51acc8ca5c543",
+    "/fitbreak/chunk-HZOAD2A7.js": "2de3a7695baf01d3fd609d7b755cb00d5819fb54",
+    "/fitbreak/chunk-IASKFMHX.js": "9cd3a769a51b9727427e6072e65e1b0faffc1322",
+    "/fitbreak/chunk-IQRTV5SV.js": "dbe4991d7019c5807975eb2c9af40c2f1dd3a936",
+    "/fitbreak/chunk-JEWCXETT.js": "4e6b3d284e365cc736bc843b00ece17231ce79ee",
+    "/fitbreak/chunk-JWUUGEM2.js": "503a15df21072900c097ce4aaa2da0f52498060c",
+    "/fitbreak/chunk-L3ZEXCMD.js": "8f93e30d436cb33478c9521b09ee1f06b9f6b7c0",
+    "/fitbreak/chunk-LBORWTC6.js": "ab98f8a01b61cab3a92fcf24b1c99a885f2e5d3f",
+    "/fitbreak/chunk-NWZZE2KS.js": "684e7360f289825b925353455df1230e39057109",
+    "/fitbreak/chunk-OM4MWUFU.js": "1901397799ded12548414eca2c4c915b75404dec",
+    "/fitbreak/chunk-PW2CEVGH.js": "5275372008a37734fe928928b68ad1d3015bbc80",
+    "/fitbreak/chunk-RNPSX6UT.js": "1615a8c5c25f1b48f0c05257474bf865863e5614",
+    "/fitbreak/chunk-UR7SIDZO.js": "749e942fd76d80b8a127689ed9fed0181e89b13f",
+    "/fitbreak/chunk-V5V3JBL7.js": "f8b21f388d00cbeed661c900134710440cedd051",
+    "/fitbreak/chunk-VPN4HEOU.js": "2b5588da02f3c16b5b6c5309949240f031fffd5e",
+    "/fitbreak/chunk-W446I6VN.js": "4223cc3079454ec22ab09ffe1636ed3cb3cabdff",
+    "/fitbreak/chunk-XQ5BXXBK.js": "75e52b0fb52997f967fe7081d8bb4b04a1e4729f",
     "/fitbreak/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/fitbreak/icons/icon-192x192.png": "5ba1d688c47a8777905aaf9a1e9420ba92d566ad",
     "/fitbreak/icons/icon-512x512.png": "3c350ceb2a2191ba6d9abc25e7acedb7c6092a6f",
-    "/fitbreak/index.html": "d8d5658f48d961d815947176e90fd66335fd1bff",
+    "/fitbreak/index.html": "ee181309553d87ce02712563ee4c4bb95e761af2",
     "/fitbreak/logo.svg": "ae6dc94232b65f593ca0e85be7f9648be5a25d33",
-    "/fitbreak/main-EZTO4ZE4.js": "9ff14ae7cafab6bc59e3379764ef3e5ee1cc33fc",
+    "/fitbreak/main-WWRS6F3G.js": "007ea6b499ad2a03d4deb6873da2279a6809ff1a",
     "/fitbreak/styles-6JFHS46B.css": "cff0604b9bf6ea61da0ac737a85e08b16d412d7c"
   },
   "navigationUrls": [
