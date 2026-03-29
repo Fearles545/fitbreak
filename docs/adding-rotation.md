@@ -36,7 +36,7 @@ Adding a rotation requires changes in 3 places:
 | `technique` | yes | Step-by-step instructions (see format below) |
 | `warnings` | no | Things to avoid, Ukrainian |
 | `tips` | no | Helpful hints, Ukrainian |
-| `timer_sec` | no | Override timer duration (if different from `default_duration_sec`) |
+| `timer_sec` | recommended | Countdown timer duration in seconds. **Without this, no timer button shows during the exercise.** Use `default_duration_sec` value if unsure. |
 | `sort_order` | yes | Order within rotation: 1, 2, 3... |
 
 #### Exercise type guide
