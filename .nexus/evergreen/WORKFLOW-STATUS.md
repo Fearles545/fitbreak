@@ -1,7 +1,7 @@
 # Workflow Status — FitBreak
 
 **Last updated:** 2026-03-29
-**Last session:** Sprint 4 complete — data-driven rotations + difficulty toggle
+**Last session:** Sprint 4 complete + exercise data refresh + break notification spec
 
 ## Current State
 
@@ -26,8 +26,9 @@ _None._
 
 ## Next Steps
 
-1. Run `/nexus-plan` for Sprint 5
-2. Test deployed app with both users (Yulia + test account)
+1. Run `/nexus-explore` on break notification spec (`.nexus/active/feature-break-notifications.md`)
+2. Run `/nexus-plan` for Sprint 5
+3. Test deployed app with all users
 
 ## Recent Decisions
 
@@ -36,4 +37,4 @@ _None._
 
 ## Session Notes
 
-Full Sprint 4 delivered in one session. Yulia onboarded with custom exercises earlier in the session. Data-driven rotation migration: DB (1 migration with 8 steps) + FE (7 files, deleted rotation.constants.ts, rewrote BreakTimerService). Code review caught 4 issues (1 critical: onBreakStarted before null check, 1 warning: .sort() mutation, 1 warning: lost progress icons, 1 info: redundant template loading) — all fixed. Difficulty toggle: DB schema + FE (2 files, reused chip pattern from mode toggle). Feature spec created and approved before implementation. Post-save: seeded difficulty_overrides for all 10 Yulia strength exercises, fixed toggle to hide when no overrides exist, cloned test user to match Yulia's setup. Deployed.
+Sprint 4 complete. Post-sprint: replaced all micro-break exercises for both users (Igor 8 rotations/35 exercises, Yulia 8 rotations/35 exercises). Test user cloned to match Yulia. Difficulty overrides seeded for Yulia's strength exercises. Toggle hidden when no overrides exist. Break notification improvement spec drafted (vibration, lock screen banner, sound variants, configurable repeat). Exercise docs updated with timer_sec recommendation.
