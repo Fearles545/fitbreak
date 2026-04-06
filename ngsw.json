@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1774788589207,
+  "timestamp": 1775471004897,
   "index": "/fitbreak/index.html",
   "assetGroups": [
     {
@@ -64,9 +64,10 @@
       "patterns": [
         "https:\\/\\/nogxsowxwfalbgkrrmyv\\.supabase\\.co\\/rest\\/v1\\/exercises[^/]*[^/]*"
       ],
-      "strategy": "performance",
+      "strategy": "freshness",
       "maxSize": 100,
       "maxAge": 604800000,
+      "timeoutMs": 3000,
       "cacheQueryOptions": {
         "ignoreVary": true
       },
@@ -77,9 +78,10 @@
       "patterns": [
         "https:\\/\\/nogxsowxwfalbgkrrmyv\\.supabase\\.co\\/rest\\/v1\\/workout_templates[^/]*[^/]*"
       ],
-      "strategy": "performance",
+      "strategy": "freshness",
       "maxSize": 50,
       "maxAge": 604800000,
+      "timeoutMs": 3000,
       "cacheQueryOptions": {
         "ignoreVary": true
       },
@@ -126,7 +128,7 @@
     "/fitbreak/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
     "/fitbreak/icons/icon-192x192.png": "5ba1d688c47a8777905aaf9a1e9420ba92d566ad",
     "/fitbreak/icons/icon-512x512.png": "3c350ceb2a2191ba6d9abc25e7acedb7c6092a6f",
-    "/fitbreak/index.html": "ee181309553d87ce02712563ee4c4bb95e761af2",
+    "/fitbreak/index.html": "a038deae67ce141dbcc00ddc80063d9fe3c0d7a7",
     "/fitbreak/logo.svg": "ae6dc94232b65f593ca0e85be7f9648be5a25d33",
     "/fitbreak/main-WWRS6F3G.js": "007ea6b499ad2a03d4deb6873da2279a6809ff1a",
     "/fitbreak/styles-6JFHS46B.css": "cff0604b9bf6ea61da0ac737a85e08b16d412d7c"
