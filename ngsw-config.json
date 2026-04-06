@@ -37,9 +37,10 @@
         "https://nogxsowxwfalbgkrrmyv.supabase.co/rest/v1/exercises**"
       ],
       "cacheConfig": {
-        "strategy": "performance",
+        "strategy": "freshness",
         "maxSize": 100,
-        "maxAge": "7d"
+        "maxAge": "7d",
+        "timeout": "3s"
       }
     },
     {
@@ -48,9 +49,10 @@
         "https://nogxsowxwfalbgkrrmyv.supabase.co/rest/v1/workout_templates**"
       ],
       "cacheConfig": {
-        "strategy": "performance",
+        "strategy": "freshness",
         "maxSize": 50,
-        "maxAge": "7d"
+        "maxAge": "7d",
+        "timeout": "3s"
       }
     },
     {
